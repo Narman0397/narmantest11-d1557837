@@ -1,0 +1,1 @@
+COMMENT ON SCHEMA public IS 'Schema rebuilt from source repo (pintubusel) on 2026-06-10';

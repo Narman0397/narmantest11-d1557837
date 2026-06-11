@@ -1,0 +1,1 @@
+GRANT REFERENCES ON auth.users TO sandbox_exec;

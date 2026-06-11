@@ -1,0 +1,1 @@
+COMMENT ON SCHEMA public IS 'Schema rebuilt with additional columns and verification tables — 2026-06-10';
