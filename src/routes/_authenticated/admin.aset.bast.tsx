@@ -236,7 +236,8 @@ function FormBast({ onCreated }: { onCreated: () => void }) {
                   checked={selected.has(a.id)}
                   onChange={() => {
                     const n = new Set(selected);
-                    n.has(a.id) ? n.delete(a.id) : n.add(a.id);
+                    if (n.has(a.id)) n.delete(a.id);
+                    else n.add(a.id);
                     setSelected(n);
                   }}
                 />
