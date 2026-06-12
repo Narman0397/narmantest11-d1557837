@@ -31,6 +31,8 @@ type AuthCtx = {
   isAdminOpd: boolean;
   isAdminPemda: boolean;
   isPimpinan: boolean;
+  /** Pimpinan dengan jabatan Bupati — granted executive.approve/sign/disposition. */
+  isBupati: boolean;
   /** Super admin atau Admin Pemda — punya cakupan lintas-OPD (read+write). */
   isElevated: boolean;
   /** Super admin / Admin Pemda / Pimpinan — boleh membaca lintas-OPD. */

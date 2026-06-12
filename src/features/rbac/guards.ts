@@ -23,8 +23,14 @@ export type AuthzContext = {
   isAdminDesa: boolean;
   isAsn: boolean;
   isPimpinan: boolean;
+  /** Pejabat aktif dengan tipe Bupati — granted executive.approve/sign/disposition. */
+  isBupati: boolean;
+  /** pejabat.pimpinan_type bila ada (bupati/wakil_bupati/sekda/asisten/kepala_opd). */
+  pimpinanType: string | null;
   /** Super admin / Admin Pemda — punya cakupan lintas-OPD. */
   isElevated: boolean;
+  /** Akses dashboard eksekutif (super_admin / admin_pemda / pimpinan). */
+  isExecutiveView: boolean;
 };
 
 export async function getUserContext(supabase: SB, userId: string): Promise<AuthzContext> {
@@ -33,11 +39,13 @@ export async function getUserContext(supabase: SB, userId: string): Promise<Auth
   const [{ data: profile }, { data: roles }, { data: pej }] = await Promise.all([
     sb.from("profiles").select("opd_id,desa").eq("id", userId).maybeSingle(),
     sb.from("user_roles").select("role").eq("user_id", userId),
-    sb.from("pejabat").select("is_pimpinan").eq("user_id", userId).eq("aktif", true).maybeSingle(),
+    sb.from("pejabat").select("is_pimpinan,pimpinan_type").eq("user_id", userId).eq("aktif", true).maybeSingle(),
   ]);
   const roleSet = new Set(((roles ?? []) as Array<{ role: string }>).map((r) => r.role));
   const isSuper = roleSet.has("super_admin");
   const isPemda = roleSet.has("admin_pemda");
+  const isPimpinanRole = roleSet.has("pimpinan");
+  const pimpinanType = (pej?.pimpinan_type as string | null) ?? null;
   return {
     userId,
     opdId: (profile?.opd_id as string | null) ?? null,
@@ -48,8 +56,11 @@ export async function getUserContext(supabase: SB, userId: string): Promise<Auth
     isAdminOpd: roleSet.has("admin_opd"),
     isAdminDesa: roleSet.has("admin_desa"),
     isAsn: roleSet.has("asn"),
-    isPimpinan: !!pej?.is_pimpinan,
+    isPimpinan: !!pej?.is_pimpinan || isPimpinanRole,
+    isBupati: pimpinanType === "bupati" && isPimpinanRole,
+    pimpinanType,
     isElevated: isSuper || isPemda,
+    isExecutiveView: isSuper || isPemda || isPimpinanRole,
   };
 }
 
