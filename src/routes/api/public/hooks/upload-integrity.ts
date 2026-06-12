@@ -2,11 +2,14 @@
 // Tag missing rows as orphan so standard cleanup pipeline removes them.
 import { createFileRoute } from "@tanstack/react-router";
 import { runUploadIntegrityScan } from "@/lib/uploads/integrity.server";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/upload-integrity")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const result = await runUploadIntegrityScan();
           return new Response(JSON.stringify({ ok: true, ...result }), {

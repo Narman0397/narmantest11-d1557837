@@ -3,11 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueNotification } from "@/lib/notifications.functions";
 import { log } from "@/lib/logger";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/aset-warranty-reminder")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const { data: rows, error } = await supabaseAdmin.rpc("aset_due_warranty", { _days: 30 });
           if (error) throw new Error(error.message);

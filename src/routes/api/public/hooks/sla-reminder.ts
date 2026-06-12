@@ -5,11 +5,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueNotification } from "@/lib/notifications.functions";
 import { log } from "@/lib/logger";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/sla-reminder")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const now = new Date();
           const horizon = new Date(now.getTime() + 24 * 3600 * 1000).toISOString();

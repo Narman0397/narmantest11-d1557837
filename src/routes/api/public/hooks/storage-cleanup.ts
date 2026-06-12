@@ -2,11 +2,14 @@
 // Dijalankan setiap jam oleh pg_cron. No-op jika `storage_cleanup_enabled` = false.
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/storage-cleanup")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         const apikey = request.headers.get("apikey");
         const url = process.env.SUPABASE_URL;
         const anon = process.env.SUPABASE_PUBLISHABLE_KEY;

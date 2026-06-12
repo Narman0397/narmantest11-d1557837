@@ -2,11 +2,14 @@
 // Schedule via pg_cron calling this URL with the apikey header.
 import { createFileRoute } from "@tanstack/react-router";
 import { runStaleUploadCleanup } from "@/lib/uploads.cleanup";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/cleanup-uploads")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const result = await runStaleUploadCleanup();
           return new Response(JSON.stringify({ ok: true, ...result }), {

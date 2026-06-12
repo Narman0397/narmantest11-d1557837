@@ -1,6 +1,7 @@
 // Cron hook: jalankan penyusutan bulanan untuk periode aktif (tanggal 1, 02:00)
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 function periodeNow() {
   const d = new Date();
@@ -10,7 +11,9 @@ function periodeNow() {
 export const Route = createFileRoute("/api/public/hooks/aset-susut-bulanan")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         const periode = periodeNow();
         const { data, error } = await supabaseAdmin.rpc("fn_susut_bulanan_run", { _periode: periode });
         if (error) return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });

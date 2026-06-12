@@ -3,11 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { processRetryBatch } from "@/lib/queue/retry.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { log, newCorrelationId } from "@/lib/logger";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/retry-queue")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         const requestId = newCorrelationId();
         const startedAt = Date.now();
         let historyId: string | null = null;

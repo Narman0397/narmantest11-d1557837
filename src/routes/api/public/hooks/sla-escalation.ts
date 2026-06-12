@@ -5,13 +5,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueNotification } from "@/lib/notifications.functions";
 import { log } from "@/lib/logger";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 type CfgRow = { opd_id: string | null; level: number; threshold_days: number; target_role: string };
 
 export const Route = createFileRoute("/api/public/hooks/sla-escalation")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const { data: flag } = await supabaseAdmin
             .from("feature_flags").select("enabled").eq("flag_key", "escalation.enabled").maybeSingle();

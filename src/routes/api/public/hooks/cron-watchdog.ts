@@ -1,11 +1,14 @@
 // Cron endpoint: scan cron_history for stalled jobs and escalate to dead-letter.
 import { createFileRoute } from "@tanstack/react-router";
 import { runCronWatchdog } from "@/lib/jobs/watchdog.server";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/cron-watchdog")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         try {
           const result = await runCronWatchdog();
           return new Response(JSON.stringify({ ok: true, ...result }), {
