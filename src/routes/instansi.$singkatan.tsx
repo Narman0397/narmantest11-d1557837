@@ -62,9 +62,7 @@ function OpdNotFound() {
     <PageShell>
       <section className="container-page py-20 text-center">
         <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h1 className="mt-4 font-display text-2xl font-bold">
-          OPD "{singkatan}" tidak ditemukan
-        </h1>
+        <h1 className="mt-4 font-display text-2xl font-bold">OPD "{singkatan}" tidak ditemukan</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Periksa kembali singkatan OPD pada URL.
         </p>
