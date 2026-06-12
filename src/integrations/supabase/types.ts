@@ -2983,30 +2983,39 @@ export type Database = {
           created_at: string
           foto_url: string | null
           id: string
+          is_pimpinan: boolean
           jabatan: string
           nama: string
+          pimpinan_type: string | null
           updated_at: string
           urutan: number
+          user_id: string | null
         }
         Insert: {
           aktif?: boolean
           created_at?: string
           foto_url?: string | null
           id?: string
+          is_pimpinan?: boolean
           jabatan: string
           nama: string
+          pimpinan_type?: string | null
           updated_at?: string
           urutan?: number
+          user_id?: string | null
         }
         Update: {
           aktif?: boolean
           created_at?: string
           foto_url?: string | null
           id?: string
+          is_pimpinan?: boolean
           jabatan?: string
           nama?: string
+          pimpinan_type?: string | null
           updated_at?: string
           urutan?: number
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -4243,7 +4252,9 @@ export type Database = {
         Returns: boolean
       }
       is_admin_pemda: { Args: { _uid: string }; Returns: boolean }
+      is_bupati: { Args: { _uid: string }; Returns: boolean }
       is_elevated_view: { Args: { _uid: string }; Returns: boolean }
+      is_executive: { Args: { _uid: string }; Returns: boolean }
       is_pimpinan: { Args: { _uid: string }; Returns: boolean }
       layanan_kinerja_agg: {
         Args: never
