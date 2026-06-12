@@ -3,11 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { detectStuck } from "@/lib/jobs/stuck.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { newCorrelationId } from "@/lib/logger";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/stuck-jobs")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         const requestId = newCorrelationId();
         const startedAt = Date.now();
         let historyId: string | null = null;

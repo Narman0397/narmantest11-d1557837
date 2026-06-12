@@ -3,6 +3,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { fetchAllChunked } from "@/lib/db/chunked";
+import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 const SNAPSHOT_TABLES = [
   "profiles", "user_roles", "opd", "kategori_layanan", "layanan_publik",
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/api/public/hooks/backup-snapshot")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauth = verifyCronCaller(request);
+        if (unauth) return unauth;
         // Otentikasi dengan anon key (pola standar pg_cron)
         const apikey = request.headers.get("apikey");
         const url = process.env.SUPABASE_URL;
