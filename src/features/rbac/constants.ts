@@ -83,6 +83,17 @@ export const PERMISSIONS = {
   view_kabupaten_dashboard: "view_kabupaten_dashboard",
   view_executive_dashboard: "view_executive_dashboard",
   view_cross_opd_analytics: "view_cross_opd_analytics",
+  // Tahap RBAC Pemda & Eksekutif (rev. 2026-06).
+  // - pemda.*       : default granted ke admin_pemda (+super_admin).
+  // - executive.view: default granted ke admin_pemda + pimpinan.
+  // - executive.approve/sign/disposition: hanya pimpinan dgn pimpinan_type='bupati'.
+  "pemda.view": "pemda.view",
+  "pemda.manage": "pemda.manage",
+  "pemda.monitor": "pemda.monitor",
+  "executive.view": "executive.view",
+  "executive.approve": "executive.approve",
+  "executive.sign": "executive.sign",
+  "executive.disposition": "executive.disposition",
 } as const;
 
 export const ASN_TYPE_LABEL: Record<AsnType, string> = {

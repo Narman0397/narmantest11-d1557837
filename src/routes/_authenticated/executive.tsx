@@ -1,10 +1,12 @@
-// Dashboard Pimpinan Daerah — read-only ringkasan kabupaten.
-import { createFileRoute } from "@tanstack/react-router";
+// Dashboard Pimpinan Daerah — read-only ringkasan kabupaten + panel khusus Bupati.
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ExecutiveGuard } from "@/components/admin/ExecutiveGuard";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
 import { getExecutiveSummary } from "@/lib/executive.functions";
 import { opdSkorKomposit, type SkorRow } from "@/lib/kinerja.functions";
-import { Trophy, AlertTriangle, Building2, Users, FileText, Package, MessageSquare, BarChart3 } from "lucide-react";
+import { Trophy, AlertTriangle, Building2, Users, FileText, Package, MessageSquare, BarChart3, FileSignature, Inbox, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/executive")({
   head: () => ({ meta: [{ title: "Dashboard Pimpinan Daerah" }, { name: "robots", content: "noindex" }] }),
@@ -21,9 +23,13 @@ type Kab = {
   ikm_responses_30d: number; opd_count: number; asn_count: number;
 };
 
+type BupatiQueue = { signPending: number; disposisiAktif: number; approvalPending: number };
+
 function Page() {
+  const { isBupati } = useAuth();
   const [kab, setKab] = useState<Kab | null>(null);
   const [skor, setSkor] = useState<SkorRow[]>([]);
+  const [bupatiQueue, setBupatiQueue] = useState<BupatiQueue | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +42,25 @@ function Page() {
       } catch (e) { setErr((e as Error).message); }
     })();
   }, []);
+
+  // Bupati-only: muat antrean persetujuan/disposisi/tanda tangan (best-effort, fallback 0).
+  useEffect(() => {
+    if (!isBupati) return;
+    (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb: any = supabase;
+      const [sign, disp, appr] = await Promise.all([
+        sb.from("signed_documents").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        sb.from("submission_dispositions").select("id", { count: "exact", head: true }).is("acted_at", null),
+        sb.from("permohonan").select("id", { count: "exact", head: true }).eq("status", "diproses"),
+      ]);
+      setBupatiQueue({
+        signPending: sign.count ?? 0,
+        disposisiAktif: disp.count ?? 0,
+        approvalPending: appr.count ?? 0,
+      });
+    })().catch(() => setBupatiQueue({ signPending: 0, disposisiAktif: 0, approvalPending: 0 }));
+  }, [isBupati]);
 
   const top3 = [...skor].filter((r) => r.skor != null).sort((a, b) => (b.skor ?? 0) - (a.skor ?? 0)).slice(0, 3);
   const needAttention = [...skor].filter((r) => (r.sla_pct ?? 100) < 70).slice(0, 3);
@@ -61,6 +86,35 @@ function Page() {
           <Stat icon={AlertTriangle} label="Aset Rusak" value={kab?.aset_rusak ?? 0} tone="destructive" />
           <Stat icon={BarChart3} label="Responden IKM (30 hari)" value={kab?.ikm_responses_30d ?? 0} />
         </section>
+
+        {isBupati && (
+          <section>
+            <h2 className="mb-3 font-display text-lg font-semibold">Antrean Bupati</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Link to="/admin/digital-signature" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tanda Tangan Pending</span>
+                  <FileSignature className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.signPending ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+              <Link to="/admin/layanan" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Disposisi Aktif</span>
+                  <Inbox className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.disposisiAktif ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+              <Link to="/admin/submission-review" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Persetujuan Dokumen</span>
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.approvalPending ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-6 lg:grid-cols-2">
           <Card title="Top 3 OPD" icon={Trophy} accent="success">
