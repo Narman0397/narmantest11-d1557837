@@ -68,14 +68,9 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
     const { data: layananRows, error: e3 } = await supabaseAdmin.rpc("layanan_kinerja_agg");
     if (e3) throw new Error(e3.message);
 
-    const ExcelJS = await import("exceljs");
-    const wb = new ExcelJS.Workbook();
-    wb.creator = "Portal Pemerintah — Kinerja OPD";
-    wb.created = new Date();
+    const { buildXlsxBuffer } = await import("./xlsx-writer.server");
 
-    // Sheet 1: Leaderboard
-    const ws1 = wb.addWorksheet("Leaderboard");
-    ws1.columns = [
+    const leaderCols = [
       { header: "Rank", key: "rank", width: 6 },
       { header: "OPD", key: "opd", width: 36 },
       { header: "Singkatan", key: "singkatan", width: 14 },
@@ -86,35 +81,27 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
       { header: "Completion %", key: "comp", width: 14 },
       { header: "Skor Komposit", key: "skor", width: 16 },
     ];
-    ws1.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    ws1.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E40AF" } };
     const sorted = [...(skorRows as SkorRow[] ?? [])].sort((a, b) => (b.skor ?? 0) - (a.skor ?? 0));
-    sorted.forEach((r, i) => ws1.addRow({
+    const leaderRows = sorted.map((r, i) => ({
       rank: i + 1, opd: r.opd_nama, singkatan: r.opd_singkatan,
       total: r.total, selesai: r.selesai,
       sla: r.sla_pct ?? "—", rating: r.rating_avg ?? "—",
       comp: r.completion_pct ?? "—", skor: r.skor ?? "—",
     }));
-    ws1.views = [{ state: "frozen", ySplit: 1 }];
 
-    // Sheet 2: Tren 12 bulan (agregat)
-    const ws2 = wb.addWorksheet("Tren 12 Bulan");
-    ws2.columns = [
+    const trendCols = [
       { header: "Bulan", key: "bulan", width: 12 },
       { header: "Masuk", key: "masuk", width: 10 },
       { header: "Selesai", key: "selesai", width: 10 },
       { header: "Tepat Waktu", key: "on_time", width: 14 },
       { header: "Selesai dgn SLA", key: "sla", width: 16 },
     ];
-    ws2.getRow(1).font = { bold: true };
-    (trendRows as TrendRow[] ?? []).forEach((r) => ws2.addRow({
+    const trendOut = (trendRows as TrendRow[] ?? []).map((r) => ({
       bulan: r.bulan, masuk: r.masuk, selesai: r.selesai,
       on_time: r.on_time, sla: r.selesai_dengan_sla,
     }));
 
-    // Sheet 3: Per layanan
-    const ws3 = wb.addWorksheet("Per Layanan");
-    ws3.columns = [
+    const layananCols = [
       { header: "Layanan", key: "judul", width: 36 },
       { header: "OPD", key: "opd", width: 14 },
       { header: "Total", key: "total", width: 10 },
@@ -122,18 +109,22 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
       { header: "Tepat Waktu", key: "on_time", width: 14 },
       { header: "Rata Hari Selesai", key: "rata", width: 18 },
     ];
-    ws3.getRow(1).font = { bold: true };
-    (layananRows as LayananAggRow[] ?? []).forEach((r) => ws3.addRow({
+    const layananOut = (layananRows as LayananAggRow[] ?? []).map((r) => ({
       judul: r.layanan_judul, opd: r.opd_singkatan ?? "-",
       total: r.total, selesai: r.selesai, on_time: r.on_time,
       rata: r.rata_hari_selesai ? Number(r.rata_hari_selesai).toFixed(2) : "-",
     }));
 
-    const buffer = await wb.xlsx.writeBuffer();
+    const buffer = buildXlsxBuffer([
+      { name: "Leaderboard", columns: leaderCols, rows: leaderRows },
+      { name: "Tren 12 Bulan", columns: trendCols, rows: trendOut },
+      { name: "Per Layanan", columns: layananCols, rows: layananOut },
+    ]);
+
     const path = `kinerja/${Date.now()}.xlsx`;
     const { error: upErr } = await supabaseAdmin.storage
       .from("share-files")
-      .upload(path, buffer as ArrayBuffer, {
+      .upload(path, buffer, {
         contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         upsert: true,
       });
@@ -143,3 +134,4 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     return { url: signed.signedUrl, filename: `kinerja-opd-${Date.now()}.xlsx` };
   });
+
