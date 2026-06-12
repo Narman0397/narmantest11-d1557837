@@ -6,7 +6,7 @@ import { getExecutiveSummary } from "@/lib/executive.functions";
 import { opdSkorKomposit, type SkorRow } from "@/lib/kinerja.functions";
 import { LayoutDashboard, FileClock, Package, Users, MessageSquare, Database } from "lucide-react";
 
-export const Route = createFileRoute("/pemda")({
+export const Route = createFileRoute("/_authenticated/pemda")({
   head: () => ({ meta: [{ title: "Dashboard Admin Pemda" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <ExecutiveGuard mode="pemda">

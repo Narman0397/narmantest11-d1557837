@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { listStorageObjects, deleteStorageObject, getStorageCleanupConfig, setStorageCleanupConfig, runStorageCleanupNow } from "@/lib/admin-actions.functions";
 import { Switch } from "@/components/ui/switch";
 
-export const Route = createFileRoute("/admin/storage")({
+export const Route = createFileRoute("/_authenticated/admin/storage")({
   head: () => ({ meta: [{ title: "Storage — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

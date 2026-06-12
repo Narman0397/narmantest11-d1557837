@@ -12,7 +12,7 @@ import { AsnClassificationBadge, RoleBadge, usePermissions, type AppRole } from 
 import { VerificationTimeline } from "@/components/VerificationTimeline";
 
 
-export const Route = createFileRoute("/akun")({
+export const Route = createFileRoute("/_authenticated/akun")({
   head: () => ({ meta: [{ title: "Akun Saya — Portal Buton Selatan" }, { name: "robots", content: "noindex" }] }),
   component: AkunPage,
 });

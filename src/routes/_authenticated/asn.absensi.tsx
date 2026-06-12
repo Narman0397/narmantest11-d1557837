@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { submitAbsensi, listAbsensiSelf } from "@/lib/asn.functions";
 import { resolveMySchedule } from "@/lib/asn-advanced.functions";
 
-export const Route = createFileRoute("/asn/absensi")({
+export const Route = createFileRoute("/_authenticated/asn/absensi")({
   head: () => ({ meta: [{ title: "Absensi ASN — Scan QR" }, { name: "robots", content: "noindex" }] }),
   component: AbsensiPage,
 });

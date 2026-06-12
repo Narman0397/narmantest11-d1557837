@@ -6,7 +6,7 @@ import { PageShell, PageHero } from "@/components/site/PageShell";
 import { useAuth } from "@/lib/auth-context";
 import { createIzin, listIzinSelf, cancelIzin } from "@/lib/asn-izin.functions";
 
-export const Route = createFileRoute("/asn/izin")({
+export const Route = createFileRoute("/_authenticated/asn/izin")({
   head: () => ({ meta: [{ title: "Pengajuan Izin / Cuti — ASN" }, { name: "robots", content: "noindex" }] }),
   component: IzinPage,
 });

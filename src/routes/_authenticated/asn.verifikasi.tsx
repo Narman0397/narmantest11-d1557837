@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { listCampaigns, listCampaignItems, submitCampaignVerification } from "@/lib/aset-advanced.functions";
 
-export const Route = createFileRoute("/asn/verifikasi")({
+export const Route = createFileRoute("/_authenticated/asn/verifikasi")({
   head: () => ({ meta: [{ title: "Verifikasi Aset — ASN" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });

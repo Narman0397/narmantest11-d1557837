@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/admin/layanan/disposisi-inbox")({
+export const Route = createFileRoute("/_authenticated/admin/layanan/disposisi-inbox")({
   head: () => ({ meta: [{ title: "Inbox Disposisi" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "Admin" }]}><Page /></AdminShell></AdminGuard>,
 });

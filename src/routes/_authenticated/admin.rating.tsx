@@ -8,7 +8,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
-export const Route = createFileRoute("/admin/rating")({
+export const Route = createFileRoute("/_authenticated/admin/rating")({
   head: () => ({ meta: [{ title: "Rating & Komentar — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

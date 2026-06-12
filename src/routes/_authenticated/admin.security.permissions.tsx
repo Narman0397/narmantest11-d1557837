@@ -10,7 +10,7 @@ import { rbacListUsers } from "@/features/rbac/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
-export const Route = createFileRoute("/admin/security/permissions")({
+export const Route = createFileRoute("/_authenticated/admin/security/permissions")({
   head: () => ({ meta: [{ title: "Permission Management — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

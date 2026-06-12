@@ -1,7 +1,7 @@
 // Redirect: /admin/rbac/audit → /admin/audit.
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/admin/rbac/audit")({
+export const Route = createFileRoute("/_authenticated/admin/rbac/audit")({
   beforeLoad: () => {
     throw redirect({ to: "/admin/audit" });
   },

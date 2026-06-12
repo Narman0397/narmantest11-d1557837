@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { upsertLayanan, deleteLayanan } from "@/lib/admin-actions.functions";
 import { invalidateLayanan } from "@/lib/queries";
 
-export const Route = createFileRoute("/admin/layanan")({
+export const Route = createFileRoute("/_authenticated/admin/layanan")({
   head: () => ({ meta: [{ title: "Layanan OPD — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

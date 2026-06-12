@@ -8,7 +8,7 @@ import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { listSettings } from "@/lib/ops/settings.functions";
 
-export const Route = createFileRoute("/admin/system/settings")({
+export const Route = createFileRoute("/_authenticated/admin/system/settings")({
   head: () => ({ meta: [{ title: "Settings Governance — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

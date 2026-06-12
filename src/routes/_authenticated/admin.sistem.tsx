@@ -11,7 +11,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 
-export const Route = createFileRoute("/admin/sistem")({
+export const Route = createFileRoute("/_authenticated/admin/sistem")({
   head: () => ({
     meta: [
       { title: "Pengaturan Sistem — Admin" },

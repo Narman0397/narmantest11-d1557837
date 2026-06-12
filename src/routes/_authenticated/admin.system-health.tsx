@@ -35,7 +35,7 @@ import {
 } from "@/lib/ops/replay.functions";
 import { getRealtimeStats, type RealtimeStats } from "@/lib/realtime/manager";
 
-export const Route = createFileRoute("/admin/system-health")({
+export const Route = createFileRoute("/_authenticated/admin/system-health")({
   head: () => ({
     meta: [
       { title: "Status Sistem — Admin" },

@@ -9,7 +9,7 @@ import { listSettings, upsertSetting } from "@/lib/ops/settings.functions";
 import { invalidateFeatureFlagCache } from "@/lib/feature-flags";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/system/feature-flags")({
+export const Route = createFileRoute("/_authenticated/admin/system/feature-flags")({
   head: () => ({ meta: [{ title: "Feature Flags — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

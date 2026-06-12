@@ -11,7 +11,7 @@ import { useFormDraft } from "@/features/forms/hooks/useFormDraft";
 import { buildSubmissionValidator } from "@/features/forms/schema/validator";
 import { ArrowLeft, Save, Send, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/tugas/$assignmentId")({
+export const Route = createFileRoute("/_authenticated/tugas/$assignmentId")({
   head: () => ({ meta: [{ title: "Pengisian Tugas" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });

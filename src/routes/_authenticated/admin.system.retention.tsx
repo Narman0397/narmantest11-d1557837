@@ -9,7 +9,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { listRetentionPolicies, runRetentionNow, updateRetentionPolicy } from "@/lib/ops/retention.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/system/retention")({
+export const Route = createFileRoute("/_authenticated/admin/system/retention")({
   head: () => ({ meta: [{ title: "Retention Policy — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

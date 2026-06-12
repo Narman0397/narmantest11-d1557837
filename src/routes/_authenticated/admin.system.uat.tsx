@@ -9,7 +9,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { listUatScenarios, recordUatResult } from "@/lib/ops/uat.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/system/uat")({
+export const Route = createFileRoute("/_authenticated/admin/system/uat")({
   head: () => ({ meta: [{ title: "UAT — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 type Row = { id: string; tanggal: string; jam_mulai: string; jam_selesai: string; alasan: string; status: string; catatan_approval: string | null; created_at: string };
 
-export const Route = createFileRoute("/asn/lembur")({
+export const Route = createFileRoute("/_authenticated/asn/lembur")({
   head: () => ({ meta: [{ title: "Lembur — ASN" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "ASN" }, { label: "Lembur" }]}><Page /></AdminShell></AdminGuard>,
 });

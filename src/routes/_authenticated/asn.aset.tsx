@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { resolveAsetByKode, scanAset, listAset } from "@/lib/aset.functions";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/asn/aset")({
+export const Route = createFileRoute("/_authenticated/asn/aset")({
   head: () => ({ meta: [{ title: "Tracking Aset — Scan QR" }, { name: "robots", content: "noindex" }] }),
   component: AsetPage,
 });

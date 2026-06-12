@@ -8,7 +8,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { runGoLiveChecks } from "@/lib/ops/golive.functions";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
-export const Route = createFileRoute("/admin/system/go-live")({
+export const Route = createFileRoute("/_authenticated/admin/system/go-live")({
   head: () => ({ meta: [{ title: "Go-Live Checklist — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

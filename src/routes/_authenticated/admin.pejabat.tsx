@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { upsertPejabat, deletePejabat } from "@/lib/admin-actions.functions";
 
-export const Route = createFileRoute("/admin/pejabat")({
+export const Route = createFileRoute("/_authenticated/admin/pejabat")({
   head: () => ({ meta: [{ title: "Pejabat — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

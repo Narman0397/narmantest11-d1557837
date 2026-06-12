@@ -6,7 +6,7 @@ import { getExecutiveSummary } from "@/lib/executive.functions";
 import { opdSkorKomposit, type SkorRow } from "@/lib/kinerja.functions";
 import { Trophy, AlertTriangle, Building2, Users, FileText, Package, MessageSquare, BarChart3 } from "lucide-react";
 
-export const Route = createFileRoute("/executive")({
+export const Route = createFileRoute("/_authenticated/executive")({
   head: () => ({ meta: [{ title: "Dashboard Pimpinan Daerah" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <ExecutiveGuard mode="executive">

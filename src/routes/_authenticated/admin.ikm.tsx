@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export const Route = createFileRoute("/admin/ikm")({
+export const Route = createFileRoute("/_authenticated/admin/ikm")({
   head: () => ({ meta: [{ title: "IKM — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "Admin" }]}><Page /></AdminShell></AdminGuard>,
 });

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/admin/layanan/escalation")({
+export const Route = createFileRoute("/_authenticated/admin/layanan/escalation")({
   head: () => ({ meta: [{ title: "Escalation SLA — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

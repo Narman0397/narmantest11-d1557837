@@ -4,7 +4,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { AdminShell } from "@/components/admin/AdminShell";
 
-export const Route = createFileRoute("/admin/system/disaster-recovery")({
+export const Route = createFileRoute("/_authenticated/admin/system/disaster-recovery")({
   head: () => ({ meta: [{ title: "Disaster Recovery — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

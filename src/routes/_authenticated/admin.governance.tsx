@@ -8,7 +8,7 @@ import { AdminShell, StatCard } from "@/components/admin/AdminShell";
 import { getGovernanceSummary } from "@/lib/ops/governance.functions";
 import { Shield, Database, Activity, AlertTriangle, FileClock, Layers } from "lucide-react";
 
-export const Route = createFileRoute("/admin/governance")({
+export const Route = createFileRoute("/_authenticated/admin/governance")({
   head: () => ({ meta: [{ title: "Governance Dashboard — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

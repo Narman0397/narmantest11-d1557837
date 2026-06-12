@@ -6,7 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { listIzinAdmin, decideIzin } from "@/lib/asn-izin.functions";
 
-export const Route = createFileRoute("/admin/izin")({
+export const Route = createFileRoute("/_authenticated/admin/izin")({
   head: () => ({ meta: [{ title: "Kelola Pengajuan Izin ASN" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

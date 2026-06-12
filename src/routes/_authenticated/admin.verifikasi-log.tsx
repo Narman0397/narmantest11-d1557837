@@ -10,7 +10,7 @@ import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { useAuth } from "@/lib/auth-context";
 import { listVerificationLog } from "@/lib/verification.functions";
 
-export const Route = createFileRoute("/admin/verifikasi-log")({
+export const Route = createFileRoute("/_authenticated/admin/verifikasi-log")({
   head: () => ({ meta: [{ title: "Log Verifikasi — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

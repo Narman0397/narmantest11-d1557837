@@ -17,7 +17,7 @@ const searchSchema = z.object({
   pageSize: z.number().int().min(5).max(50).catch(20).default(20),
 });
 
-export const Route = createFileRoute("/admin/forms/")({
+export const Route = createFileRoute("/_authenticated/admin/forms/")({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Admin — Form Builder" }, { name: "robots", content: "noindex" }] }),
   component: () => (

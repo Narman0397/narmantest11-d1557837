@@ -19,7 +19,7 @@ const searchSchema = z.object({
   pageSize: z.number().int().min(5).max(50).catch(20).default(20),
 });
 
-export const Route = createFileRoute("/admin/submission-review")({
+export const Route = createFileRoute("/_authenticated/admin/submission-review")({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Admin — Review Submission" }, { name: "robots", content: "noindex" }] }),
   component: () => (

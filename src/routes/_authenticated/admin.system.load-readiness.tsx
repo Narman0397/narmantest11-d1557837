@@ -7,7 +7,7 @@ import { AdminShell, StatCard } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Activity, Server, Users } from "lucide-react";
 
-export const Route = createFileRoute("/admin/system/load-readiness")({
+export const Route = createFileRoute("/_authenticated/admin/system/load-readiness")({
   head: () => ({ meta: [{ title: "Load Readiness — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

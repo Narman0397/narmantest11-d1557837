@@ -12,7 +12,7 @@ import {
   previewNomorFormat,
 } from "@/lib/nomor-surat.functions";
 
-export const Route = createFileRoute("/admin/nomor-surat")({
+export const Route = createFileRoute("/_authenticated/admin/nomor-surat")({
   head: () => ({
     meta: [{ title: "Nomor Surat — Admin" }, { name: "robots", content: "noindex" }],
   }),

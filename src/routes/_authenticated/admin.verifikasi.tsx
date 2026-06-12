@@ -30,7 +30,7 @@ import {
 import { setUserVerified } from "@/lib/admin-actions.functions";
 import { Pencil, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/verifikasi")({
+export const Route = createFileRoute("/_authenticated/admin/verifikasi")({
   head: () => ({ meta: [{ title: "Verifikasi Akun — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

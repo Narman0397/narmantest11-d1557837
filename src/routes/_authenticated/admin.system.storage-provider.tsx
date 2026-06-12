@@ -15,7 +15,7 @@ import {
   setStorageProviderConfig,
 } from "@/lib/storage/config.functions";
 
-export const Route = createFileRoute("/admin/system/storage-provider")({
+export const Route = createFileRoute("/_authenticated/admin/system/storage-provider")({
   head: () => ({ meta: [{ title: "Storage Provider — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

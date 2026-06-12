@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { listTemplatesForMe } from "@/lib/dataset.functions";
 import { ClipboardList, Clock } from "lucide-react";
 
-export const Route = createFileRoute("/pengisian/")({
+export const Route = createFileRoute("/_authenticated/pengisian/")({
   head: () => ({ meta: [{ title: "Pengisian Dataset" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });

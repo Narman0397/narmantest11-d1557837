@@ -14,7 +14,7 @@ import {
 import { ASN_TYPE_LABEL, POSITION_LABEL, ASN_TYPES, type AsnType, type SystemPosition } from "@/features/rbac/constants";
 import { UserRbacPanel } from "@/features/rbac/UserRbacPanel";
 
-export const Route = createFileRoute("/admin/users")({
+export const Route = createFileRoute("/_authenticated/admin/users")({
   head: () => ({ meta: [{ title: "Manajemen User — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

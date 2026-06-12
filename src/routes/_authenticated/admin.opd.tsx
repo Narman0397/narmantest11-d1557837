@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { upsertOpd, deleteOpd } from "@/lib/admin-actions.functions";
 import { invalidateOpd } from "@/lib/queries";
 
-export const Route = createFileRoute("/admin/opd")({
+export const Route = createFileRoute("/_authenticated/admin/opd")({
   head: () => ({ meta: [{ title: "Manajemen OPD — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

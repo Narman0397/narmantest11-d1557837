@@ -7,7 +7,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { listHariLibur, upsertHariLibur, deleteHariLibur } from "@/lib/asn-izin.functions";
 
-export const Route = createFileRoute("/admin/hari-libur")({
+export const Route = createFileRoute("/_authenticated/admin/hari-libur")({
   head: () => ({ meta: [{ title: "Kelola Hari Libur" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><SuperAdminOnly><Page /></SuperAdminOnly></AdminGuard>),
 });

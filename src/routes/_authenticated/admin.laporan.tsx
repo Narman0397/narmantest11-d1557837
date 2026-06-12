@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { deleteLaporan } from "@/lib/admin-actions.functions";
 
-export const Route = createFileRoute("/admin/laporan")({
+export const Route = createFileRoute("/_authenticated/admin/laporan")({
   head: () => ({ meta: [{ title: "Laporan Masyarakat — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

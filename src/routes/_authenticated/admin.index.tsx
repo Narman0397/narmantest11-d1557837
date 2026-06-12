@@ -15,7 +15,7 @@ import { deletePermohonan } from "@/lib/admin-actions.functions";
 import { STATUS_LABEL, STATUS_TONE, fmtTanggal, type StatusPermohonan } from "@/lib/permohonan";
 import { dashboardSummaryQueryOptions } from "@/lib/queries.dashboard";
 
-export const Route = createFileRoute("/admin/")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Dashboard Admin — Kabupaten Buton Selatan" },

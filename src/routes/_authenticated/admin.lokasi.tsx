@@ -10,7 +10,7 @@ import { listHierarki, upsertGedung, upsertLantai, upsertRuangan } from "@/lib/l
 import { toast } from "sonner";
 import { Building2, Plus } from "lucide-react";
 
-export const Route = createFileRoute("/admin/lokasi")({
+export const Route = createFileRoute("/_authenticated/admin/lokasi")({
   head: () => ({ meta: [{ title: "Admin — Lokasi" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

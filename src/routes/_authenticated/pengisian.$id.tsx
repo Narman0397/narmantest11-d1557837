@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getTemplate, mySubmission, submitDataset } from "@/lib/dataset.functions";
 import { ArrowLeft, Save, CheckCircle2 } from "lucide-react";
 
-export const Route = createFileRoute("/pengisian/$id")({
+export const Route = createFileRoute("/_authenticated/pengisian/$id")({
   head: () => ({ meta: [{ title: "Isi Dataset" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });

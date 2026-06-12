@@ -7,7 +7,7 @@ import { AdminShell, StatCard } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Database, CheckCircle2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/system/backup-status")({
+export const Route = createFileRoute("/_authenticated/admin/system/backup-status")({
   head: () => ({ meta: [{ title: "Backup Status — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

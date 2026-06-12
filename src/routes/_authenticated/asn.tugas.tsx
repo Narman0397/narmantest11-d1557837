@@ -19,7 +19,7 @@ const searchSchema = z.object({
   pageSize: z.number().int().min(5).max(50).catch(20).default(20),
 });
 
-export const Route = createFileRoute("/asn/tugas")({
+export const Route = createFileRoute("/_authenticated/asn/tugas")({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Tugas ASN" }, { name: "robots", content: "noindex" }] }),
   component: Page,
