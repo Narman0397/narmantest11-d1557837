@@ -60,7 +60,7 @@ export function UserRbacPanel({ userId }: { userId: string }) {
   useEffect(() => {
     if (tab === "audit" && audit === null) {
       rbacAuditForUser({ data: { user_id: userId, limit: 30 } }).then((r) =>
-        setAudit(r.rows as Audit[]),
+        setAudit(r.rows as unknown as Audit[]),
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

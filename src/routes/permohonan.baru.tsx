@@ -239,7 +239,7 @@ function BaruPage() {
 
       // Upload berkas (jika ada) ke storage + catat ke tabel permohonan_berkas.
       for (const f of files) {
-        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+        const safeName = f.name.replace(/[^\w.-]+/g, "_");
         const path = `${user.id}/${row.id}/${Date.now()}_${safeName}`;
         const { error: upErr } = await supabase.storage
           .from("berkas-permohonan")

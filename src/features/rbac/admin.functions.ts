@@ -52,19 +52,20 @@ export const rbacListUsers = createServerFn({ method: "POST" })
     }
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const ids = (rows ?? []).map((r: any) => r.id);
+    const profileRows = (rows ?? []) as Array<{ id: string } & Record<string, unknown>>;
+    const ids = profileRows.map((r) => r.id);
     const roles = ids.length
       ? ((await supabaseAdmin.from("user_roles").select("user_id,role").in("user_id", ids)).data ??
         [])
       : [];
     const grouped = new Map<string, string[]>();
-    for (const r of roles as any[]) {
+    for (const r of roles as Array<{ user_id: string; role: string }>) {
       const arr = grouped.get(r.user_id) ?? [];
-      arr.push(r.role as string);
+      arr.push(r.role);
       grouped.set(r.user_id, arr);
     }
     return {
-      rows: (rows ?? []).map((r: any) => ({ ...r, roles: grouped.get(r.id) ?? [] })),
+      rows: profileRows.map((r) => ({ ...r, roles: grouped.get(r.id) ?? [] })),
     };
   });
 
@@ -101,7 +102,7 @@ export const rbacGetUser = createServerFn({ method: "POST" })
     ]);
     return {
       profile: prof,
-      roles: (roles ?? []).map((r: any) => r.role),
+      roles: (roles ?? []).map((r: { role: string }) => r.role),
       overrides: overrides ?? [],
       effective: (effective ?? []).map((e: { permission_code: string }) => e.permission_code),
       catalog: allPerms ?? [],
@@ -235,11 +236,14 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (error) throw new Error(error.message);
+    type AuditRow = {
+      user_id: string | null;
+      target_user_id: string | null;
+    } & Record<string, unknown>;
+    const auditRows = (rows ?? []) as AuditRow[];
     const ids = Array.from(
       new Set(
-        (rows ?? [])
-          .flatMap((r: any) => [r.user_id, r.target_user_id])
-          .filter((x: any): x is string => !!x),
+        auditRows.flatMap((r) => [r.user_id, r.target_user_id]).filter((x): x is string => !!x),
       ),
     );
     const profMap = new Map<string, string>();
@@ -251,7 +255,7 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
       for (const p of profs ?? []) profMap.set(p.id, p.nama_lengkap ?? "");
     }
     return {
-      rows: (rows ?? []).map((r: any) => ({
+      rows: auditRows.map((r) => ({
         ...r,
         actor_name: r.user_id ? (profMap.get(r.user_id) ?? "") : "",
         target_name: r.target_user_id ? (profMap.get(r.target_user_id) ?? "") : "",
@@ -269,13 +273,13 @@ export const rbacAuditList = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
-    const rows = data ?? [];
+    type AuditRow = {
+      user_id: string | null;
+      target_user_id: string | null;
+    } & Record<string, unknown>;
+    const rows = (data ?? []) as AuditRow[];
     const ids = Array.from(
-      new Set(
-        rows
-          .flatMap((r: any) => [r.user_id, r.target_user_id])
-          .filter((x: any): x is string => !!x),
-      ),
+      new Set(rows.flatMap((r) => [r.user_id, r.target_user_id]).filter((x): x is string => !!x)),
     );
     const profMap = new Map<string, string>();
     if (ids.length) {
@@ -286,7 +290,7 @@ export const rbacAuditList = createServerFn({ method: "POST" })
       for (const p of profs ?? []) profMap.set(p.id, p.nama_lengkap ?? "");
     }
     return {
-      rows: rows.map((r: any) => ({
+      rows: rows.map((r) => ({
         ...r,
         actor: r.user_id ? { nama_lengkap: profMap.get(r.user_id) ?? "" } : null,
         target: r.target_user_id ? { nama_lengkap: profMap.get(r.target_user_id) ?? "" } : null,

@@ -82,7 +82,11 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
     const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
     const qrImg = await pdf.embedPng(qrPng);
 
-    const opdRel = Array.isArray((p as any).opd) ? (p as any).opd[0] : (p as any).opd;
+    const opdRaw = (p as { opd?: unknown }).opd;
+    const opdRel = (Array.isArray(opdRaw) ? opdRaw[0] : opdRaw) as
+      | { nama?: string | null; singkatan?: string | null }
+      | null
+      | undefined;
     const opdNama = opdRel?.nama ?? "Pemerintah Daerah";
     const opdSingkatan = opdRel?.singkatan ?? "OPD";
     let y = 800;

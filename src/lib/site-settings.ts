@@ -124,7 +124,9 @@ function writeBrandingCache(b: SiteBranding) {
   try {
     window.localStorage.setItem(BRANDING_LS_KEY, JSON.stringify(b));
     window.dispatchEvent(new CustomEvent("site-branding-updated", { detail: b }));
-  } catch {}
+  } catch {
+    // ignore storage / event errors (mis. quota / SSR)
+  }
 }
 
 export async function getSiteBranding(): Promise<SiteBranding> {

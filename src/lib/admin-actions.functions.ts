@@ -147,7 +147,7 @@ const enqueueSchema = z.object({
     .string()
     .min(1)
     .max(64)
-    .regex(/^[a-z0-9_.\-]+$/),
+    .regex(/^[a-z0-9_.-]+$/),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
 

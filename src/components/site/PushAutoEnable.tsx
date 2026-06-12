@@ -45,7 +45,9 @@ async function ensureSubscription(userId: string) {
   // Paksa update untuk memastikan SW versi terbaru (push handler) terpasang.
   try {
     await reg.update();
-  } catch {}
+  } catch {
+    // Update SW gagal (offline / network) — abaikan; SW lama tetap aktif.
+  }
   await navigator.serviceWorker.ready;
 
   if (Notification.permission === "default") {
