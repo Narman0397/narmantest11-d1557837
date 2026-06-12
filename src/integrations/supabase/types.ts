@@ -4218,6 +4218,7 @@ export type Database = {
         Args: { _id: string }
         Returns: number
       }
+      fn_retention_cleanup: { Args: never; Returns: Json }
       fn_susut_bulanan_run: { Args: { _periode: string }; Returns: Json }
       get_effective_permissions: {
         Args: { _user_id: string }
