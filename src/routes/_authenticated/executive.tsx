@@ -87,6 +87,35 @@ function Page() {
           <Stat icon={BarChart3} label="Responden IKM (30 hari)" value={kab?.ikm_responses_30d ?? 0} />
         </section>
 
+        {isBupati && (
+          <section>
+            <h2 className="mb-3 font-display text-lg font-semibold">Antrean Bupati</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Link to="/admin/digital-signature" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tanda Tangan Pending</span>
+                  <FileSignature className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.signPending ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+              <Link to="/admin/layanan" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Disposisi Aktif</span>
+                  <Inbox className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.disposisiAktif ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+              <Link to="/admin/submission-review" className="rounded-xl border border-border bg-card p-4 shadow-soft hover:bg-primary-soft hover:text-primary">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Persetujuan Dokumen</span>
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                </div>
+                <div className="mt-2 font-display text-2xl font-bold">{(bupatiQueue?.approvalPending ?? 0).toLocaleString("id-ID")}</div>
+              </Link>
+            </div>
+          </section>
+        )}
+
         <section className="grid gap-6 lg:grid-cols-2">
           <Card title="Top 3 OPD" icon={Trophy} accent="success">
             {top3.length === 0 && <p className="text-sm text-muted-foreground">Belum cukup data.</p>}
