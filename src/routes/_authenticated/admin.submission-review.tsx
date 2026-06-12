@@ -42,8 +42,8 @@ type Row = {
 };
 
 function Page() {
-  const search = useSearch({ from: "/_authenticated/admin/submission-review" });
-  const nav = useNavigate({ from: "/_authenticated/admin/submission-review" });
+  const search = Route.useSearch();
+  const nav = Route.useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);

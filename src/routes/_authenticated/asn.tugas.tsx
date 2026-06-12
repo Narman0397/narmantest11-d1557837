@@ -36,8 +36,8 @@ type Row = {
 
 function Page() {
   const { user, loading } = useAuth();
-  const search = useSearch({ from: "/_authenticated/asn/tugas" });
-  const nav = useNavigate({ from: "/_authenticated/asn/tugas" });
+  const search = Route.useSearch();
+  const nav = Route.useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
   const [busy, setBusy] = useState(true);
