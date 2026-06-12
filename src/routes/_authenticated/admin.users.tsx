@@ -235,16 +235,6 @@ function UsersPage() {
     }
   }
 
-  if (!isSuperAdmin) {
-    return (
-      <AdminShell breadcrumb={[{ label: "Manajemen User" }]}>
-        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
-          Halaman ini hanya untuk Super Admin.
-        </div>
-      </AdminShell>
-    );
-  }
-
   const matchQ = (r: Row) => {
     if (q.trim()) {
       const needle = q.toLowerCase();
@@ -296,6 +286,16 @@ function UsersPage() {
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, q, wargaDesa, fAsnType, fOpd, fStatus]);
+
+  if (!isSuperAdmin) {
+    return (
+      <AdminShell breadcrumb={[{ label: "Manajemen User" }]}>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+          Halaman ini hanya untuk Super Admin.
+        </div>
+      </AdminShell>
+    );
+  }
 
   function renderRow(r: Row) {
     const role = r.pendingRole ?? r.role;
