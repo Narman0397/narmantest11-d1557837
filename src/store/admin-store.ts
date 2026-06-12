@@ -42,12 +42,7 @@ export function setOpdAktif(id: string) {
   emit();
 }
 
-export function ubahStatus(
-  id: string,
-  status: StatusPermohonan,
-  catatan: string,
-  oleh: string,
-) {
+export function ubahStatus(id: string, status: StatusPermohonan, catatan: string, oleh: string) {
   state = {
     ...state,
     permohonan: state.permohonan.map((p) =>

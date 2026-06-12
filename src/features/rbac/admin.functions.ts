@@ -32,15 +32,18 @@ const ELEVATED_PERMS = new Set<string>([
   "can_approve_registration",
 ]);
 
-
 export const rbacListUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ q: z.string().trim().max(80).optional() }).parse(i ?? {}))
+  .inputValidator((i: unknown) =>
+    z.object({ q: z.string().trim().max(80).optional() }).parse(i ?? {}),
+  )
   .handler(async ({ data, context }) => {
     await assertSuper(context.userId);
     let q = supabaseAdmin
       .from("profiles")
-      .select("id,nama_lengkap,nip,jabatan,asn_type,system_position,opd_id, opd:opd!opd_id(singkatan,nama)")
+      .select(
+        "id,nama_lengkap,nip,jabatan,asn_type,system_position,opd_id, opd:opd!opd_id(singkatan,nama)",
+      )
       .order("nama_lengkap")
       .limit(200);
     if (data.q && data.q.length >= 2) {
@@ -51,10 +54,11 @@ export const rbacListUsers = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const ids = (rows ?? []).map((r: any) => r.id);
     const roles = ids.length
-      ? (await supabaseAdmin.from("user_roles").select("user_id,role").in("user_id", ids)).data ?? []
+      ? ((await supabaseAdmin.from("user_roles").select("user_id,role").in("user_id", ids)).data ??
+        [])
       : [];
     const grouped = new Map<string, string[]>();
-    for (const r of (roles as any[])) {
+    for (const r of roles as any[]) {
       const arr = grouped.get(r.user_id) ?? [];
       arr.push(r.role as string);
       grouped.set(r.user_id, arr);
@@ -69,14 +73,32 @@ export const rbacGetUser = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ user_id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertSuper(context.userId);
-    const [{ data: prof }, { data: roles }, { data: overrides }, { data: effective }, { data: allPerms }] =
-      await Promise.all([
-        supabaseAdmin.from("profiles").select("id,nama_lengkap,nip,jabatan,asn_type,system_position,opd_id, opd:opd!opd_id(singkatan,nama)").eq("id", data.user_id).maybeSingle(),
-        supabaseAdmin.from("user_roles").select("role").eq("user_id", data.user_id),
-        supabaseAdmin.from("user_permissions").select("permission_code,granted,expires_at,reason,granted_by,created_at").eq("user_id", data.user_id),
-        supabaseAdmin.rpc("get_effective_permissions", { _user_id: data.user_id }),
-        supabaseAdmin.from("permissions").select("code,label,kategori,description").order("kategori").order("code"),
-      ]);
+    const [
+      { data: prof },
+      { data: roles },
+      { data: overrides },
+      { data: effective },
+      { data: allPerms },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select(
+          "id,nama_lengkap,nip,jabatan,asn_type,system_position,opd_id, opd:opd!opd_id(singkatan,nama)",
+        )
+        .eq("id", data.user_id)
+        .maybeSingle(),
+      supabaseAdmin.from("user_roles").select("role").eq("user_id", data.user_id),
+      supabaseAdmin
+        .from("user_permissions")
+        .select("permission_code,granted,expires_at,reason,granted_by,created_at")
+        .eq("user_id", data.user_id),
+      supabaseAdmin.rpc("get_effective_permissions", { _user_id: data.user_id }),
+      supabaseAdmin
+        .from("permissions")
+        .select("code,label,kategori,description")
+        .order("kategori")
+        .order("code"),
+    ]);
     return {
       profile: prof,
       roles: (roles ?? []).map((r: any) => r.role),
@@ -89,17 +111,37 @@ export const rbacGetUser = createServerFn({ method: "POST" })
 export const rbacUpdateProfileMeta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      user_id: z.string().uuid(),
-      asn_type: z.enum(["pns", "pppk_penuh_waktu", "pppk_paruh_waktu", "honorer"]).nullable().optional(),
-      system_position: z.enum([
-        "kepala_opd", "sekretaris", "kepala_bidang", "kepala_sekolah",
-        "operator", "verifikator", "staff", "guru", "tenaga_teknis", "lainnya",
-      ]).nullable().optional(),
-    }).parse(i))
+    z
+      .object({
+        user_id: z.string().uuid(),
+        asn_type: z
+          .enum(["pns", "pppk_penuh_waktu", "pppk_paruh_waktu", "honorer"])
+          .nullable()
+          .optional(),
+        system_position: z
+          .enum([
+            "kepala_opd",
+            "sekretaris",
+            "kepala_bidang",
+            "kepala_sekolah",
+            "operator",
+            "verifikator",
+            "staff",
+            "guru",
+            "tenaga_teknis",
+            "lainnya",
+          ])
+          .nullable()
+          .optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     await assertSuper(context.userId);
-    const patch: { asn_type?: typeof data.asn_type; system_position?: typeof data.system_position } = {};
+    const patch: {
+      asn_type?: typeof data.asn_type;
+      system_position?: typeof data.system_position;
+    } = {};
     if (data.asn_type !== undefined) patch.asn_type = data.asn_type;
     if (data.system_position !== undefined) patch.system_position = data.system_position;
     if (Object.keys(patch).length === 0) return { ok: true };
@@ -111,13 +153,16 @@ export const rbacUpdateProfileMeta = createServerFn({ method: "POST" })
 export const rbacSetPermissionOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      user_id: z.string().uuid(),
-      permission_code: z.string().min(1).max(80),
-      granted: z.boolean(),
-      expires_at: z.string().datetime().nullable().optional(),
-      reason: z.string().max(500).optional(),
-    }).parse(i))
+    z
+      .object({
+        user_id: z.string().uuid(),
+        permission_code: z.string().min(1).max(80),
+        granted: z.boolean(),
+        expires_at: z.string().datetime().nullable().optional(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     // Elevated permission → super_admin / admin_pemda. Permission biasa → super_admin.
     if (ELEVATED_PERMS.has(data.permission_code)) {
@@ -126,15 +171,21 @@ export const rbacSetPermissionOverride = createServerFn({ method: "POST" })
       await assertSuper(context.userId);
     }
     const { data: existing } = await supabaseAdmin
-      .from("user_permissions").select("id")
-      .eq("user_id", data.user_id).eq("permission_code", data.permission_code).maybeSingle();
+      .from("user_permissions")
+      .select("id")
+      .eq("user_id", data.user_id)
+      .eq("permission_code", data.permission_code)
+      .maybeSingle();
     if (existing) {
-      const { error } = await supabaseAdmin.from("user_permissions").update({
-        granted: data.granted,
-        expires_at: data.expires_at ?? null,
-        reason: data.reason ?? null,
-        granted_by: context.userId,
-      }).eq("id", existing.id);
+      const { error } = await supabaseAdmin
+        .from("user_permissions")
+        .update({
+          granted: data.granted,
+          expires_at: data.expires_at ?? null,
+          reason: data.reason ?? null,
+          granted_by: context.userId,
+        })
+        .eq("id", existing.id);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabaseAdmin.from("user_permissions").insert({
@@ -150,17 +201,19 @@ export const rbacSetPermissionOverride = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-
 export const rbacRemovePermissionOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({ user_id: z.string().uuid(), permission_code: z.string().min(1).max(80) }).parse(i))
+    z.object({ user_id: z.string().uuid(), permission_code: z.string().min(1).max(80) }).parse(i),
+  )
   .handler(async ({ data, context }) => {
     await assertSuper(context.userId);
     // F4.1 — soft-revoke: keep audit trail instead of hard delete.
-    const { error } = await supabaseAdmin.from("user_permissions")
+    const { error } = await supabaseAdmin
+      .from("user_permissions")
       .update({ granted: false, revoked_at: new Date().toISOString(), revoked_by: context.userId })
-      .eq("user_id", data.user_id).eq("permission_code", data.permission_code)
+      .eq("user_id", data.user_id)
+      .eq("permission_code", data.permission_code)
       .is("revoked_at", null);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -168,7 +221,11 @@ export const rbacRemovePermissionOverride = createServerFn({ method: "POST" })
 
 export const rbacAuditForUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ user_id: z.string().uuid(), limit: z.number().int().min(1).max(100).default(30) }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({ user_id: z.string().uuid(), limit: z.number().int().min(1).max(100).default(30) })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     await assertSuper(context.userId);
     const { data: rows, error } = await supabaseAdmin
@@ -178,13 +235,28 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (error) throw new Error(error.message);
-    const ids = Array.from(new Set((rows ?? []).flatMap((r: any) => [r.user_id, r.target_user_id]).filter((x: any): x is string => !!x)));
+    const ids = Array.from(
+      new Set(
+        (rows ?? [])
+          .flatMap((r: any) => [r.user_id, r.target_user_id])
+          .filter((x: any): x is string => !!x),
+      ),
+    );
     const profMap = new Map<string, string>();
     if (ids.length) {
-      const { data: profs } = await supabaseAdmin.from("profiles").select("id,nama_lengkap").in("id", ids);
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id,nama_lengkap")
+        .in("id", ids);
       for (const p of profs ?? []) profMap.set(p.id, p.nama_lengkap ?? "");
     }
-    return { rows: (rows ?? []).map((r: any) => ({ ...r, actor_name: r.user_id ? profMap.get(r.user_id) ?? "" : "", target_name: r.target_user_id ? profMap.get(r.target_user_id) ?? "" : "" })) };
+    return {
+      rows: (rows ?? []).map((r: any) => ({
+        ...r,
+        actor_name: r.user_id ? (profMap.get(r.user_id) ?? "") : "",
+        target_name: r.target_user_id ? (profMap.get(r.target_user_id) ?? "") : "",
+      })),
+    };
   });
 
 export const rbacAuditList = createServerFn({ method: "POST" })
@@ -198,10 +270,19 @@ export const rbacAuditList = createServerFn({ method: "POST" })
       .limit(200);
     if (error) throw new Error(error.message);
     const rows = data ?? [];
-    const ids = Array.from(new Set(rows.flatMap((r: any) => [r.user_id, r.target_user_id]).filter((x: any): x is string => !!x)));
+    const ids = Array.from(
+      new Set(
+        rows
+          .flatMap((r: any) => [r.user_id, r.target_user_id])
+          .filter((x: any): x is string => !!x),
+      ),
+    );
     const profMap = new Map<string, string>();
     if (ids.length) {
-      const { data: profs } = await supabaseAdmin.from("profiles").select("id,nama_lengkap").in("id", ids);
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id,nama_lengkap")
+        .in("id", ids);
       for (const p of profs ?? []) profMap.set(p.id, p.nama_lengkap ?? "");
     }
     return {
@@ -212,4 +293,3 @@ export const rbacAuditList = createServerFn({ method: "POST" })
       })),
     };
   });
-

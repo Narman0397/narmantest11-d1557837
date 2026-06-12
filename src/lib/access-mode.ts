@@ -19,11 +19,7 @@ export function parseAccessMode(value: unknown): AccessMode {
 }
 
 export async function getAccessMode(key: AccessSettingKey): Promise<AccessMode> {
-  const { data } = await supabase
-    .from("app_setting")
-    .select("value")
-    .eq("key", key)
-    .maybeSingle();
+  const { data } = await supabase.from("app_setting").select("value").eq("key", key).maybeSingle();
   return parseAccessMode(data?.value);
 }
 

@@ -8,7 +8,11 @@ export type StuckReport = {
   stuckCleanupRuns: number;
   loopingRetryJobs: number;
   unresolvedDeadLetters: number;
-  staleCronJobs: Array<{ jobName: string; lastSuccessAt: string | null; minutesSince: number | null }>;
+  staleCronJobs: Array<{
+    jobName: string;
+    lastSuccessAt: string | null;
+    minutesSince: number | null;
+  }>;
   generatedAt: string;
 };
 

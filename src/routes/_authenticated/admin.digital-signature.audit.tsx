@@ -15,7 +15,9 @@ function Page() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Audit Trail Dokumen</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>Audit Trail Dokumen</CardTitle>
+      </CardHeader>
       <CardContent>
         <DocumentAuditTable rows={q.data?.audit ?? []} />
       </CardContent>

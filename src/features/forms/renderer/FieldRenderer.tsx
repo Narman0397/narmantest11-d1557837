@@ -30,7 +30,9 @@ export function FieldRenderer({
       {field.required && <span className="text-destructive"> *</span>}
     </label>
   );
-  const help = field.help_text && <p className="mt-1 text-xs text-muted-foreground">{field.help_text}</p>;
+  const help = field.help_text && (
+    <p className="mt-1 text-xs text-muted-foreground">{field.help_text}</p>
+  );
   const errEl = error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null;
 
   const wrap = (inner: React.ReactNode) => (
@@ -148,7 +150,9 @@ export function FieldRenderer({
                   type="checkbox"
                   checked={arr.includes(o.value)}
                   onChange={(e) => {
-                    const next = e.target.checked ? [...arr, o.value] : arr.filter((v) => v !== o.value);
+                    const next = e.target.checked
+                      ? [...arr, o.value]
+                      : arr.filter((v) => v !== o.value);
                     onChange(next);
                   }}
                   disabled={readOnly}

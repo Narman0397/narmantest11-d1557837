@@ -6,7 +6,12 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { checkRateLimit } from "@/integrations/supabase/rate-limit.server";
 
 const USERNAME_DOMAIN = "local.narman";
-const usernameSchema = z.string().trim().min(3).max(40).regex(/^[a-z0-9_.-]+$/, "Username hanya huruf kecil, angka, . _ -");
+const usernameSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(40)
+  .regex(/^[a-z0-9_.-]+$/, "Username hanya huruf kecil, angka, . _ -");
 
 export const resolveUsernameEmail = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
@@ -37,11 +42,26 @@ const signupSchema = z.object({
   password: z.string().min(6).max(72),
   email: z.string().trim().email().max(255).optional().nullable(),
   nama_lengkap: z.string().trim().min(2).max(120),
-  no_hp: z.string().trim().regex(/^(\+62|62|0)8\d{7,12}$/).optional().nullable(),
-  nik: z.string().trim().regex(/^\d{16}$/).optional().nullable(),
+  no_hp: z
+    .string()
+    .trim()
+    .regex(/^(\+62|62|0)8\d{7,12}$/)
+    .optional()
+    .nullable(),
+  nik: z
+    .string()
+    .trim()
+    .regex(/^\d{16}$/)
+    .optional()
+    .nullable(),
   desa: z.string().trim().min(2).max(120).optional().nullable(),
   opd_id: z.string().uuid().optional().nullable(),
-  nip: z.string().trim().regex(/^\d{8,20}$/).optional().nullable(),
+  nip: z
+    .string()
+    .trim()
+    .regex(/^\d{8,20}$/)
+    .optional()
+    .nullable(),
   jabatan: z.string().trim().min(2).max(160).optional().nullable(),
   requested_role: z.enum(["warga", "admin_desa", "admin_opd", "asn"]),
 });
@@ -55,10 +75,14 @@ export const signupWithUsername = createServerFn({ method: "POST" })
 
     // Cek konflik username
     const { data: existing } = await supabaseAdmin
-      .from("profiles").select("id").ilike("username", u).maybeSingle();
+      .from("profiles")
+      .select("id")
+      .ilike("username", u)
+      .maybeSingle();
     if (existing) throw new Error("Username sudah dipakai");
 
-    const email = (data.email && data.email.trim().length > 0) ? data.email : `${u}@${USERNAME_DOMAIN}`;
+    const email =
+      data.email && data.email.trim().length > 0 ? data.email : `${u}@${USERNAME_DOMAIN}`;
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -69,7 +93,10 @@ export const signupWithUsername = createServerFn({ method: "POST" })
         nama_lengkap: data.nama_lengkap,
         no_hp: data.no_hp ?? null,
         nik: data.requested_role === "warga" ? (data.nik ?? null) : null,
-        desa: data.requested_role === "warga" || data.requested_role === "admin_desa" ? (data.desa ?? null) : null,
+        desa:
+          data.requested_role === "warga" || data.requested_role === "admin_desa"
+            ? (data.desa ?? null)
+            : null,
       },
     });
     if (error) throw new Error(error.message);
@@ -112,7 +139,9 @@ export const signupWithUsername = createServerFn({ method: "POST" })
     // Untuk staf (non-warga), set role tanpa verified_at. Trigger super_admin protection tetap aktif.
     if (data.requested_role !== "warga") {
       await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-      const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: data.requested_role });
+      const { error: roleErr } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role: data.requested_role });
       if (roleErr) throw new Error(roleErr.message);
     }
 

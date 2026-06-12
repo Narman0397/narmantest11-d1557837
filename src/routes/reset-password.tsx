@@ -33,7 +33,10 @@ function ResetPasswordPage() {
   return (
     <PageShell>
       <section className="container-page py-16">
-        <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4 rounded-xl border border-border bg-card p-6 shadow-soft">
+        <form
+          onSubmit={onSubmit}
+          className="mx-auto max-w-md space-y-4 rounded-xl border border-border bg-card p-6 shadow-soft"
+        >
           <h1 className="font-display text-2xl font-bold">Atur Password Baru</h1>
           <input
             type="password"
@@ -44,7 +47,10 @@ function ResetPasswordPage() {
             placeholder="Password baru"
             className="input"
           />
-          <button disabled={busy} className="inline-flex h-11 w-full items-center justify-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+          <button
+            disabled={busy}
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
             {busy ? "Menyimpan…" : "Simpan Password"}
           </button>
         </form>

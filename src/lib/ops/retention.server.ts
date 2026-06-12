@@ -72,7 +72,11 @@ export async function runRetentionCleanup(): Promise<{
         .update({ last_run_at: new Date().toISOString(), last_deleted_count: deleted })
         .eq("entity", p.entity);
     } catch (e) {
-      results.push({ entity: p.entity, deleted: 0, error: e instanceof Error ? e.message : String(e) });
+      results.push({
+        entity: p.entity,
+        deleted: 0,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 

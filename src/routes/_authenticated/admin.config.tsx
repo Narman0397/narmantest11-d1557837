@@ -15,11 +15,18 @@ import { useAuth } from "@/lib/auth-context";
 import { setSiteToggle } from "@/lib/admin-actions.functions";
 import { getVerificationConfig, setVerificationConfig } from "@/lib/verification.functions";
 import { getShowOpdDirectory } from "@/lib/site-settings";
-import { getAccessMode, setAccessMode, type AccessMode, type AccessSettingKey } from "@/lib/access-mode";
+import {
+  getAccessMode,
+  setAccessMode,
+  type AccessMode,
+  type AccessSettingKey,
+} from "@/lib/access-mode";
 import { DataTerpaduManager } from "@/components/admin/DataTerpaduManager";
 
 export const Route = createFileRoute("/_authenticated/admin/config")({
-  head: () => ({ meta: [{ title: "Konfigurasi Sistem — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Konfigurasi Sistem — Admin" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <SuperAdminOnly>
@@ -31,16 +38,29 @@ export const Route = createFileRoute("/_authenticated/admin/config")({
 
 function ConfigPage() {
   const { isSuperAdmin } = useAuth();
-  const [verif, setVerif] = useState<{ enabled: boolean; mode: "block_login" | "block_permohonan" | "badge_only" }>({ enabled: false, mode: "badge_only" });
+  const [verif, setVerif] = useState<{
+    enabled: boolean;
+    mode: "block_login" | "block_permohonan" | "badge_only";
+  }>({ enabled: false, mode: "badge_only" });
   const [savingVerif, setSavingVerif] = useState(false);
   const [showOpdDir, setShowOpdDir] = useState(true);
   const [savingToggle, setSavingToggle] = useState<string | null>(null);
 
   async function load() {
-    try { setVerif(await getVerificationConfig()); } catch { /* ignore */ }
-    try { setShowOpdDir(await getShowOpdDirectory()); } catch { /* ignore */ }
+    try {
+      setVerif(await getVerificationConfig());
+    } catch {
+      /* ignore */
+    }
+    try {
+      setShowOpdDir(await getShowOpdDirectory());
+    } catch {
+      /* ignore */
+    }
   }
-  useEffect(() => { if (isSuperAdmin) load(); }, [isSuperAdmin]);
+  useEffect(() => {
+    if (isSuperAdmin) load();
+  }, [isSuperAdmin]);
 
   async function saveVerif(next: typeof verif) {
     setSavingVerif(true);
@@ -48,8 +68,11 @@ function ConfigPage() {
       await setVerificationConfig({ data: next });
       setVerif(next);
       toast.success("Pengaturan verifikasi disimpan");
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setSavingVerif(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSavingVerif(false);
+    }
   }
 
   async function toggleSetting(key: "show_opd_directory", value: boolean) {
@@ -58,17 +81,29 @@ function ConfigPage() {
       await setSiteToggle({ data: { key, value: { visible: value } } });
       setShowOpdDir(value);
       toast.success("Pengaturan disimpan");
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setSavingToggle(null); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSavingToggle(null);
+    }
   }
 
-  if (!isSuperAdmin) return <AdminShell breadcrumb={[{ label: "Konfigurasi" }]}><div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">Hanya Super Admin.</div></AdminShell>;
+  if (!isSuperAdmin)
+    return (
+      <AdminShell breadcrumb={[{ label: "Konfigurasi" }]}>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+          Hanya Super Admin.
+        </div>
+      </AdminShell>
+    );
 
   return (
     <AdminShell breadcrumb={[{ label: "Konfigurasi" }]}>
       <div className="mb-4">
         <h1 className="font-display text-2xl font-bold">Konfigurasi Sistem</h1>
-        <p className="text-sm text-muted-foreground">Pengaturan verifikasi akun, akses menu publik, dan manajemen konten Data Terpadu.</p>
+        <p className="text-sm text-muted-foreground">
+          Pengaturan verifikasi akun, akses menu publik, dan manajemen konten Data Terpadu.
+        </p>
       </div>
 
       {/* Direktori OPD di Beranda */}
@@ -77,14 +112,18 @@ function ConfigPage() {
           <Eye className="h-5 w-5 text-primary" />
           <div className="flex-1">
             <h2 className="font-display text-lg font-bold">Direktori OPD di Beranda</h2>
-            <p className="text-sm text-muted-foreground">Tampilkan atau sembunyikan blok "Direktori OPD" pada halaman utama.</p>
+            <p className="text-sm text-muted-foreground">
+              Tampilkan atau sembunyikan blok "Direktori OPD" pada halaman utama.
+            </p>
             <div className="mt-3 flex items-center gap-3">
               <Switch
                 checked={showOpdDir}
                 disabled={savingToggle === "show_opd_directory"}
                 onCheckedChange={(v) => toggleSetting("show_opd_directory", v)}
               />
-              <span className="text-sm font-medium">{showOpdDir ? "Ditampilkan" : "Disembunyikan"}</span>
+              <span className="text-sm font-medium">
+                {showOpdDir ? "Ditampilkan" : "Disembunyikan"}
+              </span>
             </div>
           </div>
         </div>
@@ -109,7 +148,8 @@ function ConfigPage() {
           <div className="flex-1">
             <h2 className="font-display text-lg font-bold">Verifikasi Akun oleh Admin Desa</h2>
             <p className="text-sm text-muted-foreground">
-              Aktifkan verifikasi warga via QR / kode oleh Admin Desa. Pilih bagaimana akun yang belum diverifikasi diperlakukan.
+              Aktifkan verifikasi warga via QR / kode oleh Admin Desa. Pilih bagaimana akun yang
+              belum diverifikasi diperlakukan.
             </p>
             <div className="mt-3 flex items-center gap-3">
               <Switch
@@ -120,11 +160,25 @@ function ConfigPage() {
               <span className="text-sm font-medium">{verif.enabled ? "Aktif" : "Nonaktif"}</span>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              {([
-                { v: "badge_only", label: "Hanya Badge", desc: "Tampilkan badge belum/terverifikasi tanpa membatasi." },
-                { v: "block_permohonan", label: "Blokir Permohonan", desc: "Warga tidak bisa mengajukan permohonan sebelum verifikasi." },
-                { v: "block_login", label: "Blokir Login", desc: "Warga otomatis di-logout sebelum verifikasi." },
-              ] as const).map((opt) => (
+              {(
+                [
+                  {
+                    v: "badge_only",
+                    label: "Hanya Badge",
+                    desc: "Tampilkan badge belum/terverifikasi tanpa membatasi.",
+                  },
+                  {
+                    v: "block_permohonan",
+                    label: "Blokir Permohonan",
+                    desc: "Warga tidak bisa mengajukan permohonan sebelum verifikasi.",
+                  },
+                  {
+                    v: "block_login",
+                    label: "Blokir Login",
+                    desc: "Warga otomatis di-logout sebelum verifikasi.",
+                  },
+                ] as const
+              ).map((opt) => (
                 <button
                   key={opt.v}
                   disabled={!verif.enabled || savingVerif}
@@ -146,7 +200,10 @@ function ConfigPage() {
           <BarChart3 className="h-5 w-5 text-primary" />
           <div className="flex-1">
             <h2 className="font-display text-lg font-bold">Manajemen Konten Data Terpadu</h2>
-            <p className="text-sm text-muted-foreground">Kelola semua konten (KPI, chart, dataset) yang tampil di halaman publik <code>/data</code>.</p>
+            <p className="text-sm text-muted-foreground">
+              Kelola semua konten (KPI, chart, dataset) yang tampil di halaman publik{" "}
+              <code>/data</code>.
+            </p>
           </div>
         </div>
         <DataTerpaduManager />
@@ -156,13 +213,21 @@ function ConfigPage() {
 }
 
 function AccessModeCard({
-  settingKey, title, description,
-}: { settingKey: AccessSettingKey; title: string; description: string }) {
+  settingKey,
+  title,
+  description,
+}: {
+  settingKey: AccessSettingKey;
+  title: string;
+  description: string;
+}) {
   const [mode, setMode] = useState<AccessMode | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    getAccessMode(settingKey).then(setMode).catch(() => setMode("public"));
+    getAccessMode(settingKey)
+      .then(setMode)
+      .catch(() => setMode("public"));
   }, [settingKey]);
 
   async function change(next: AccessMode) {
@@ -171,9 +236,16 @@ function AccessModeCard({
     try {
       await setAccessMode(settingKey, next);
       setMode(next);
-      toast.success(next === "public" ? "Diatur: dapat diakses publik tanpa login" : "Diatur: pengunjung wajib login");
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setSaving(false); }
+      toast.success(
+        next === "public"
+          ? "Diatur: dapat diakses publik tanpa login"
+          : "Diatur: pengunjung wajib login",
+      );
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -186,10 +258,22 @@ function AccessModeCard({
           <h2 className="font-display text-lg font-bold">{title}</h2>
           <p className="text-sm text-muted-foreground">{description}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {([
-              { v: "public", label: "Publik tanpa login", desc: "Semua pengunjung dapat mengakses halaman ini.", Icon: Globe },
-              { v: "auth", label: "Perlu login", desc: "Pengunjung anonim diarahkan ke halaman masuk dengan pemberitahuan.", Icon: Lock },
-            ] as const).map((opt) => (
+            {(
+              [
+                {
+                  v: "public",
+                  label: "Publik tanpa login",
+                  desc: "Semua pengunjung dapat mengakses halaman ini.",
+                  Icon: Globe,
+                },
+                {
+                  v: "auth",
+                  label: "Perlu login",
+                  desc: "Pengunjung anonim diarahkan ke halaman masuk dengan pemberitahuan.",
+                  Icon: Lock,
+                },
+              ] as const
+            ).map((opt) => (
               <button
                 key={opt.v}
                 disabled={saving || mode === null}

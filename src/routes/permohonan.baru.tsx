@@ -12,17 +12,21 @@ import { compressImage } from "@/lib/compress-image";
 import { getVerificationConfig } from "@/lib/verification.functions";
 import { getPermohonanVerificationRequired } from "@/lib/site-settings";
 
-
 type BaruSearch = { layanan?: string };
 
 export const Route = createFileRoute("/permohonan/baru")({
   validateSearch: (search: Record<string, unknown>): BaruSearch => ({
-    layanan: typeof search.layanan === "string" && search.layanan.length > 0 ? search.layanan : undefined,
+    layanan:
+      typeof search.layanan === "string" && search.layanan.length > 0 ? search.layanan : undefined,
   }),
   head: () => ({
     meta: [
       { title: "Ajukan Permohonan — Portal Buton Selatan" },
-      { name: "description", content: "Ajukan permohonan layanan publik secara online ke OPD terkait Kabupaten Buton Selatan." },
+      {
+        name: "description",
+        content:
+          "Ajukan permohonan layanan publik secara online ke OPD terkait Kabupaten Buton Selatan.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -41,12 +45,7 @@ const formSchema = z.object({
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB per file (final, setelah kompresi gambar)
 const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB total semua berkas
-const ALLOWED_MIME = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const ALLOWED_MIME = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 
 function BaruPage() {
   const { user, loading, isVerified } = useAuth();
@@ -58,11 +57,17 @@ function BaruPage() {
     Promise.all([getVerificationConfig(), getPermohonanVerificationRequired()])
       .then(([cfg, required]) => {
         if (cancelled) return;
-        const block = (cfg.enabled && cfg.mode === "block_permohonan" && !isVerified) || (required && !isVerified);
+        const block =
+          (cfg.enabled && cfg.mode === "block_permohonan" && !isVerified) ||
+          (required && !isVerified);
         setVerifBlock(block);
       })
-      .catch(() => { /* ignore */ });
-    return () => { cancelled = true; };
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isVerified]);
   const { layanan: layananSlug } = Route.useSearch();
   const [opdList, setOpdList] = useState<Opd[]>([]);
@@ -92,9 +97,13 @@ function BaruPage() {
   }, [user, loading, navigate, layananSlug]);
 
   useEffect(() => {
-    supabase.from("opd").select("id,nama,singkatan,kategori").order("nama").then(({ data }) => {
-      setOpdList((data ?? []) as Opd[]);
-    });
+    supabase
+      .from("opd")
+      .select("id,nama,singkatan,kategori")
+      .order("nama")
+      .then(({ data }) => {
+        setOpdList((data ?? []) as Opd[]);
+      });
   }, []);
 
   // Prefill form berdasar slug layanan dari query string.
@@ -120,7 +129,9 @@ function BaruPage() {
       }
       setPrefilling(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [layananSlug]);
 
   const opd = opdList.find((o) => o.id === form.opd_id);
@@ -148,7 +159,9 @@ function BaruPage() {
           try {
             f = await compressImage(raw, MAX_FILE_BYTES);
             if (f.size < raw.size) {
-              toast.success(`${raw.name}: dikompresi ${(raw.size / 1024 / 1024).toFixed(1)}MB → ${(f.size / 1024 / 1024).toFixed(1)}MB`);
+              toast.success(
+                `${raw.name}: dikompresi ${(raw.size / 1024 / 1024).toFixed(1)}MB → ${(f.size / 1024 / 1024).toFixed(1)}MB`,
+              );
             }
           } catch {
             f = raw;
@@ -162,7 +175,9 @@ function BaruPage() {
       }
       const total = next.reduce((acc, x) => acc + x.size, 0);
       if (total > MAX_TOTAL_BYTES) {
-        toast.error(`Total ukuran berkas ${(total / 1024 / 1024).toFixed(1)} MB melebihi batas 10 MB. Hapus / kompres berkas terlebih dahulu.`);
+        toast.error(
+          `Total ukuran berkas ${(total / 1024 / 1024).toFixed(1)} MB melebihi batas 10 MB. Hapus / kompres berkas terlebih dahulu.`,
+        );
         return;
       }
       setFiles(next);
@@ -181,14 +196,16 @@ function BaruPage() {
       let kategoriFinal = parsed.kategori;
       if (parsed.kategori === "Lainnya") {
         const detail = kategoriLain.trim();
-        if (detail.length < 3) throw new Error("Sebutkan jenis layanan untuk kategori Lainnya (min. 3 karakter).");
+        if (detail.length < 3)
+          throw new Error("Sebutkan jenis layanan untuk kategori Lainnya (min. 3 karakter).");
         kategoriFinal = `Lainnya: ${detail}`;
       }
       const kode = generateKodePermohonan();
       const tenggat = new Date(Date.now() + slaHari * 86400_000).toISOString();
 
       if (untukOrangLain) {
-        if (atasNama.nama.trim().length < 3) throw new Error("Nama pemohon (orang lain) wajib diisi.");
+        if (atasNama.nama.trim().length < 3)
+          throw new Error("Nama pemohon (orang lain) wajib diisi.");
         if (!/^\d{16}$/.test(atasNama.nik.trim())) throw new Error("NIK harus 16 digit angka.");
         if (atasNama.hp.trim().length < 8) throw new Error("Nomor telepon wajib diisi.");
       }
@@ -227,7 +244,10 @@ function BaruPage() {
         const { error: upErr } = await supabase.storage
           .from("berkas-permohonan")
           .upload(path, f, { contentType: f.type, upsert: false });
-        if (upErr) { console.warn("Gagal upload", f.name, upErr.message); continue; }
+        if (upErr) {
+          console.warn("Gagal upload", f.name, upErr.message);
+          continue;
+        }
         await supabase.from("permohonan_berkas").insert({
           permohonan_id: row.id,
           storage_path: path,
@@ -261,13 +281,21 @@ function BaruPage() {
   if (verifBlock) {
     return (
       <PageShell>
-        <PageHero eyebrow="Verifikasi Diperlukan" title="Akun Anda belum diverifikasi" description="Pengajuan permohonan baru memerlukan verifikasi oleh Admin Desa." />
+        <PageHero
+          eyebrow="Verifikasi Diperlukan"
+          title="Akun Anda belum diverifikasi"
+          description="Pengajuan permohonan baru memerlukan verifikasi oleh Admin Desa."
+        />
         <section className="container-page py-12">
           <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6 text-center shadow-soft">
             <p className="text-sm text-muted-foreground">
-              Silakan buka <strong>Akun Saya</strong> untuk menampilkan QR / kode verifikasi, lalu temui Admin Desa setempat untuk diverifikasi.
+              Silakan buka <strong>Akun Saya</strong> untuk menampilkan QR / kode verifikasi, lalu
+              temui Admin Desa setempat untuk diverifikasi.
             </p>
-            <Link to="/akun" className="mt-4 inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground">
+            <Link
+              to="/akun"
+              className="mt-4 inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground"
+            >
               Buka Akun Saya
             </Link>
           </div>
@@ -288,22 +316,57 @@ function BaruPage() {
             Mengisi otomatis berdasarkan layanan yang dipilih…
           </div>
         )}
-        <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-5 rounded-xl border border-border bg-card p-6 shadow-soft">
+        <form
+          onSubmit={onSubmit}
+          className="mx-auto max-w-2xl space-y-5 rounded-xl border border-border bg-card p-6 shadow-soft"
+        >
           <Field label="Permohonan ini untuk" required>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setUntukOrangLain(false)}
-                className={`rounded-md border px-3 py-2 text-sm font-medium ${!untukOrangLain ? "border-primary bg-primary-soft text-primary" : "border-border bg-background hover:bg-muted"}`}>Diri sendiri</button>
-              <button type="button" onClick={() => setUntukOrangLain(true)}
-                className={`rounded-md border px-3 py-2 text-sm font-medium ${untukOrangLain ? "border-primary bg-primary-soft text-primary" : "border-border bg-background hover:bg-muted"}`}>Orang lain</button>
+              <button
+                type="button"
+                onClick={() => setUntukOrangLain(false)}
+                className={`rounded-md border px-3 py-2 text-sm font-medium ${!untukOrangLain ? "border-primary bg-primary-soft text-primary" : "border-border bg-background hover:bg-muted"}`}
+              >
+                Diri sendiri
+              </button>
+              <button
+                type="button"
+                onClick={() => setUntukOrangLain(true)}
+                className={`rounded-md border px-3 py-2 text-sm font-medium ${untukOrangLain ? "border-primary bg-primary-soft text-primary" : "border-border bg-background hover:bg-muted"}`}
+              >
+                Orang lain
+              </button>
             </div>
             {untukOrangLain && (
               <div className="mt-3 space-y-2 rounded-md border border-border bg-background p-3">
-                <input className="input h-10 w-full" placeholder="Nama lengkap pemohon"
-                  value={atasNama.nama} onChange={(e) => setAtasNama({ ...atasNama, nama: e.target.value })} maxLength={100} required />
-                <input className="input h-10 w-full" placeholder="NIK (16 digit)" inputMode="numeric"
-                  value={atasNama.nik} onChange={(e) => setAtasNama({ ...atasNama, nik: e.target.value.replace(/\D/g, "") })} maxLength={16} required />
-                <input className="input h-10 w-full" placeholder="Nomor telepon" inputMode="tel"
-                  value={atasNama.hp} onChange={(e) => setAtasNama({ ...atasNama, hp: e.target.value })} maxLength={20} required />
+                <input
+                  className="input h-10 w-full"
+                  placeholder="Nama lengkap pemohon"
+                  value={atasNama.nama}
+                  onChange={(e) => setAtasNama({ ...atasNama, nama: e.target.value })}
+                  maxLength={100}
+                  required
+                />
+                <input
+                  className="input h-10 w-full"
+                  placeholder="NIK (16 digit)"
+                  inputMode="numeric"
+                  value={atasNama.nik}
+                  onChange={(e) =>
+                    setAtasNama({ ...atasNama, nik: e.target.value.replace(/\D/g, "") })
+                  }
+                  maxLength={16}
+                  required
+                />
+                <input
+                  className="input h-10 w-full"
+                  placeholder="Nomor telepon"
+                  inputMode="tel"
+                  value={atasNama.hp}
+                  onChange={(e) => setAtasNama({ ...atasNama, hp: e.target.value })}
+                  maxLength={20}
+                  required
+                />
               </div>
             )}
           </Field>
@@ -317,7 +380,9 @@ function BaruPage() {
             >
               <option value="">— Pilih OPD —</option>
               {opdList.map((o) => (
-                <option key={o.id} value={o.id}>{o.singkatan} — {o.nama}</option>
+                <option key={o.id} value={o.id}>
+                  {o.singkatan} — {o.nama}
+                </option>
               ))}
             </select>
           </Field>
@@ -335,7 +400,9 @@ function BaruPage() {
             >
               <option value="">— Pilih kategori —</option>
               {kategoriOptions.map((k) => (
-                <option key={k} value={k}>{k}</option>
+                <option key={k} value={k}>
+                  {k}
+                </option>
               ))}
             </select>
             {isLainnya && (
@@ -393,21 +460,40 @@ function BaruPage() {
 
           <Field label={`Berkas Pendukung (total maks 10 MB, gambar dikompresi otomatis)`}>
             <div className="mb-2 text-xs text-muted-foreground">
-              Terpakai: <strong className="text-foreground">{(files.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(2)} MB</strong> / 10 MB
+              Terpakai:{" "}
+              <strong className="text-foreground">
+                {(files.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(2)} MB
+              </strong>{" "}
+              / 10 MB
             </div>
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background p-6 text-sm text-muted-foreground hover:bg-muted">
               <Upload className="h-4 w-4" />
               {compressing ? "Memproses…" : "Klik untuk pilih berkas"}
-              <input type="file" multiple className="hidden" onChange={onPickFiles} accept=".pdf,.png,.jpg,.jpeg,.webp" />
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={onPickFiles}
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+              />
             </label>
             {files.length > 0 && (
               <ul className="mt-3 space-y-1.5">
                 {files.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+                  <li
+                    key={i}
+                    className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
                     <FileText className="h-4 w-4 text-primary" />
                     <span className="flex-1 truncate">{f.name}</span>
-                    <span className="text-xs text-muted-foreground">{(f.size / 1024).toFixed(0)} KB</span>
-                    <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                    <span className="text-xs text-muted-foreground">
+                      {(f.size / 1024).toFixed(0)} KB
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
                       <X className="h-4 w-4" />
                     </button>
                   </li>
@@ -417,7 +503,9 @@ function BaruPage() {
           </Field>
 
           <div className="flex items-center justify-between gap-3 pt-2">
-            <Link to="/permohonan" className="text-sm text-primary hover:underline">← Lihat permohonan saya</Link>
+            <Link to="/permohonan" className="text-sm text-primary hover:underline">
+              ← Lihat permohonan saya
+            </Link>
             <button
               disabled={busy}
               className="inline-flex h-11 items-center gap-2 rounded-md bg-gradient-primary px-6 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-95 disabled:opacity-60"
@@ -432,7 +520,15 @@ function BaruPage() {
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-foreground">

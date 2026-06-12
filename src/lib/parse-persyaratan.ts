@@ -7,10 +7,6 @@ export function parsePersyaratan(raw: string | null | undefined): string[] {
   if (!raw) return [];
   return raw
     .split(/\r?\n|;/g)
-    .map((line) =>
-      line
-        .replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "")
-        .trim(),
-    )
+    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim())
     .filter((s) => s.length > 0);
 }

@@ -116,7 +116,9 @@ export async function runStaleUploadCleanup(): Promise<CleanupResult> {
       // Safe delete: re-verify row is still NOT finalized & still orphan before drop
       const paths = rows.map((r) => r.storage_path).filter(Boolean) as string[];
       if (paths.length > 0) {
-        const { error: rmErr, data: rmData } = await supabaseAdmin.storage.from(BUCKET).remove(paths);
+        const { error: rmErr, data: rmData } = await supabaseAdmin.storage
+          .from(BUCKET)
+          .remove(paths);
         if (rmErr) {
           result.failedDeletes += paths.length;
           log.error("cleanup.storage_remove.fail", { error: rmErr.message, count: paths.length });

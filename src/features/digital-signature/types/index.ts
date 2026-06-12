@@ -8,13 +8,25 @@ export type SignedDocumentRow = Database["public"]["Tables"]["signed_documents"]
 export type DocumentAuditRow = Database["public"]["Tables"]["document_audit"]["Row"];
 
 export type DocumentAuditAction =
-  | "GENERATED" | "UPLOADED" | "SIGNED" | "VIEWED" | "VERIFIED" | "DOWNLOADED" | "REVOKED"
-  | "HASH_MISMATCH" | "VERIFY_UPLOAD" | "EXPIRED";
+  | "GENERATED"
+  | "UPLOADED"
+  | "SIGNED"
+  | "VIEWED"
+  | "VERIFIED"
+  | "DOWNLOADED"
+  | "REVOKED"
+  | "HASH_MISMATCH"
+  | "VERIFY_UPLOAD"
+  | "EXPIRED";
 
 export type SignedDocumentStatus = "draft" | "signed" | "revoked" | "expired";
 
 export type VerifyResult =
-  | { valid: true; signed: SignedDocumentRow & { document: DocumentRow }; signer: { full_name: string; nip: string | null; position: string | null } | null }
+  | {
+      valid: true;
+      signed: SignedDocumentRow & { document: DocumentRow };
+      signer: { full_name: string; nip: string | null; position: string | null } | null;
+    }
   | { valid: false; reason: "not_found" | "revoked" | "expired" | "hash_mismatch" };
 
 export const DIGITAL_SIGNATURE_PERMISSIONS = {

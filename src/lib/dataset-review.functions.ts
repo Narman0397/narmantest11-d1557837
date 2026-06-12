@@ -12,18 +12,23 @@ async function ctx(userId: string) {
 export const listPendingReviews = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      status: z.enum(["pending", "approved", "rejected", "revision"]).default("pending"),
-      page: z.number().int().min(0).default(0),
-      pageSize: z.number().int().min(1).max(100).default(20),
-    }).parse(i ?? {}),
+    z
+      .object({
+        status: z.enum(["pending", "approved", "rejected", "revision"]).default("pending"),
+        page: z.number().int().min(0).default(0),
+        pageSize: z.number().int().min(1).max(100).default(20),
+      })
+      .parse(i ?? {}),
   )
   .handler(async ({ data, context }) => {
     const c = await ctx((context as { userId: string }).userId);
     if (!c.isSuper && !c.isAdminOpd) throw new Error("Forbidden");
     let q = supabaseAdmin
       .from("dataset_submission")
-      .select("id, template_id, oleh_user_id, opd_id, data, review_status, submitted_at, reviewed_at, review_note", { count: "exact" })
+      .select(
+        "id, template_id, oleh_user_id, opd_id, data, review_status, submitted_at, reviewed_at, review_note",
+        { count: "exact" },
+      )
       .eq("review_status", data.status)
       .order("submitted_at", { ascending: false })
       .range(data.page * data.pageSize, data.page * data.pageSize + data.pageSize - 1);
@@ -36,11 +41,13 @@ export const listPendingReviews = createServerFn({ method: "POST" })
 export const reviewSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      submissionId: z.string().uuid(),
-      aksi: z.enum(["approve", "reject", "request_revision", "comment"]),
-      catatan: z.string().max(2000).optional(),
-    }).parse(i),
+    z
+      .object({
+        submissionId: z.string().uuid(),
+        aksi: z.enum(["approve", "reject", "request_revision", "comment"]),
+        catatan: z.string().max(2000).optional(),
+      })
+      .parse(i),
   )
   .handler(async ({ data, context }) => {
     const userId = (context as { userId: string }).userId;
@@ -48,7 +55,10 @@ export const reviewSubmission = createServerFn({ method: "POST" })
     if (!c.isSuper && !c.isAdminOpd) throw new Error("Forbidden");
 
     const { data: sub, error: subErr } = await supabaseAdmin
-      .from("dataset_submission").select("id, opd_id").eq("id", data.submissionId).maybeSingle();
+      .from("dataset_submission")
+      .select("id, opd_id")
+      .eq("id", data.submissionId)
+      .maybeSingle();
     if (subErr || !sub) throw new Error("Submission tidak ditemukan");
     if (!c.isSuper && c.opdId && sub.opd_id !== c.opdId) throw new Error("Forbidden");
 
@@ -62,13 +72,20 @@ export const reviewSubmission = createServerFn({ method: "POST" })
     if (insErr) throw new Error(insErr.message);
 
     if (data.aksi !== "comment") {
-      const map = { approve: "approved", reject: "rejected", request_revision: "revision" } as const;
-      const { error: upErr } = await supabaseAdmin.from("dataset_submission").update({
-        review_status: map[data.aksi],
-        reviewed_by: userId,
-        reviewed_at: new Date().toISOString(),
-        review_note: data.catatan ?? null,
-      }).eq("id", data.submissionId);
+      const map = {
+        approve: "approved",
+        reject: "rejected",
+        request_revision: "revision",
+      } as const;
+      const { error: upErr } = await supabaseAdmin
+        .from("dataset_submission")
+        .update({
+          review_status: map[data.aksi],
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString(),
+          review_note: data.catatan ?? null,
+        })
+        .eq("id", data.submissionId);
       if (upErr) throw new Error(upErr.message);
     }
     return { ok: true };

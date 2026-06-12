@@ -14,17 +14,21 @@ type AuthSearch = { redirect?: string };
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): AuthSearch => ({
     redirect:
-      typeof search.redirect === "string"
-        && search.redirect.startsWith("/")
-        && !search.redirect.startsWith("//")
-        && !search.redirect.startsWith("/\\")
+      typeof search.redirect === "string" &&
+      search.redirect.startsWith("/") &&
+      !search.redirect.startsWith("//") &&
+      !search.redirect.startsWith("/\\")
         ? search.redirect
         : undefined,
   }),
   head: () => ({
     meta: [
       { title: "Masuk / Daftar — Portal Buton Selatan" },
-      { name: "description", content: "Masuk atau daftar akun (warga, Admin Desa, Admin OPD, ASN) untuk layanan publik Kabupaten Buton Selatan." },
+      {
+        name: "description",
+        content:
+          "Masuk atau daftar akun (warga, Admin Desa, Admin OPD, ASN) untuk layanan publik Kabupaten Buton Selatan.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -40,7 +44,11 @@ const ROLE_LABEL: Record<RoleTab, string> = {
   asn: "ASN",
 };
 
-const usernameRule = z.string().trim().min(3, "Username minimal 3 karakter").max(40)
+const usernameRule = z
+  .string()
+  .trim()
+  .min(3, "Username minimal 3 karakter")
+  .max(40)
   .regex(/^[a-zA-Z0-9_.-]+$/, "Username hanya huruf, angka, . _ -");
 
 type Opd = { id: string; nama: string; singkatan: string };
@@ -67,8 +75,16 @@ function AuthPage() {
   const [desaList, setDesaList] = useState<Desa[]>([]);
   const [opdList, setOpdList] = useState<Opd[]>([]);
 
-  useEffect(() => { fetchDesaList(true).then(setDesaList).catch(() => {}); }, []);
-  useEffect(() => { listOpdPublic().then((r) => setOpdList(r.rows as Opd[])).catch(() => {}); }, []);
+  useEffect(() => {
+    fetchDesaList(true)
+      .then(setDesaList)
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    listOpdPublic()
+      .then((r) => setOpdList(r.rows as Opd[]))
+      .catch(() => {});
+  }, []);
 
   const goAfterAuth = () => {
     if (redirect) window.location.assign(redirect);
@@ -89,7 +105,10 @@ function AuthPage() {
         if (!username) throw new Error("Username wajib diisi");
         if (!form.password) throw new Error("Password wajib diisi");
         const { email } = await resolveUsernameEmail({ data: { username } });
-        const { error } = await supabase.auth.signInWithPassword({ email, password: form.password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password: form.password,
+        });
         if (error) throw error;
         toast.success("Berhasil masuk");
         goAfterAuth();
@@ -108,15 +127,18 @@ function AuthPage() {
 
       // ===== SIGNUP via username =====
       const username = usernameRule.parse(form.username);
-      if (!form.password || form.password.length < 6) throw new Error("Password minimal 6 karakter");
+      if (!form.password || form.password.length < 6)
+        throw new Error("Password minimal 6 karakter");
       if (!form.nama_lengkap.trim()) throw new Error("Nama lengkap wajib diisi");
-      if (form.email && !z.string().email().safeParse(form.email).success) throw new Error("Email tidak valid");
+      if (form.email && !z.string().email().safeParse(form.email).success)
+        throw new Error("Email tidak valid");
 
       if (roleTab === "warga") {
         if (!/^\d{16}$/.test(form.nik)) throw new Error("NIK harus 16 digit angka");
         if (!form.desa) throw new Error("Desa wajib dipilih");
       }
-      if (roleTab === "admin_desa" && !form.desa) throw new Error("Desa yang Anda kelola wajib dipilih");
+      if (roleTab === "admin_desa" && !form.desa)
+        throw new Error("Desa yang Anda kelola wajib dipilih");
       if (roleTab === "admin_opd" && !form.opd_id) throw new Error("OPD wajib dipilih");
       if (roleTab === "asn") {
         if (!form.opd_id) throw new Error("OPD/Instansi wajib dipilih");
@@ -149,9 +171,11 @@ function AuthPage() {
         toast.success("Akun dibuat. Silakan masuk dengan username Anda.");
         setMode("signin");
       } else {
-        toast.success(roleTab === "warga"
-          ? "Pendaftaran berhasil."
-          : "Pendaftaran berhasil. Akun menunggu verifikasi Super Admin.");
+        toast.success(
+          roleTab === "warga"
+            ? "Pendaftaran berhasil."
+            : "Pendaftaran berhasil. Akun menunggu verifikasi Super Admin.",
+        );
         goAfterAuth();
       }
     } catch (err) {
@@ -198,7 +222,8 @@ function AuthPage() {
               </div>
               {roleTab !== "warga" && (
                 <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-                  Akun <b>{ROLE_LABEL[roleTab]}</b> memerlukan verifikasi Super Admin sebelum dapat digunakan secara penuh.
+                  Akun <b>{ROLE_LABEL[roleTab]}</b> memerlukan verifikasi Super Admin sebelum dapat
+                  digunakan secara penuh.
                 </p>
               )}
             </div>
@@ -242,59 +267,127 @@ function AuthPage() {
                   />
                 </Field>
                 <Field label="Nama Lengkap" required>
-                  <input required value={form.nama_lengkap} onChange={(e) => setForm({ ...form, nama_lengkap: e.target.value })} className="input" />
+                  <input
+                    required
+                    value={form.nama_lengkap}
+                    onChange={(e) => setForm({ ...form, nama_lengkap: e.target.value })}
+                    className="input"
+                  />
                 </Field>
                 <Field label="Email (opsional)">
-                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input" placeholder="dipakai untuk reset password" />
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="input"
+                    placeholder="dipakai untuk reset password"
+                  />
                 </Field>
                 <Field label="Nomor HP">
-                  <input inputMode="tel" value={form.no_hp} onChange={(e) => setForm({ ...form, no_hp: e.target.value })} className="input" placeholder="08xxxxxxxxxx" />
+                  <input
+                    inputMode="tel"
+                    value={form.no_hp}
+                    onChange={(e) => setForm({ ...form, no_hp: e.target.value })}
+                    className="input"
+                    placeholder="08xxxxxxxxxx"
+                  />
                 </Field>
 
                 {roleTab === "warga" && (
                   <>
                     <Field label="NIK" required>
-                      <input required inputMode="numeric" pattern="\d{16}" maxLength={16} value={form.nik}
-                        onChange={(e) => setForm({ ...form, nik: e.target.value.replace(/\D/g, "") })}
-                        className="input" placeholder="16 digit NIK" />
+                      <input
+                        required
+                        inputMode="numeric"
+                        pattern="\d{16}"
+                        maxLength={16}
+                        value={form.nik}
+                        onChange={(e) =>
+                          setForm({ ...form, nik: e.target.value.replace(/\D/g, "") })
+                        }
+                        className="input"
+                        placeholder="16 digit NIK"
+                      />
                     </Field>
-                    <DesaSelect form={form} setForm={setForm} desaList={desaList} label="Desa / Kelurahan" />
+                    <DesaSelect
+                      form={form}
+                      setForm={setForm}
+                      desaList={desaList}
+                      label="Desa / Kelurahan"
+                    />
                   </>
                 )}
                 {roleTab === "admin_desa" && (
-                  <DesaSelect form={form} setForm={setForm} desaList={desaList} label="Desa / Kelurahan yang Anda Kelola" />
+                  <DesaSelect
+                    form={form}
+                    setForm={setForm}
+                    desaList={desaList}
+                    label="Desa / Kelurahan yang Anda Kelola"
+                  />
                 )}
                 {roleTab === "admin_opd" && (
-                  <OpdSelect form={form} setForm={setForm} opdList={opdList} label="OPD yang Anda Kelola" />
+                  <OpdSelect
+                    form={form}
+                    setForm={setForm}
+                    opdList={opdList}
+                    label="OPD yang Anda Kelola"
+                  />
                 )}
                 {roleTab === "asn" && (
                   <>
-                    <OpdSelect form={form} setForm={setForm} opdList={opdList} label="OPD / Instansi Penugasan" />
+                    <OpdSelect
+                      form={form}
+                      setForm={setForm}
+                      opdList={opdList}
+                      label="OPD / Instansi Penugasan"
+                    />
                     <Field label="NIP" required>
-                      <input required inputMode="numeric" value={form.nip}
-                        onChange={(e) => setForm({ ...form, nip: e.target.value.replace(/\D/g, "") })}
-                        className="input" placeholder="Nomor Induk Pegawai" />
+                      <input
+                        required
+                        inputMode="numeric"
+                        value={form.nip}
+                        onChange={(e) =>
+                          setForm({ ...form, nip: e.target.value.replace(/\D/g, "") })
+                        }
+                        className="input"
+                        placeholder="Nomor Induk Pegawai"
+                      />
                     </Field>
                     <Field label="Jabatan" required>
-                      <input required value={form.jabatan} onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
-                        className="input" placeholder="contoh: Analis Kepegawaian" />
+                      <input
+                        required
+                        value={form.jabatan}
+                        onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
+                        className="input"
+                        placeholder="contoh: Analis Kepegawaian"
+                      />
                     </Field>
                   </>
                 )}
 
                 <Field label="Password" required>
-                  <input type="password" required value={form.password}
+                  <input
+                    type="password"
+                    required
+                    value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="input" minLength={6} />
+                    className="input"
+                    minLength={6}
+                  />
                 </Field>
               </>
             )}
 
             {mode === "forgot" && (
               <Field label="Email Pemulihan" required>
-                <input type="email" required value={form.email}
+                <input
+                  type="email"
+                  required
+                  value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="input" placeholder="email yang terdaftar pada akun Anda" />
+                  className="input"
+                  placeholder="email yang terdaftar pada akun Anda"
+                />
               </Field>
             )}
 
@@ -305,30 +398,41 @@ function AuthPage() {
               {busy
                 ? "Memproses…"
                 : mode === "signin"
-                ? "Masuk"
-                : mode === "signup"
-                ? `Daftar ${ROLE_LABEL[roleTab]}`
-                : "Kirim Email Reset"}
+                  ? "Masuk"
+                  : mode === "signup"
+                    ? `Daftar ${ROLE_LABEL[roleTab]}`
+                    : "Kirim Email Reset"}
             </button>
           </form>
 
           <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
             {mode === "signin" && (
               <>
-                <button onClick={() => setMode("signup")} className="text-primary hover:underline text-left">
+                <button
+                  onClick={() => setMode("signup")}
+                  className="text-primary hover:underline text-left"
+                >
                   Belum punya akun? Daftar di sini
                 </button>
-                <button onClick={() => setMode("forgot")} className="text-primary hover:underline text-left">
+                <button
+                  onClick={() => setMode("forgot")}
+                  className="text-primary hover:underline text-left"
+                >
                   Lupa password?
                 </button>
               </>
             )}
             {mode !== "signin" && (
-              <button onClick={() => setMode("signin")} className="text-primary hover:underline text-left">
+              <button
+                onClick={() => setMode("signin")}
+                className="text-primary hover:underline text-left"
+              >
                 ← Kembali ke Masuk
               </button>
             )}
-            <Link to="/" className="hover:underline">← Kembali ke Beranda</Link>
+            <Link to="/" className="hover:underline">
+              ← Kembali ke Beranda
+            </Link>
           </div>
         </div>
       </section>
@@ -337,42 +441,83 @@ function AuthPage() {
 }
 
 function DesaSelect({
-  form, setForm, desaList, label,
-}: { form: { desa: string }; setForm: (v: never) => void; desaList: Desa[]; label: string }) {
+  form,
+  setForm,
+  desaList,
+  label,
+}: {
+  form: { desa: string };
+  setForm: (v: never) => void;
+  desaList: Desa[];
+  label: string;
+}) {
   return (
     <Field label={label} required>
-      <select required value={form.desa}
-        onChange={(e) => setForm({ ...form, desa: e.target.value } as never)} className="input">
+      <select
+        required
+        value={form.desa}
+        onChange={(e) => setForm({ ...form, desa: e.target.value } as never)}
+        className="input"
+      >
         <option value="">— Pilih desa —</option>
         {desaList.map((d) => (
           <option key={d.id} value={d.nama}>
-            {d.nama}{d.kecamatan ? ` (${d.kecamatan})` : ""}
+            {d.nama}
+            {d.kecamatan ? ` (${d.kecamatan})` : ""}
           </option>
         ))}
       </select>
-      {desaList.length === 0 && <p className="mt-1 text-xs text-muted-foreground">Daftar desa belum tersedia. Hubungi admin.</p>}
+      {desaList.length === 0 && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          Daftar desa belum tersedia. Hubungi admin.
+        </p>
+      )}
     </Field>
   );
 }
 
 function OpdSelect({
-  form, setForm, opdList, label,
-}: { form: { opd_id: string }; setForm: (v: never) => void; opdList: Opd[]; label: string }) {
+  form,
+  setForm,
+  opdList,
+  label,
+}: {
+  form: { opd_id: string };
+  setForm: (v: never) => void;
+  opdList: Opd[];
+  label: string;
+}) {
   return (
     <Field label={label} required>
-      <select required value={form.opd_id}
-        onChange={(e) => setForm({ ...form, opd_id: e.target.value } as never)} className="input">
+      <select
+        required
+        value={form.opd_id}
+        onChange={(e) => setForm({ ...form, opd_id: e.target.value } as never)}
+        className="input"
+      >
         <option value="">— Pilih OPD/Instansi —</option>
         {opdList.map((o) => (
-          <option key={o.id} value={o.id}>{o.singkatan} — {o.nama}</option>
+          <option key={o.id} value={o.id}>
+            {o.singkatan} — {o.nama}
+          </option>
         ))}
       </select>
-      {opdList.length === 0 && <p className="mt-1 text-xs text-muted-foreground">Daftar OPD belum tersedia.</p>}
+      {opdList.length === 0 && (
+        <p className="mt-1 text-xs text-muted-foreground">Daftar OPD belum tersedia.</p>
+      )}
     </Field>
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium text-foreground">

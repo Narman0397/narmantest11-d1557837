@@ -14,18 +14,30 @@ export const Route = createFileRoute("/api/public/hooks/aset-warranty-reminder")
         try {
           const { data: rows, error } = await supabaseAdmin.rpc("aset_due_warranty", { _days: 30 });
           if (error) throw new Error(error.message);
-          const list = (rows ?? []) as Array<{ aset_id: string; kode: string; nama: string; opd_id: string | null; jenis: string; due_date: string }>;
+          const list = (rows ?? []) as Array<{
+            aset_id: string;
+            kode: string;
+            nama: string;
+            opd_id: string | null;
+            jenis: string;
+            due_date: string;
+          }>;
           if (list.length === 0) return Response.json({ ok: true, sent: 0 });
 
           const opdIds = Array.from(new Set(list.map((r) => r.opd_id).filter(Boolean) as string[]));
           const adminsByOpd = new Map<string, string[]>();
           if (opdIds.length > 0) {
-            const { data: adminRoles } = await supabaseAdmin.from("user_roles")
-              .select("user_id").eq("role", "admin_opd");
+            const { data: adminRoles } = await supabaseAdmin
+              .from("user_roles")
+              .select("user_id")
+              .eq("role", "admin_opd");
             const userIds = (adminRoles ?? []).map((r) => r.user_id);
             if (userIds.length > 0) {
-              const { data: profs } = await supabaseAdmin.from("profiles")
-                .select("id,opd_id").in("id", userIds).in("opd_id", opdIds);
+              const { data: profs } = await supabaseAdmin
+                .from("profiles")
+                .select("id,opd_id")
+                .in("id", userIds)
+                .in("opd_id", opdIds);
               for (const p of profs ?? []) {
                 if (!p.opd_id) continue;
                 const cur = adminsByOpd.get(p.opd_id) ?? [];
@@ -54,8 +66,13 @@ export const Route = createFileRoute("/api/public/hooks/aset-warranty-reminder")
           }
           return Response.json({ ok: true, sent, items: list.length });
         } catch (e) {
-          log.error("cron.aset-warranty.fail", { error: e instanceof Error ? e.message : String(e) });
-          return Response.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+          log.error("cron.aset-warranty.fail", {
+            error: e instanceof Error ? e.message : String(e),
+          });
+          return Response.json(
+            { ok: false, error: e instanceof Error ? e.message : String(e) },
+            { status: 500 },
+          );
         }
       },
     },

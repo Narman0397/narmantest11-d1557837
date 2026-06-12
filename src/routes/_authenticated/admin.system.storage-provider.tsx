@@ -10,13 +10,12 @@ import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  getStorageProviderConfig,
-  setStorageProviderConfig,
-} from "@/lib/storage/config.functions";
+import { getStorageProviderConfig, setStorageProviderConfig } from "@/lib/storage/config.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/system/storage-provider")({
-  head: () => ({ meta: [{ title: "Storage Provider — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Storage Provider — Admin" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <SuperAdminOnly>
@@ -60,10 +59,15 @@ function Page() {
         public_base_url: c.r2.public_base_url,
         region: c.r2.region || "auto",
       });
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setLoading(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }
-  useEffect(() => { if (isSuperAdmin) load(); }, [isSuperAdmin]);
+  useEffect(() => {
+    if (isSuperAdmin) load();
+  }, [isSuperAdmin]);
 
   async function save() {
     setSaving(true);
@@ -87,8 +91,11 @@ function Page() {
       setEncKey("");
       setR2((p) => ({ ...p, secret_access_key: "" }));
       load();
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setSaving(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!isSuperAdmin) {
@@ -158,22 +165,57 @@ function Page() {
           <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
             <div className="mb-3 text-sm font-semibold">Konfigurasi Cloudflare R2</div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field label="Account ID" value={r2.account_id} onChange={(v) => setR2((p) => ({ ...p, account_id: v }))} placeholder="abc123..." />
-              <Field label="Bucket" value={r2.bucket} onChange={(v) => setR2((p) => ({ ...p, bucket: v }))} placeholder="berkas-permohonan" />
-              <Field label="Endpoint" value={r2.endpoint} onChange={(v) => setR2((p) => ({ ...p, endpoint: v }))} placeholder="https://<acct>.r2.cloudflarestorage.com" className="sm:col-span-2" />
-              <Field label="Access Key ID" value={r2.access_key_id} onChange={(v) => setR2((p) => ({ ...p, access_key_id: v }))} />
+              <Field
+                label="Account ID"
+                value={r2.account_id}
+                onChange={(v) => setR2((p) => ({ ...p, account_id: v }))}
+                placeholder="abc123..."
+              />
+              <Field
+                label="Bucket"
+                value={r2.bucket}
+                onChange={(v) => setR2((p) => ({ ...p, bucket: v }))}
+                placeholder="berkas-permohonan"
+              />
+              <Field
+                label="Endpoint"
+                value={r2.endpoint}
+                onChange={(v) => setR2((p) => ({ ...p, endpoint: v }))}
+                placeholder="https://<acct>.r2.cloudflarestorage.com"
+                className="sm:col-span-2"
+              />
+              <Field
+                label="Access Key ID"
+                value={r2.access_key_id}
+                onChange={(v) => setR2((p) => ({ ...p, access_key_id: v }))}
+              />
               <Field
                 label={`Secret Access Key${cfg?.r2.secret_access_key_set ? " (terisi)" : ""}`}
                 type="password"
                 value={r2.secret_access_key}
                 onChange={(v) => setR2((p) => ({ ...p, secret_access_key: v }))}
-                placeholder={cfg?.r2.secret_access_key_set ? "Kosongkan untuk tidak mengubah" : "Masukkan secret"}
+                placeholder={
+                  cfg?.r2.secret_access_key_set
+                    ? "Kosongkan untuk tidak mengubah"
+                    : "Masukkan secret"
+                }
               />
-              <Field label="Public Base URL (opsional)" value={r2.public_base_url} onChange={(v) => setR2((p) => ({ ...p, public_base_url: v }))} placeholder="https://cdn.example.com" />
-              <Field label="Region" value={r2.region} onChange={(v) => setR2((p) => ({ ...p, region: v }))} placeholder="auto" />
+              <Field
+                label="Public Base URL (opsional)"
+                value={r2.public_base_url}
+                onChange={(v) => setR2((p) => ({ ...p, public_base_url: v }))}
+                placeholder="https://cdn.example.com"
+              />
+              <Field
+                label="Region"
+                value={r2.region}
+                onChange={(v) => setR2((p) => ({ ...p, region: v }))}
+                placeholder="auto"
+              />
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Pastikan bucket R2 mengaktifkan CORS untuk origin aplikasi (PUT/GET) agar upload signed-URL dari browser berfungsi.
+              Pastikan bucket R2 mengaktifkan CORS untuk origin aplikasi (PUT/GET) agar upload
+              signed-URL dari browser berfungsi.
             </p>
           </section>
 
@@ -193,25 +235,63 @@ function Page() {
   );
 }
 
-function ProviderCard({ active, onClick, icon, title, desc }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string; desc: string }) {
+function ProviderCard({
+  active,
+  onClick,
+  icon,
+  title,
+  desc,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={`flex flex-col items-start gap-1 rounded-lg border p-4 text-left transition ${active ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/40"}`}
     >
-      <div className="flex items-center gap-2 text-sm font-semibold">{icon}{title}</div>
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        {icon}
+        {title}
+      </div>
       <div className="text-xs text-muted-foreground">{desc}</div>
-      {active && <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-primary">Aktif</div>}
+      {active && (
+        <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+          Aktif
+        </div>
+      )}
     </button>
   );
 }
 
-function Field({ label, value, onChange, type = "text", placeholder, className }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; className?: string }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  className,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  className?: string;
+}) {
   return (
     <div className={className}>
       <Label className="mb-1 block text-xs">{label}</Label>
-      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

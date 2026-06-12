@@ -33,24 +33,89 @@ export async function getInternalMetrics(): Promise<InternalMetrics> {
     { count: rateHits },
   ] = await Promise.all([
     c(supabaseAdmin.from("form_submission_files").select("id", { count: "exact", head: true })),
-    c(supabaseAdmin.from("form_submission_files").select("id", { count: "exact", head: true }).eq("cleanup_status", "orphaned")),
-    c(supabaseAdmin.from("form_submission_files").select("id", { count: "exact", head: true }).not("finalized_at", "is", null)),
-    c(supabaseAdmin.from("notifications").select("id", { count: "exact", head: true }).gte("created_at", oneDayAgo)),
-    c(supabaseAdmin.from("notifications").select("id", { count: "exact", head: true }).eq("dibaca", false)),
-    c(supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "pending")),
-    c(supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "retrying")),
-    c(supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "failed")),
-    c(supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "dead_letter")),
-    c(supabaseAdmin.from("dead_letter_jobs").select("id", { count: "exact", head: true }).is("resolved_at", null)),
+    c(
+      supabaseAdmin
+        .from("form_submission_files")
+        .select("id", { count: "exact", head: true })
+        .eq("cleanup_status", "orphaned"),
+    ),
+    c(
+      supabaseAdmin
+        .from("form_submission_files")
+        .select("id", { count: "exact", head: true })
+        .not("finalized_at", "is", null),
+    ),
+    c(
+      supabaseAdmin
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", oneDayAgo),
+    ),
+    c(
+      supabaseAdmin
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("dibaca", false),
+    ),
+    c(
+      supabaseAdmin
+        .from("retry_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ),
+    c(
+      supabaseAdmin
+        .from("retry_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "retrying"),
+    ),
+    c(
+      supabaseAdmin
+        .from("retry_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "failed"),
+    ),
+    c(
+      supabaseAdmin
+        .from("retry_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "dead_letter"),
+    ),
+    c(
+      supabaseAdmin
+        .from("dead_letter_jobs")
+        .select("id", { count: "exact", head: true })
+        .is("resolved_at", null),
+    ),
     c(supabaseAdmin.from("dead_letter_jobs").select("id", { count: "exact", head: true })),
-    c(supabaseAdmin.from("cron_history").select("id", { count: "exact", head: true }).gte("started_at", oneDayAgo)),
-    c(supabaseAdmin.from("cron_history").select("id", { count: "exact", head: true }).eq("status", "error").gte("started_at", oneDayAgo)),
-    c(supabaseAdmin.from("rate_limit_hits").select("subject", { count: "exact", head: true }).gte("last_hit_at", oneHourAgo)),
+    c(
+      supabaseAdmin
+        .from("cron_history")
+        .select("id", { count: "exact", head: true })
+        .gte("started_at", oneDayAgo),
+    ),
+    c(
+      supabaseAdmin
+        .from("cron_history")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "error")
+        .gte("started_at", oneDayAgo),
+    ),
+    c(
+      supabaseAdmin
+        .from("rate_limit_hits")
+        .select("subject", { count: "exact", head: true })
+        .gte("last_hit_at", oneHourAgo),
+    ),
   ]);
 
   return {
     generatedAt: new Date().toISOString(),
-    uploads: { total: uploadsTotal ?? 0, orphaned: uploadsOrphaned ?? 0, finalized: uploadsFinalized ?? 0 },
+    uploads: {
+      total: uploadsTotal ?? 0,
+      orphaned: uploadsOrphaned ?? 0,
+      finalized: uploadsFinalized ?? 0,
+    },
     notifications: { last24h: notifLast24 ?? 0, unread: notifUnread ?? 0 },
     retry: {
       pending: retryPending ?? 0,

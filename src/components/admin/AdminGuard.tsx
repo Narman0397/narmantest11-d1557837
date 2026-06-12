@@ -6,7 +6,6 @@ export function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading, isAdmin, isAdminDesa, isAdminPemda } = useAuth();
   const allowed = isAdmin || isAdminDesa || isAdminPemda;
 
-
   if (loading) {
     return (
       <div className="grid min-h-screen place-items-center bg-surface text-sm text-muted-foreground">
@@ -35,7 +34,15 @@ export function AdminGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-function Gate({ title, msg, cta }: { title: string; msg: string; cta: { to: string; label: string } }) {
+function Gate({
+  title,
+  msg,
+  cta,
+}: {
+  title: string;
+  msg: string;
+  cta: { to: string; label: string };
+}) {
   return (
     <div className="grid min-h-screen place-items-center bg-surface px-4">
       <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-soft">

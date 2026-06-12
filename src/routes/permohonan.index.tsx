@@ -7,9 +7,15 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, STATUS_TONE, fmtTanggal, type StatusPermohonan } from "@/lib/permohonan";
 import { RatingForm } from "@/components/warga/RatingForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { setWakilAmbil, clearWakilAmbil } from "@/lib/admin-actions.functions";
-
 
 export const Route = createFileRoute("/permohonan/")({
   head: () => ({
@@ -80,12 +86,16 @@ function ListPage() {
     setLoadingList(true);
     const { data } = await supabase
       .from("permohonan")
-      .select("id, kode, judul, kategori, status, tanggal_masuk, wakil_ambil_nama, wakil_ambil_nik, opd:opd!opd_id(singkatan)")
+      .select(
+        "id, kode, judul, kategori, status, tanggal_masuk, wakil_ambil_nama, wakil_ambil_nik, opd:opd!opd_id(singkatan)",
+      )
       .eq("pemohon_id", uid)
       .order("tanggal_masuk", { ascending: false });
     const rows = (data ?? []) as unknown as Row[];
 
-    const finalIds = rows.filter((r) => r.status === "selesai" || r.status === "ditolak" || r.status === "diproses").map((r) => r.id);
+    const finalIds = rows
+      .filter((r) => r.status === "selesai" || r.status === "ditolak" || r.status === "diproses")
+      .map((r) => r.id);
     if (finalIds.length > 0) {
       const [{ data: rws }, { data: rts }] = await Promise.all([
         supabase
@@ -106,9 +116,11 @@ function ListPage() {
         if (r.catatan && !latest[r.permohonan_id]) latest[r.permohonan_id] = r.catatan;
       });
       const ratingMap: Record<string, { skor: number; komentar: string | null }> = {};
-      ((rts ?? []) as { permohonan_id: string; skor: number; komentar: string | null }[]).forEach((r) => {
-        ratingMap[r.permohonan_id] = { skor: r.skor, komentar: r.komentar };
-      });
+      ((rts ?? []) as { permohonan_id: string; skor: number; komentar: string | null }[]).forEach(
+        (r) => {
+          ratingMap[r.permohonan_id] = { skor: r.skor, komentar: r.komentar };
+        },
+      );
 
       rows.forEach((r) => {
         r.catatanAdmin = latest[r.id] ?? null;
@@ -127,7 +139,11 @@ function ListPage() {
 
   return (
     <PageShell>
-      <PageHero eyebrow="Akun Saya" title="Permohonan Saya" description="Pantau status pengajuan layanan publik Anda." />
+      <PageHero
+        eyebrow="Akun Saya"
+        title="Permohonan Saya"
+        description="Pantau status pengajuan layanan publik Anda."
+      />
       <section className="container-page py-12">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">Daftar Permohonan</h2>
@@ -140,13 +156,20 @@ function ListPage() {
         </div>
 
         {loadingList ? (
-          <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">Memuat…</div>
+          <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+            Memuat…
+          </div>
         ) : items.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <Inbox className="mx-auto h-10 w-10 text-muted-foreground" />
             <h3 className="mt-3 font-display text-lg font-semibold">Belum ada permohonan</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Mulai ajukan permohonan layanan publik pertama Anda.</p>
-            <Link to="/permohonan/baru" className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
+              Mulai ajukan permohonan layanan publik pertama Anda.
+            </p>
+            <Link
+              to="/permohonan/baru"
+              className="mt-4 inline-flex h-10 items-center gap-2 rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground"
+            >
               <Plus className="h-4 w-4" /> Ajukan Baru
             </Link>
           </div>
@@ -178,33 +201,49 @@ function ListPage() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-foreground">{p.judul}</div>
                       <div className="text-xs text-muted-foreground">{p.kategori}</div>
-                      {(p.status === "selesai" || p.status === "ditolak" || p.status === "diproses") && p.catatanAdmin && (
-                        <div className={`mt-2 rounded-md border px-2 py-1.5 text-xs ${p.status === "selesai" ? "border-success/30 bg-success/5 text-success" : p.status === "ditolak" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-gold/30 bg-gold/5 text-gold-foreground"}`}>
-                          <span className="font-semibold">Catatan Admin: </span>
-                          <span className="text-foreground/80">{p.catatanAdmin}</span>
-                        </div>
-                      )}
+                      {(p.status === "selesai" ||
+                        p.status === "ditolak" ||
+                        p.status === "diproses") &&
+                        p.catatanAdmin && (
+                          <div
+                            className={`mt-2 rounded-md border px-2 py-1.5 text-xs ${p.status === "selesai" ? "border-success/30 bg-success/5 text-success" : p.status === "ditolak" ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-gold/30 bg-gold/5 text-gold-foreground"}`}
+                          >
+                            <span className="font-semibold">Catatan Admin: </span>
+                            <span className="text-foreground/80">{p.catatanAdmin}</span>
+                          </div>
+                        )}
                       {p.status === "selesai" && p.rating && (
                         <div className="mt-2 rounded-md border border-gold/30 bg-gold/5 p-2 text-xs">
                           <div className="flex flex-wrap items-center gap-0.5">
                             {Array.from({ length: 10 }, (_, i) => i + 1).map((s) => (
-                              <Star key={s} className={`h-3 w-3 ${s <= p.rating!.skor ? "fill-gold text-gold" : "text-muted-foreground/40"}`} />
+                              <Star
+                                key={s}
+                                className={`h-3 w-3 ${s <= p.rating!.skor ? "fill-gold text-gold" : "text-muted-foreground/40"}`}
+                              />
                             ))}
-                            <span className="ml-1 font-medium text-foreground">{p.rating.skor}/10</span>
+                            <span className="ml-1 font-medium text-foreground">
+                              {p.rating.skor}/10
+                            </span>
                           </div>
                           {p.rating.komentar && (
-                            <div className="mt-1 italic text-muted-foreground">"{p.rating.komentar}"</div>
+                            <div className="mt-1 italic text-muted-foreground">
+                              "{p.rating.komentar}"
+                            </div>
                           )}
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-foreground">{p.opd?.singkatan ?? "-"}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_TONE[p.status]}`}>
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_TONE[p.status]}`}
+                      >
                         {STATUS_LABEL[p.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtTanggal(p.tanggal_masuk)}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                      {fmtTanggal(p.tanggal_masuk)}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col items-start gap-1.5">
                         {p.status === "selesai" && !p.rating && (
@@ -240,7 +279,10 @@ function ListPage() {
                         )}
                         {p.wakil_ambil_nama && (
                           <div className="text-[10px] text-muted-foreground">
-                            Wakil: <span className="font-medium text-foreground">{p.wakil_ambil_nama}</span>
+                            Wakil:{" "}
+                            <span className="font-medium text-foreground">
+                              {p.wakil_ambil_nama}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -254,7 +296,9 @@ function ListPage() {
 
         <p className="mt-4 text-xs text-muted-foreground">
           Rating & ulasan Anda akan diagregasi pada halaman{" "}
-          <Link to="/kinerja-opd" className="font-medium text-primary hover:underline">Kinerja OPD</Link>{" "}
+          <Link to="/kinerja-opd" className="font-medium text-primary hover:underline">
+            Kinerja OPD
+          </Link>{" "}
           sebagai indikator kepuasan layanan publik.
         </p>
       </section>
@@ -286,7 +330,8 @@ function ListPage() {
           <DialogHeader>
             <DialogTitle>Wakilkan Pengambilan Berkas</DialogTitle>
             <DialogDescription>
-              Isi nama dan NIK orang yang akan mewakili Anda mengambil berkas yang sudah selesai di dinas.
+              Isi nama dan NIK orang yang akan mewakili Anda mengambil berkas yang sudah selesai di
+              dinas.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -324,8 +369,11 @@ function ListPage() {
                     toast.success("Wakil dihapus");
                     setOpenWakilFor(null);
                     if (user) loadData(user.id);
-                  } catch (e) { toast.error((e as Error).message); }
-                  finally { setSavingWakil(false); }
+                  } catch (e) {
+                    toast.error((e as Error).message);
+                  } finally {
+                    setSavingWakil(false);
+                  }
                 }}
                 className="inline-flex h-9 items-center rounded-md border border-destructive/40 px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
               >
@@ -339,16 +387,21 @@ function ListPage() {
                 if (!openWakilFor) return;
                 setSavingWakil(true);
                 try {
-                  await setWakilAmbil({ data: {
-                    permohonan_id: openWakilFor.id,
-                    nama: wakilNama.trim(),
-                    nik: wakilNik,
-                  }});
+                  await setWakilAmbil({
+                    data: {
+                      permohonan_id: openWakilFor.id,
+                      nama: wakilNama.trim(),
+                      nik: wakilNik,
+                    },
+                  });
                   toast.success("Wakil tersimpan");
                   setOpenWakilFor(null);
                   if (user) loadData(user.id);
-                } catch (e) { toast.error((e as Error).message); }
-                finally { setSavingWakil(false); }
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setSavingWakil(false);
+                }
               }}
               className="inline-flex h-9 items-center rounded-md bg-gradient-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-50"
             >

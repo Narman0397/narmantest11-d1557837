@@ -1,4 +1,9 @@
-import { createUploadSession, deleteSubmissionFile, finalizeUpload, getSignedPreview } from "@/lib/uploads.functions";
+import {
+  createUploadSession,
+  deleteSubmissionFile,
+  finalizeUpload,
+  getSignedPreview,
+} from "@/lib/uploads.functions";
 
 /**
  * Hook helper untuk upload workflow signed URL:
@@ -17,10 +22,20 @@ export function useUploadSession() {
     const sess = (await createUploadSession({
       data: { submissionId, fieldKode, filename: file.name, mime: file.type, sizeBytes: file.size },
     })) as { signedUrl: string; path: string };
-    const up = await fetch(sess.signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+    const up = await fetch(sess.signedUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
     if (!up.ok) throw new Error("Upload gagal");
     await finalizeUpload({
-      data: { submissionId, fieldKode, storagePath: sess.path, mime: file.type, sizeBytes: file.size },
+      data: {
+        submissionId,
+        fieldKode,
+        storagePath: sess.path,
+        mime: file.type,
+        sizeBytes: file.size,
+      },
     });
     return sess.path;
   }

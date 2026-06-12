@@ -80,9 +80,27 @@ export const OPD_LIST: OPD[] = [
 ];
 
 export const PETUGAS_LIST: Petugas[] = [
-  { id: "p1", nama: "Andi Saputra", jabatan: "Kepala Seksi Adminduk", opdId: "disdukcapil", inisial: "AS" },
-  { id: "p2", nama: "Rini Marlina", jabatan: "Staf Pelayanan", opdId: "disdukcapil", inisial: "RM" },
-  { id: "p3", nama: "Budi Hartono", jabatan: "Staf Pencatatan Sipil", opdId: "disdukcapil", inisial: "BH" },
+  {
+    id: "p1",
+    nama: "Andi Saputra",
+    jabatan: "Kepala Seksi Adminduk",
+    opdId: "disdukcapil",
+    inisial: "AS",
+  },
+  {
+    id: "p2",
+    nama: "Rini Marlina",
+    jabatan: "Staf Pelayanan",
+    opdId: "disdukcapil",
+    inisial: "RM",
+  },
+  {
+    id: "p3",
+    nama: "Budi Hartono",
+    jabatan: "Staf Pencatatan Sipil",
+    opdId: "disdukcapil",
+    inisial: "BH",
+  },
   { id: "p4", nama: "Siti Nurhaliza", jabatan: "Kasi Perizinan", opdId: "dpmptsp", inisial: "SN" },
   { id: "p5", nama: "Eko Prasetyo", jabatan: "Verifikator Izin", opdId: "dpmptsp", inisial: "EP" },
   { id: "p6", nama: "Dewi Anggraini", jabatan: "Staf Trayek", opdId: "dishub", inisial: "DA" },
@@ -91,14 +109,30 @@ export const PETUGAS_LIST: Petugas[] = [
 ];
 
 const namaWarga = [
-  "Ahmad Fauzi", "Maya Putri", "Joko Susilo", "Linda Permata", "Hendra Wijaya",
-  "Sari Indah", "Agus Setiawan", "Tina Mulyani", "Bambang Suryo", "Ratna Dewi",
-  "Yusuf Ramadhan", "Citra Kirana", "Dimas Aji", "Farah Salsabila", "Nanda Pratama",
-  "Indri Lestari", "Rio Saputra", "Mega Anjani", "Hadi Pranoto", "Vina Oktaviani",
+  "Ahmad Fauzi",
+  "Maya Putri",
+  "Joko Susilo",
+  "Linda Permata",
+  "Hendra Wijaya",
+  "Sari Indah",
+  "Agus Setiawan",
+  "Tina Mulyani",
+  "Bambang Suryo",
+  "Ratna Dewi",
+  "Yusuf Ramadhan",
+  "Citra Kirana",
+  "Dimas Aji",
+  "Farah Salsabila",
+  "Nanda Pratama",
+  "Indri Lestari",
+  "Rio Saputra",
+  "Mega Anjani",
+  "Hadi Pranoto",
+  "Vina Oktaviani",
 ];
 
 const ringkasanContoh: Record<string, string> = {
-  "Adminduk": "Permohonan pencetakan ulang dokumen kependudukan karena hilang/rusak.",
+  Adminduk: "Permohonan pencetakan ulang dokumen kependudukan karena hilang/rusak.",
   "Akta Kelahiran": "Permohonan penerbitan Akta Kelahiran untuk anak yang baru lahir.",
   "KTP-el": "Permohonan perekaman & pencetakan KTP-el untuk warga usia 17 tahun.",
   "Kartu Keluarga": "Permohonan perubahan data Kartu Keluarga (penambahan anggota).",
@@ -106,14 +140,23 @@ const ringkasanContoh: Record<string, string> = {
   "IMB / PBG": "Permohonan Persetujuan Bangunan Gedung untuk rumah tinggal 2 lantai.",
   "Izin Reklame": "Permohonan izin pemasangan reklame baliho di Jl. Diponegoro.",
   "Izin Trayek": "Permohonan perpanjangan izin trayek angkutan kota jalur 04.",
-  "Parkir": "Permohonan izin penyelenggaraan parkir di lahan milik sendiri.",
+  Parkir: "Permohonan izin penyelenggaraan parkir di lahan milik sendiri.",
   "Pengaduan Lalin": "Pengaduan kerusakan rambu lalu lintas di simpang Pasar Baru.",
   "Izin Praktik": "Permohonan SIP untuk praktik dokter umum mandiri.",
   "Layanan Kesehatan": "Permohonan rujukan layanan kesehatan rujukan tingkat lanjut.",
-  "Vaksinasi": "Pendaftaran jadwal vaksinasi balita di Puskesmas terdekat.",
+  Vaksinasi: "Pendaftaran jadwal vaksinasi balita di Puskesmas terdekat.",
 };
 
-const statusPool: StatusPermohonan[] = ["baru", "baru", "diproses", "diproses", "diproses", "selesai", "selesai", "ditolak"];
+const statusPool: StatusPermohonan[] = [
+  "baru",
+  "baru",
+  "diproses",
+  "diproses",
+  "diproses",
+  "selesai",
+  "selesai",
+  "ditolak",
+];
 const prioritasPool: Permohonan["prioritas"][] = ["rendah", "normal", "normal", "normal", "tinggi"];
 
 function pad(n: number, width = 4) {
@@ -130,7 +173,7 @@ function generatePermohonan(): Permohonan[] {
       // 3-5 permohonan per kategori
       const jumlah = 3 + (counter % 3);
       for (let i = 0; i < jumlah; i++) {
-        const dayOffset = (counter % 28); // 0-27 hari yang lalu
+        const dayOffset = counter % 28; // 0-27 hari yang lalu
         const tanggalMasuk = new Date(now - dayOffset * 86400000);
         const tenggat = new Date(tanggalMasuk.getTime() + (5 + (counter % 10)) * 86400000);
         const status = statusPool[counter % statusPool.length];

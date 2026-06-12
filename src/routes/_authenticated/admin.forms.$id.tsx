@@ -52,8 +52,24 @@ function Page() {
     setLoading(true);
     try {
       const r = (await getForm({ data: { id } })) as {
-        form: { judul: string; deskripsi: string | null; deadline: string | null; allow_multiple_submit: boolean; status: string };
-        fields: Array<{ kode: string; label: string; tipe: FormField["tipe"]; required: boolean; placeholder: string | null; help_text: string | null; options: unknown; validation: unknown; urutan: number }>;
+        form: {
+          judul: string;
+          deskripsi: string | null;
+          deadline: string | null;
+          allow_multiple_submit: boolean;
+          status: string;
+        };
+        fields: Array<{
+          kode: string;
+          label: string;
+          tipe: FormField["tipe"];
+          required: boolean;
+          placeholder: string | null;
+          help_text: string | null;
+          options: unknown;
+          validation: unknown;
+          urutan: number;
+        }>;
         targets: Target[];
       };
       setMeta({
@@ -73,14 +89,21 @@ function Page() {
           help_text: f.help_text,
           options: (f.options as FormField["options"]) ?? [],
           validation: (f.validation as FormField["validation"]) ?? {},
-          visible_if: ((f as unknown as { visible_if?: FormField["visible_if"] }).visible_if) ?? null,
+          visible_if: (f as unknown as { visible_if?: FormField["visible_if"] }).visible_if ?? null,
           urutan: f.urutan ?? i,
         })),
       );
       setTargets(r.targets);
       // Load is_public/slug terpisah
-      const { data: extra } = await supabase.from("forms").select("is_public,slug").eq("id", id).maybeSingle();
-      if (extra) { setIsPublic(!!extra.is_public); setSlug(extra.slug ?? ""); }
+      const { data: extra } = await supabase
+        .from("forms")
+        .select("is_public,slug")
+        .eq("id", id)
+        .maybeSingle();
+      if (extra) {
+        setIsPublic(!!extra.is_public);
+        setSlug(extra.slug ?? "");
+      }
     } catch (e) {
       alert(e instanceof Error ? e.message : "Gagal memuat");
     } finally {
@@ -107,34 +130,47 @@ function Page() {
         },
       });
       alert("Metadata tersimpan");
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function saveFields() {
     setBusy(true);
     try {
       await saveFormFields({ data: { id, fields: fields.map((f, i) => ({ ...f, urutan: i })) } });
       alert("Field tersimpan");
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function saveTargetsAct() {
     setBusy(true);
     try {
       await saveFormTargets({ data: { id, targets } });
       alert("Target tersimpan");
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function doPublish() {
-    if (!confirm("Publish form? Setelah publish, schema akan dikunci dan assignment dibuat.")) return;
+    if (!confirm("Publish form? Setelah publish, schema akan dikunci dan assignment dibuat."))
+      return;
     setBusy(true);
     try {
       const r = (await publishForm({ data: { id } })) as { assignments: number };
       alert(`Form dipublish. ${r.assignments} assignment dibuat.`);
       await load();
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function doArchive() {
     if (!confirm("Arsipkan form?")) return;
@@ -142,25 +178,43 @@ function Page() {
     try {
       await archiveForm({ data: { id } });
       await load();
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveAkses() {
     setBusy(true);
     try {
-      await setFormPublic({ data: { form_id: id, is_public: isPublic, slug: slug.trim() || null } });
+      await setFormPublic({
+        data: { form_id: id, is_public: isPublic, slug: slug.trim() || null },
+      });
       alert("Pengaturan akses publik tersimpan");
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function doExport() {
     setBusy(true);
     try {
-      const r = await exportFormSubmissionsXlsx({ data: { form_id: id } }) as unknown as { url: string; filename: string };
-      const a = document.createElement("a"); a.href = r.url; a.download = r.filename; a.target = "_blank"; a.click();
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+      const r = (await exportFormSubmissionsXlsx({ data: { form_id: id } })) as unknown as {
+        url: string;
+        filename: string;
+      };
+      const a = document.createElement("a");
+      a.href = r.url;
+      a.download = r.filename;
+      a.target = "_blank";
+      a.click();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (loading) return <div className="text-sm text-muted-foreground">Memuat…</div>;
@@ -169,22 +223,41 @@ function Page() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <Link to="/admin/forms" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"><ArrowLeft className="h-3 w-3" /> Kembali</Link>
+          <Link
+            to="/admin/forms"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+          >
+            <ArrowLeft className="h-3 w-3" /> Kembali
+          </Link>
           <h2 className="font-display text-xl font-bold">{meta.judul || "(Tanpa Judul)"}</h2>
-          <p className="text-xs text-muted-foreground">Status: <span className="font-semibold uppercase">{meta.status}</span></p>
+          <p className="text-xs text-muted-foreground">
+            Status: <span className="font-semibold uppercase">{meta.status}</span>
+          </p>
         </div>
         <div className="flex gap-2">
           {meta.status === "draft" && (
-            <button onClick={doPublish} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-gradient-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50">
+            <button
+              onClick={doPublish}
+              disabled={busy}
+              className="inline-flex items-center gap-1 rounded-md bg-gradient-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+            >
               <Send className="h-4 w-4" /> Publish
             </button>
           )}
           {meta.status !== "archived" && (
-            <button onClick={doArchive} disabled={busy} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm">
+            <button
+              onClick={doArchive}
+              disabled={busy}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+            >
               <Archive className="h-4 w-4" /> Arsipkan
             </button>
           )}
-          <button onClick={doExport} disabled={busy} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm">
+          <button
+            onClick={doExport}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+          >
             <FileSpreadsheet className="h-4 w-4" /> Ekspor XLSX
           </button>
         </div>
@@ -192,38 +265,89 @@ function Page() {
 
       <div className="flex gap-2 border-b border-border">
         {(["meta", "fields", "preview", "targets", "akses"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm font-medium ${tab === t ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}>
-            {t === "meta" ? "Metadata" : t === "fields" ? "Field" : t === "preview" ? "Pratinjau" : t === "targets" ? "Target Pengisi" : "Akses Publik"}
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-3 py-2 text-sm font-medium ${tab === t ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
+          >
+            {t === "meta"
+              ? "Metadata"
+              : t === "fields"
+                ? "Field"
+                : t === "preview"
+                  ? "Pratinjau"
+                  : t === "targets"
+                    ? "Target Pengisi"
+                    : "Akses Publik"}
           </button>
         ))}
       </div>
 
       {tab === "meta" && (
-        <FormMetaTab meta={meta} setMeta={setMeta} readOnly={readOnly} busy={busy} onSave={saveMeta} />
+        <FormMetaTab
+          meta={meta}
+          setMeta={setMeta}
+          readOnly={readOnly}
+          busy={busy}
+          onSave={saveMeta}
+        />
       )}
       {tab === "fields" && (
-        <FormFieldsTab fields={fields} setFields={setFields} readOnly={readOnly} busy={busy} onSave={saveFields} />
+        <FormFieldsTab
+          fields={fields}
+          setFields={setFields}
+          readOnly={readOnly}
+          busy={busy}
+          onSave={saveFields}
+        />
       )}
-      {tab === "preview" && (
-        <FormLivePreview fields={fields} judul={meta.judul} />
-      )}
+      {tab === "preview" && <FormLivePreview fields={fields} judul={meta.judul} />}
       {tab === "targets" && (
-        <FormTargetsTab formId={id} formStatus={meta.status} targets={targets} setTargets={setTargets} busy={busy} onSave={saveTargetsAct} />
+        <FormTargetsTab
+          formId={id}
+          formStatus={meta.status}
+          targets={targets}
+          setTargets={setTargets}
+          busy={busy}
+          onSave={saveTargetsAct}
+        />
       )}
       {tab === "akses" && (
         <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-          <h3 className="font-display text-base font-semibold flex items-center gap-2"><Globe className="h-4 w-4" /> Portal Data Terbuka</h3>
-          <p className="text-xs text-muted-foreground">Jika diaktifkan dan form ber-status <strong>published</strong>, skema kolom + statistik agregat akan muncul di <code>/data-terbuka/{`{slug}`}</code> (tanpa login). Submisi individual tetap pribadi.</p>
+          <h3 className="font-display text-base font-semibold flex items-center gap-2">
+            <Globe className="h-4 w-4" /> Portal Data Terbuka
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Jika diaktifkan dan form ber-status <strong>published</strong>, skema kolom + statistik
+            agregat akan muncul di <code>/data-terbuka/{`{slug}`}</code> (tanpa login). Submisi
+            individual tetap pribadi.
+          </p>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+            />
             Tampilkan di Data Terbuka
           </label>
           <div>
             <label className="mb-1 block text-xs font-medium">Slug URL</label>
-            <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="contoh: bantuan-sosial-2026" className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm" />
-            <p className="mt-1 text-xs text-muted-foreground">Hanya huruf kecil, angka, dan tanda <code>-</code>. URL: <code>/data-terbuka/{slug || "(slug)"}</code></p>
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              placeholder="contoh: bantuan-sosial-2026"
+              className="w-full max-w-md rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Hanya huruf kecil, angka, dan tanda <code>-</code>. URL:{" "}
+              <code>/data-terbuka/{slug || "(slug)"}</code>
+            </p>
           </div>
-          <button onClick={saveAkses} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-gradient-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50">
+          <button
+            onClick={saveAkses}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md bg-gradient-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+          >
             <Save className="h-4 w-4" /> Simpan Akses
           </button>
         </div>

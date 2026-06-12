@@ -5,15 +5,26 @@ import { useAuth } from "@/lib/auth-context";
 
 type Mode = "executive" | "pemda";
 
-export function ExecutiveGuard({ children, mode = "executive" }: { children: ReactNode; mode?: Mode }) {
+export function ExecutiveGuard({
+  children,
+  mode = "executive",
+}: {
+  children: ReactNode;
+  mode?: Mode;
+}) {
   const { loading, user, isSuperAdmin, isAdminPemda, isPimpinan } = useAuth();
   // Executive: pimpinan + admin_pemda + super. Pemda: admin_pemda + super.
-  const allowed = mode === "executive"
-    ? isSuperAdmin || isAdminPemda || isPimpinan
-    : isSuperAdmin || isAdminPemda;
+  const allowed =
+    mode === "executive"
+      ? isSuperAdmin || isAdminPemda || isPimpinan
+      : isSuperAdmin || isAdminPemda;
 
   if (loading) {
-    return <div className="grid min-h-screen place-items-center bg-surface text-sm text-muted-foreground">Memuat…</div>;
+    return (
+      <div className="grid min-h-screen place-items-center bg-surface text-sm text-muted-foreground">
+        Memuat…
+      </div>
+    );
   }
   if (!user) {
     return (
@@ -36,7 +47,15 @@ export function ExecutiveGuard({ children, mode = "executive" }: { children: Rea
   return <>{children}</>;
 }
 
-function Gate({ title, msg, cta }: { title: string; msg: string; cta: { to: string; label: string } }) {
+function Gate({
+  title,
+  msg,
+  cta,
+}: {
+  title: string;
+  msg: string;
+  cta: { to: string; label: string };
+}) {
   return (
     <div className="grid min-h-screen place-items-center bg-surface px-4">
       <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-soft">

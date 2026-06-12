@@ -45,21 +45,33 @@ function Page() {
 
   async function submit() {
     if (UNSUR.some(([k]) => !values[k])) {
-      toast.error("Mohon isi seluruh unsur"); return;
+      toast.error("Mohon isi seluruh unsur");
+      return;
     }
     setBusy(true);
     try {
-      await fnSubmit({ data: {
-        survey_id: id,
-        u1: values.u1, u2: values.u2, u3: values.u3, u4: values.u4, u5: values.u5,
-        u6: values.u6, u7: values.u7, u8: values.u8, u9: values.u9,
-        saran: saran || undefined,
-      } });
+      await fnSubmit({
+        data: {
+          survey_id: id,
+          u1: values.u1,
+          u2: values.u2,
+          u3: values.u3,
+          u4: values.u4,
+          u5: values.u5,
+          u6: values.u6,
+          u7: values.u7,
+          u8: values.u8,
+          u9: values.u9,
+          saran: saran || undefined,
+        },
+      });
       toast.success("Terima kasih atas penilaian Anda");
       navigate({ to: "/" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gagal mengirim");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -69,21 +81,34 @@ function Page() {
         <Card className="mx-auto max-w-3xl">
           <CardHeader>
             <CardTitle>Survei Kepuasan Masyarakat</CardTitle>
-            {survey && <p className="text-sm text-muted-foreground">{survey.judul} — {survey.periode}</p>}
+            {survey && (
+              <p className="text-sm text-muted-foreground">
+                {survey.judul} — {survey.periode}
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {!survey ? <p>Survei tidak tersedia.</p> : (
+            {!survey ? (
+              <p>Survei tidak tersedia.</p>
+            ) : (
               <>
-                <p className="text-sm text-muted-foreground">Penilaian: 1 (Tidak Baik) sampai 4 (Sangat Baik). Sesuai PermenPAN-RB No. 14/2017.</p>
+                <p className="text-sm text-muted-foreground">
+                  Penilaian: 1 (Tidak Baik) sampai 4 (Sangat Baik). Sesuai PermenPAN-RB No. 14/2017.
+                </p>
                 <div className="space-y-3">
                   {UNSUR.map(([k, label]) => (
                     <div key={k} className="rounded-md border p-3">
                       <div className="mb-2 text-sm font-medium">{label}</div>
                       <div className="flex gap-2">
                         {[1, 2, 3, 4].map((n) => (
-                          <button key={n} type="button"
+                          <button
+                            key={n}
+                            type="button"
                             className={`h-10 w-10 rounded border text-sm ${values[k] === n ? "bg-primary text-primary-foreground" : "bg-background"}`}
-                            onClick={() => setValues((v) => ({ ...v, [k]: n }))}>{n}</button>
+                            onClick={() => setValues((v) => ({ ...v, [k]: n }))}
+                          >
+                            {n}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -91,9 +116,16 @@ function Page() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Saran (opsional)</label>
-                  <Textarea value={saran} onChange={(e) => setSaran(e.target.value)} maxLength={2000} rows={4} />
+                  <Textarea
+                    value={saran}
+                    onChange={(e) => setSaran(e.target.value)}
+                    maxLength={2000}
+                    rows={4}
+                  />
                 </div>
-                <Button onClick={submit} disabled={busy}>{busy ? "Mengirim…" : "Kirim Penilaian"}</Button>
+                <Button onClick={submit} disabled={busy}>
+                  {busy ? "Mengirim…" : "Kirim Penilaian"}
+                </Button>
               </>
             )}
           </CardContent>

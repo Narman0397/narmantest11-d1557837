@@ -28,21 +28,13 @@ function Page() {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const {
-    data,
-    setField,
-    submission,
-    manualSave,
-    isSaving,
-    lastSavedAt,
-    saveError,
-    isDirty,
-  } = useFormDraft({
-    assignmentId,
-    initialSubmission,
-    initialData,
-    busy,
-  });
+  const { data, setField, submission, manualSave, isSaving, lastSavedAt, saveError, isDirty } =
+    useFormDraft({
+      assignmentId,
+      initialSubmission,
+      initialData,
+      busy,
+    });
 
   async function load() {
     setLoading(true);
@@ -126,7 +118,11 @@ function Page() {
 
   const savedLabel = useMemo(() => {
     if (!lastSavedAt) return null;
-    return lastSavedAt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return lastSavedAt.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   }, [lastSavedAt]);
 
   if (authLoading || loading)
@@ -165,7 +161,14 @@ function Page() {
         </Link>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
           <h1 className="font-display text-2xl font-bold">{judul}</h1>
-          {!readOnly && <SaveIndicator isSaving={isSaving} isDirty={isDirty} savedLabel={savedLabel} error={saveError} />}
+          {!readOnly && (
+            <SaveIndicator
+              isSaving={isSaving}
+              isDirty={isDirty}
+              savedLabel={savedLabel}
+              error={saveError}
+            />
+          )}
         </div>
         {submission && (
           <div className="mt-1 text-xs">

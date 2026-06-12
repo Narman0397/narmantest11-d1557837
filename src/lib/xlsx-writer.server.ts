@@ -33,9 +33,7 @@ export function buildXlsxBuffer(sheets: SheetSpec[]): Uint8Array {
     if (s.freezeHeader !== false) {
       ws["!freeze"] = { xSplit: 0, ySplit: 1 } as unknown as Record<string, number>;
       // SheetJS uses !views for freeze; set as fallback
-      (ws as unknown as { "!views"?: unknown[] })["!views"] = [
-        { state: "frozen", ySplit: 1 },
-      ];
+      (ws as unknown as { "!views"?: unknown[] })["!views"] = [{ state: "frozen", ySplit: 1 }];
     }
     XLSX.utils.book_append_sheet(wb, ws, s.name.slice(0, 31));
   }

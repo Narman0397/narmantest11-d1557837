@@ -4,7 +4,11 @@ import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 
-export function SignatureCanvasPad({ onSave }: { onSave: (pngBase64: string) => Promise<void> | void }) {
+export function SignatureCanvasPad({
+  onSave,
+}: {
+  onSave: (pngBase64: string) => Promise<void> | void;
+}) {
   const ref = useRef<SignatureCanvas | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -30,14 +34,20 @@ export function SignatureCanvasPad({ onSave }: { onSave: (pngBase64: string) => 
     <div className="space-y-2">
       <div className="rounded-md border border-border bg-background">
         <SignatureCanvas
-          ref={(r) => { ref.current = r; }}
+          ref={(r) => {
+            ref.current = r;
+          }}
           penColor="#0b1220"
           canvasProps={{ width: 600, height: 200, className: "w-full h-[200px]" }}
         />
       </div>
       <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={clear} disabled={saving}>Bersihkan</Button>
-        <Button type="button" onClick={save} disabled={saving}>{saving ? "Menyimpan…" : "Simpan Spesimen"}</Button>
+        <Button type="button" variant="outline" onClick={clear} disabled={saving}>
+          Bersihkan
+        </Button>
+        <Button type="button" onClick={save} disabled={saving}>
+          {saving ? "Menyimpan…" : "Simpan Spesimen"}
+        </Button>
       </div>
     </div>
   );

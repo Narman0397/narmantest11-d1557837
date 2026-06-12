@@ -6,10 +6,21 @@ import { fetchAllChunked } from "@/lib/db/chunked";
 import { verifyCronCaller } from "@/lib/cron-auth.server";
 
 const SNAPSHOT_TABLES = [
-  "profiles", "user_roles", "opd", "kategori_layanan", "layanan_publik",
-  "berita", "pejabat", "data_terpadu_item", "app_setting",
-  "permohonan", "permohonan_riwayat", "permohonan_rating",
-  "laporan_masyarakat", "audit_log", "job_queue",
+  "profiles",
+  "user_roles",
+  "opd",
+  "kategori_layanan",
+  "layanan_publik",
+  "berita",
+  "pejabat",
+  "data_terpadu_item",
+  "app_setting",
+  "permohonan",
+  "permohonan_riwayat",
+  "permohonan_rating",
+  "laporan_masyarakat",
+  "audit_log",
+  "job_queue",
 ] as const;
 
 export const Route = createFileRoute("/api/public/hooks/backup-snapshot")({
@@ -36,7 +47,10 @@ export const Route = createFileRoute("/api/public/hooks/backup-snapshot")({
 
         // Cek config auto backup
         const { data: cfgRow } = await admin
-          .from("app_setting").select("value").eq("key", "auto_backup_config").maybeSingle();
+          .from("app_setting")
+          .select("value")
+          .eq("key", "auto_backup_config")
+          .maybeSingle();
         const cfg = (cfgRow?.value ?? {}) as { enabled?: boolean; retention?: number };
         if (!cfg.enabled) {
           return Response.json({ skipped: true, reason: "auto_backup_disabled" });
@@ -63,17 +77,27 @@ export const Route = createFileRoute("/api/public/hooks/backup-snapshot")({
         const size = new TextEncoder().encode(payloadStr).length;
 
         const label = `Auto · ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" })}`;
-        const { data: inserted, error } = await admin.from("backup_snapshot").insert({
-          label, tipe: "auto", size_bytes: size, table_counts: counts, data: { tables },
-        }).select("id, created_at").single();
+        const { data: inserted, error } = await admin
+          .from("backup_snapshot")
+          .insert({
+            label,
+            tipe: "auto",
+            size_bytes: size,
+            table_counts: counts,
+            data: { tables },
+          })
+          .select("id, created_at")
+          .single();
         if (error) {
           return new Response(`Insert failed: ${error.message}`, { status: 500 });
         }
 
         // Retention auto-snapshot
         const { data: autoList } = await admin
-          .from("backup_snapshot").select("id")
-          .eq("tipe", "auto").order("created_at", { ascending: false });
+          .from("backup_snapshot")
+          .select("id")
+          .eq("tipe", "auto")
+          .order("created_at", { ascending: false });
         if (autoList && autoList.length > retention) {
           const drop = autoList.slice(retention).map((x) => x.id);
           await admin.from("backup_snapshot").delete().in("id", drop);

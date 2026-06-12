@@ -136,18 +136,24 @@ export type SubscribeOptions = {
  * Subscribe to a scoped realtime channel. Returns an unsubscribe function.
  * Multiple subscribers to the same channelName share one underlying channel.
  */
-export function subscribeRealtime({ channelName, binding, onPayload }: SubscribeOptions): () => void {
+export function subscribeRealtime({
+  channelName,
+  binding,
+  onPayload,
+}: SubscribeOptions): () => void {
   let entry = registry.get(channelName);
   if (!entry) {
     const channel = supabase.channel(channelName);
     const listeners = new Set<Listener>();
-    (channel as unknown as {
-      on: (
-        type: "postgres_changes",
-        cfg: Record<string, string | undefined>,
-        cb: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void,
-      ) => RealtimeChannel;
-    }).on(
+    (
+      channel as unknown as {
+        on: (
+          type: "postgres_changes",
+          cfg: Record<string, string | undefined>,
+          cb: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void,
+        ) => RealtimeChannel;
+      }
+    ).on(
       "postgres_changes",
       {
         event: binding.event,

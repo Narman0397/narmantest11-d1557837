@@ -46,8 +46,11 @@ export function FileUploader({
       const next = multi ? [...paths, path] : path;
       onChange(next);
       await onFilesChanged();
-    } catch (err) { alert(err instanceof Error ? err.message : "Gagal upload"); }
-    finally { setUploading(false); }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal upload");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function preview(path: string) {
@@ -69,11 +72,24 @@ export function FileUploader({
       {label}
       <div className="mt-1 space-y-1">
         {paths.map((p) => (
-          <div key={p} className="flex items-center gap-2 rounded-md border border-border bg-card px-2 py-1 text-xs">
+          <div
+            key={p}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-2 py-1 text-xs"
+          >
             <FileText className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="flex-1 truncate font-mono">{p.split("/").pop()}</span>
-            <button type="button" onClick={() => preview(p)} className="inline-flex items-center gap-1 text-primary"><ExternalLink className="h-3 w-3" /></button>
-            {!readOnly && <button type="button" onClick={() => remove(p)} className="text-destructive"><X className="h-3 w-3" /></button>}
+            <button
+              type="button"
+              onClick={() => preview(p)}
+              className="inline-flex items-center gap-1 text-primary"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </button>
+            {!readOnly && (
+              <button type="button" onClick={() => remove(p)} className="text-destructive">
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         ))}
         {!readOnly && (multi || paths.length === 0) && (

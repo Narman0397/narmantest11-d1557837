@@ -26,7 +26,9 @@ export async function compressImage(file: File, targetBytes: number): Promise<Fi
         typeof OffscreenCanvas !== "undefined"
           ? new OffscreenCanvas(w, h)
           : Object.assign(document.createElement("canvas"), { width: w, height: h });
-      const ctx = (canvas as HTMLCanvasElement | OffscreenCanvas).getContext("2d") as CanvasRenderingContext2D;
+      const ctx = (canvas as HTMLCanvasElement | OffscreenCanvas).getContext(
+        "2d",
+      ) as CanvasRenderingContext2D;
       ctx.drawImage(bitmap, 0, 0, w, h);
       let blob: Blob;
       if (canvas instanceof HTMLCanvasElement) {

@@ -31,9 +31,7 @@ export const Route = createFileRoute("/api/public/hooks/sla-reminder")({
           for (const p of rows ?? []) {
             const overdue = p.tenggat && p.tenggat < nowIso;
             const dayKey = nowIso.slice(0, 10);
-            const judul = overdue
-              ? `Lewat tenggat: ${p.kode}`
-              : `Tenggat 24 jam: ${p.kode}`;
+            const judul = overdue ? `Lewat tenggat: ${p.kode}` : `Tenggat 24 jam: ${p.kode}`;
             const body = `${p.judul} — tenggat ${new Date(p.tenggat!).toLocaleString("id-ID")}`;
             const link = `/permohonan/${p.id}`;
 

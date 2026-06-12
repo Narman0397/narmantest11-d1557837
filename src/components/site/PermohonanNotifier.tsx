@@ -48,10 +48,20 @@ export function PermohonanNotifier() {
       .channel(`permohonan-self-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "permohonan", filter: `pemohon_id=eq.${user.id}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "permohonan",
+          filter: `pemohon_id=eq.${user.id}`,
+        },
         (payload) => {
           const oldRow = payload.old as { status?: string } | null;
-          const newRow = payload.new as { id?: string; kode?: string; status?: string; judul?: string } | null;
+          const newRow = payload.new as {
+            id?: string;
+            kode?: string;
+            status?: string;
+            judul?: string;
+          } | null;
           if (!newRow?.id) return;
           if (oldRow?.status && oldRow.status === newRow.status) return;
           const key = `status:${newRow.id}:${newRow.status}`;
@@ -75,7 +85,13 @@ export function PermohonanNotifier() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "permohonan_riwayat" },
         async (payload) => {
-          const row = payload.new as { id?: string; permohonan_id?: string; aksi?: string; catatan?: string | null; oleh?: string | null } | null;
+          const row = payload.new as {
+            id?: string;
+            permohonan_id?: string;
+            aksi?: string;
+            catatan?: string | null;
+            oleh?: string | null;
+          } | null;
           if (!row?.id || !row.permohonan_id) return;
           // Hanya untuk permohonan milik user (verifikasi via RLS-aware fetch)
           const { data: perm } = await supabase
@@ -91,7 +107,9 @@ export function PermohonanNotifier() {
           seen.current.add(key);
 
           const title = `${perm.kode || "Permohonan"} — ${row.aksi || "Pembaruan"}`;
-          const body = (row.catatan && row.catatan.trim()) || `Status saat ini: ${STATUS_LABEL[perm.status || ""] || perm.status || "-"}`;
+          const body =
+            (row.catatan && row.catatan.trim()) ||
+            `Status saat ini: ${STATUS_LABEL[perm.status || ""] || perm.status || "-"}`;
           const url = `/permohonan/${perm.id}`;
           toast(title, { description: body });
           showSystemNotification(title, body, url, `permohonan-${perm.id}-riwayat`);

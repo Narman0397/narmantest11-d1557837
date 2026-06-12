@@ -3,25 +3,42 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { listForReview, getSubmission, approveSubmission, rejectSubmission, requestRevision } from "@/lib/submissions.functions";
+import {
+  listForReview,
+  getSubmission,
+  approveSubmission,
+  rejectSubmission,
+  requestRevision,
+} from "@/lib/submissions.functions";
 import { getSignedPreview } from "@/lib/uploads.functions";
 import { subscribeRealtime } from "@/lib/realtime/manager";
 import { PaginationBar } from "@/components/ui/pagination-bar";
 import type { FormSchemaSnapshot } from "@/features/forms/schema/types";
 import { CheckCircle2, XCircle, RotateCcw, Eye, FileText, ExternalLink } from "lucide-react";
 
-const STATUSES = ["submitted", "under_review", "approved", "rejected", "revision_required"] as const;
-type StatusFilter = typeof STATUSES[number] | "";
+const STATUSES = [
+  "submitted",
+  "under_review",
+  "approved",
+  "rejected",
+  "revision_required",
+] as const;
+type StatusFilter = (typeof STATUSES)[number] | "";
 
 const searchSchema = z.object({
-  status: z.enum([...STATUSES, ""]).catch("submitted").default("submitted"),
+  status: z
+    .enum([...STATUSES, ""])
+    .catch("submitted")
+    .default("submitted"),
   page: z.number().int().min(1).catch(1).default(1),
   pageSize: z.number().int().min(5).max(50).catch(20).default(20),
 });
 
 export const Route = createFileRoute("/_authenticated/admin/submission-review")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Admin — Review Submission" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Admin — Review Submission" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <AdminShell breadcrumb={[{ label: "Review Submission" }]}>
@@ -59,12 +76,15 @@ function Page() {
     setLoading(true);
     (async () => {
       try {
-        const payload: { page: number; pageSize: number; status?: typeof STATUSES[number] } = {
+        const payload: { page: number; pageSize: number; status?: (typeof STATUSES)[number] } = {
           page: page - 1,
           pageSize,
         };
         if (statusFilter) payload.status = statusFilter;
-        const r = (await listForReview({ data: payload })) as unknown as { rows: Row[]; total: number };
+        const r = (await listForReview({ data: payload })) as unknown as {
+          rows: Row[];
+          total: number;
+        };
         if (cancelled) return;
         setRows(r.rows);
         setTotal(r.total);
@@ -72,7 +92,9 @@ function Page() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [statusFilter, page, pageSize, tick]);
 
   // Realtime: refresh saat ada submission baru atau status berubah.
@@ -94,7 +116,9 @@ function Page() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="font-display text-xl font-bold">Review Submission Form</h2>
-          <p className="text-sm text-muted-foreground">Verifikasi data yang dikirim ASN sesuai form.</p>
+          <p className="text-sm text-muted-foreground">
+            Verifikasi data yang dikirim ASN sesuai form.
+          </p>
         </div>
         <select
           value={statusFilter}
@@ -123,16 +147,39 @@ function Page() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {loading && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">Memuat…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">Tidak ada submission.</td></tr>}
+              {loading && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                    Memuat…
+                  </td>
+                </tr>
+              )}
+              {!loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                    Tidak ada submission.
+                  </td>
+                </tr>
+              )}
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td className="px-3 py-2 font-medium">{r.forms?.judul ?? "—"}</td>
                   <td className="px-3 py-2">{r.profiles?.nama_lengkap ?? "—"}</td>
-                  <td className="px-3 py-2"><span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{r.status}</span></td>
-                  <td className="px-3 py-2 text-xs">{r.submitted_at ? new Date(r.submitted_at).toLocaleString("id-ID") : "—"}</td>
                   <td className="px-3 py-2">
-                    <button onClick={() => setOpenId(r.id)} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"><Eye className="h-3 w-3" /> Tinjau</button>
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-xs">
+                    {r.submitted_at ? new Date(r.submitted_at).toLocaleString("id-ID") : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <button
+                      onClick={() => setOpenId(r.id)}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+                    >
+                      <Eye className="h-3 w-3" /> Tinjau
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -149,11 +196,16 @@ function Page() {
         />
       </div>
 
-      {openId && <ReviewDialog id={openId} onClose={() => {
-        setOpenId(null);
-        // Trigger reload by toggling search noop
-        updateSearch({ page });
-      }} />}
+      {openId && (
+        <ReviewDialog
+          id={openId}
+          onClose={() => {
+            setOpenId(null);
+            // Trigger reload by toggling search noop
+            updateSearch({ page });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -161,18 +213,31 @@ function Page() {
 function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [sub, setSub] = useState<{ id: string; status: string; data: Record<string, unknown>; review_note: string | null; forms: { judul: string; schema_snapshot: FormSchemaSnapshot } } | null>(null);
-  const [files, setFiles] = useState<Array<{ id: string; field_kode: string; storage_path: string }>>([]);
+  const [sub, setSub] = useState<{
+    id: string;
+    status: string;
+    data: Record<string, unknown>;
+    review_note: string | null;
+    forms: { judul: string; schema_snapshot: FormSchemaSnapshot };
+  } | null>(null);
+  const [files, setFiles] = useState<
+    Array<{ id: string; field_kode: string; storage_path: string }>
+  >([]);
   const [note, setNote] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const r = (await getSubmission({ data: { id } })) as unknown as { submission: typeof sub; files: typeof files };
+        const r = (await getSubmission({ data: { id } })) as unknown as {
+          submission: typeof sub;
+          files: typeof files;
+        };
         setSub(r.submission);
         setFiles(r.files);
         setNote(r.submission?.review_note ?? "");
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [id]);
 
@@ -182,12 +247,16 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
     }
     setBusy(true);
     try {
-      if (kind === "approve") await approveSubmission({ data: { submissionId: id, note: note || null } });
+      if (kind === "approve")
+        await approveSubmission({ data: { submissionId: id, note: note || null } });
       else if (kind === "reject") await rejectSubmission({ data: { submissionId: id, note } });
       else await requestRevision({ data: { submissionId: id, note } });
       onClose();
-    } catch (e) { alert(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function preview(fileId: string) {
@@ -200,7 +269,11 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal
+    >
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-elevated">
         {loading || !sub ? (
           <div className="py-10 text-center text-muted-foreground">Memuat…</div>
@@ -209,9 +282,13 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="mb-3 flex items-start justify-between">
               <div>
                 <h3 className="font-display text-lg font-bold">{sub.forms.judul}</h3>
-                <div className="text-xs text-muted-foreground">Status: <span className="font-semibold uppercase">{sub.status}</span></div>
+                <div className="text-xs text-muted-foreground">
+                  Status: <span className="font-semibold uppercase">{sub.status}</span>
+                </div>
               </div>
-              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                ✕
+              </button>
             </div>
 
             <div className="space-y-3">
@@ -220,17 +297,32 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 const fieldFiles = files.filter((x) => x.field_kode === f.kode);
                 return (
                   <div key={f.kode} className="rounded-md border border-border bg-background p-3">
-                    <div className="text-xs font-medium uppercase text-muted-foreground">{f.label}</div>
+                    <div className="text-xs font-medium uppercase text-muted-foreground">
+                      {f.label}
+                    </div>
                     {fieldFiles.length > 0 ? (
                       <div className="mt-1 space-y-1">
                         {fieldFiles.map((file) => (
-                          <button key={file.id} onClick={() => preview(file.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                            <FileText className="h-3 w-3" /> {file.storage_path.split("/").pop()} <ExternalLink className="h-3 w-3" />
+                          <button
+                            key={file.id}
+                            onClick={() => preview(file.id)}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                          >
+                            <FileText className="h-3 w-3" /> {file.storage_path.split("/").pop()}{" "}
+                            <ExternalLink className="h-3 w-3" />
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <div className="mt-1 break-words text-sm">{v == null || v === "" ? <span className="text-muted-foreground italic">(kosong)</span> : Array.isArray(v) ? v.join(", ") : String(v)}</div>
+                      <div className="mt-1 break-words text-sm">
+                        {v == null || v === "" ? (
+                          <span className="text-muted-foreground italic">(kosong)</span>
+                        ) : Array.isArray(v) ? (
+                          v.join(", ")
+                        ) : (
+                          String(v)
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -238,14 +330,39 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </div>
 
             <div className="mt-4">
-              <label className="text-xs font-medium">Catatan Reviewer {`(wajib untuk Reject / Request Revisi)`}</label>
-              <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="text-xs font-medium">
+                Catatan Reviewer {`(wajib untuk Reject / Request Revisi)`}
+              </label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
 
             <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button onClick={() => act("revision")} disabled={busy} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"><RotateCcw className="h-4 w-4" /> Minta Revisi</button>
-              <button onClick={() => act("reject")} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-destructive px-3 py-2 text-sm font-semibold text-destructive-foreground"><XCircle className="h-4 w-4" /> Reject</button>
-              <button onClick={() => act("approve")} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-success px-3 py-2 text-sm font-semibold text-success-foreground"><CheckCircle2 className="h-4 w-4" /> Approve</button>
+              <button
+                onClick={() => act("revision")}
+                disabled={busy}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+              >
+                <RotateCcw className="h-4 w-4" /> Minta Revisi
+              </button>
+              <button
+                onClick={() => act("reject")}
+                disabled={busy}
+                className="inline-flex items-center gap-1 rounded-md bg-destructive px-3 py-2 text-sm font-semibold text-destructive-foreground"
+              >
+                <XCircle className="h-4 w-4" /> Reject
+              </button>
+              <button
+                onClick={() => act("approve")}
+                disabled={busy}
+                className="inline-flex items-center gap-1 rounded-md bg-success px-3 py-2 text-sm font-semibold text-success-foreground"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Approve
+              </button>
             </div>
           </>
         )}

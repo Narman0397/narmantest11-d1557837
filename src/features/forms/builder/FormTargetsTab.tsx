@@ -98,17 +98,18 @@ export function FormTargetsTab({
       newType === "role"
         ? ROLES.asn
         : newType === "asn_type"
-        ? ASN_TYPES.pns
-        : newType === "position"
-        ? POSITIONS.staff
-        : "";
+          ? ASN_TYPES.pns
+          : newType === "position"
+            ? POSITIONS.staff
+            : "";
     updateRow(i, { target_type: newType, target_value: defaultValue });
   }
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4">
       <p className="text-xs text-muted-foreground">
-        Tentukan siapa yang harus mengisi form ini. Jika kosong, default = semua user di OPD pemilik form.
+        Tentukan siapa yang harus mengisi form ini. Jika kosong, default = semua user di OPD pemilik
+        form.
       </p>
 
       {targets.map((t, i) => (
@@ -229,11 +230,22 @@ export function FormTargetsTab({
         {formStatus === "published" && (
           <button
             onClick={async () => {
-              if (!confirm("Sinkronkan assignment? Sistem akan membuat assignment baru bagi user yang masuk target tetapi belum punya assignment.")) return;
+              if (
+                !confirm(
+                  "Sinkronkan assignment? Sistem akan membuat assignment baru bagi user yang masuk target tetapi belum punya assignment.",
+                )
+              )
+                return;
               setSyncing(true);
               try {
-                const r = (await syncAssignmentsForForm({ data: { form_id: formId } })) as unknown as { added: number };
-                alert(r.added > 0 ? `${r.added} assignment baru dibuat.` : "Tidak ada user baru yang perlu di-assign.");
+                const r = (await syncAssignmentsForForm({
+                  data: { form_id: formId },
+                })) as unknown as { added: number };
+                alert(
+                  r.added > 0
+                    ? `${r.added} assignment baru dibuat.`
+                    : "Tidak ada user baru yang perlu di-assign.",
+                );
               } catch (e) {
                 alert(e instanceof Error ? e.message : "Gagal sinkronisasi");
               } finally {
@@ -244,13 +256,15 @@ export function FormTargetsTab({
             className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
             title="Buat assignment baru untuk user yang masuk target tetapi belum punya assignment"
           >
-            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} /> Sinkronkan Assignment
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} /> Sinkronkan
+            Assignment
           </button>
         )}
       </div>
       {formStatus === "published" && (
         <p className="text-[11px] text-muted-foreground">
-          Form sudah dipublish. Perubahan target akan memengaruhi user yang menerima assignment baru saat tombol <strong>Sinkronkan Assignment</strong> ditekan. Assignment lama tidak dihapus.
+          Form sudah dipublish. Perubahan target akan memengaruhi user yang menerima assignment baru
+          saat tombol <strong>Sinkronkan Assignment</strong> ditekan. Assignment lama tidak dihapus.
         </p>
       )}
     </div>
@@ -271,7 +285,10 @@ function UserPicker({
   const [busy, setBusy] = useState(false);
   const [hits, setHits] = useState<ProfileHit[]>([]);
   const tRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const display = useMemo(() => label ?? (value ? `User ${value.slice(0, 8)}…` : ""), [label, value]);
+  const display = useMemo(
+    () => label ?? (value ? `User ${value.slice(0, 8)}…` : ""),
+    [label, value],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -322,7 +339,9 @@ function UserPicker({
           <div className="max-h-56 overflow-y-auto">
             {busy && <div className="px-3 py-2 text-xs text-muted-foreground">Mencari…</div>}
             {!busy && q.trim().length < 2 && (
-              <div className="px-3 py-2 text-xs text-muted-foreground">Ketik minimal 2 karakter</div>
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Ketik minimal 2 karakter
+              </div>
             )}
             {!busy && q.trim().length >= 2 && hits.length === 0 && (
               <div className="px-3 py-2 text-xs text-muted-foreground">Tidak ada hasil</div>

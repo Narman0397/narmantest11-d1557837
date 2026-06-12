@@ -15,7 +15,14 @@ async function assertSuperAdmin(userId: string) {
   if (data !== true) throw new Error("Forbidden");
 }
 
-async function writeAudit(actorId: string, aksi: string, entitas: string, entitasId: string, correlationId: string, meta: unknown) {
+async function writeAudit(
+  actorId: string,
+  aksi: string,
+  entitas: string,
+  entitasId: string,
+  correlationId: string,
+  meta: unknown,
+) {
   try {
     await supabaseAdmin.from("audit_log").insert({
       user_id: actorId,

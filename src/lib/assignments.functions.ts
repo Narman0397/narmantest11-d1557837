@@ -16,9 +16,10 @@ type TargetRow = { target_type: string; target_value: string };
  * Memutuskan kumpulan user_id yang harus dapat assignment untuk form
  * berdasarkan baris form_targets. Server-side resolution.
  */
-async function resolveTargetUserIds(formId: string, formOpdId: string | null): Promise<
-  Array<{ user_id: string; opd_id: string | null }>
-> {
+async function resolveTargetUserIds(
+  formId: string,
+  formOpdId: string | null,
+): Promise<Array<{ user_id: string; opd_id: string | null }>> {
   const { data: targets } = await supabaseAdmin
     .from("form_targets")
     .select("target_type,target_value")
@@ -30,10 +31,7 @@ async function resolveTargetUserIds(formId: string, formOpdId: string | null): P
   // 1. user spesifik (target_type = 'individu')
   const userIds = t.filter((x) => x.target_type === "individu").map((x) => x.target_value);
   if (userIds.length) {
-    const { data } = await supabaseAdmin
-      .from("profiles")
-      .select("id,opd_id")
-      .in("id", userIds);
+    const { data } = await supabaseAdmin.from("profiles").select("id,opd_id").in("id", userIds);
     for (const p of data ?? []) out.set(p.id, { user_id: p.id, opd_id: p.opd_id });
   }
 
@@ -54,10 +52,7 @@ async function resolveTargetUserIds(formId: string, formOpdId: string | null): P
   // 3. opd-based
   const opds = t.filter((x) => x.target_type === "opd").map((x) => x.target_value);
   if (opds.length) {
-    const { data } = await supabaseAdmin
-      .from("profiles")
-      .select("id,opd_id")
-      .in("opd_id", opds);
+    const { data } = await supabaseAdmin.from("profiles").select("id,opd_id").in("opd_id", opds);
     for (const p of data ?? []) out.set(p.id, { user_id: p.id, opd_id: p.opd_id });
   }
 
@@ -125,7 +120,9 @@ export async function generateAssignmentsForForm(formId: string): Promise<number
       userId: u.user_id,
       tipe: "form.assigned",
       judul: `Tugas baru: ${form.judul}`,
-      body: form.deadline ? `Tenggat: ${new Date(form.deadline).toLocaleDateString("id-ID")}` : null,
+      body: form.deadline
+        ? `Tenggat: ${new Date(form.deadline).toLocaleDateString("id-ID")}`
+        : null,
       link: `/asn/tugas`,
       meta: { form_id: formId },
     })),
@@ -150,7 +147,11 @@ export const syncAssignmentsForForm = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!form) throw new Error("Form tidak ditemukan");
     const ctx = await getUserContext(supabaseAdmin, userId);
-    if (!ctx.isElevated && !(ctx.isAdminOpd && ctx.opdId === form.opd_pemilik_id) && form.created_by !== userId) {
+    if (
+      !ctx.isElevated &&
+      !(ctx.isAdminOpd && ctx.opdId === form.opd_pemilik_id) &&
+      form.created_by !== userId
+    ) {
       throw new Error("Akses ditolak");
     }
     if (form.status !== "published") throw new Error("Form harus berstatus published");
@@ -247,7 +248,12 @@ export const updateAssignmentStatus = createServerFn({ method: "POST" })
       if (!a) throw new Error("Assignment tidak ditemukan");
       if (a.user_id !== userId) throw new Error("Akses ditolak");
       if (a.status !== "assigned") {
-        log.info("assignment.update.noop", { userId, correlationId, id: data.id, status: a.status });
+        log.info("assignment.update.noop", {
+          userId,
+          correlationId,
+          id: data.id,
+          status: a.status,
+        });
         return { ok: true, status: a.status };
       }
       try {

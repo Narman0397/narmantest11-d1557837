@@ -3,14 +3,38 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, ShieldCheck, Database, Users, Megaphone, Search, Building2,
-  GraduationCap, HeartPulse, Landmark, Wallet, Wheat, Hammer, Bus, Briefcase,
-  Trees, Shield, Scale, Map as MapIcon, Wrench, Factory, Stethoscope, FileText,
+  ArrowRight,
+  ShieldCheck,
+  Database,
+  Users,
+  Megaphone,
+  Search,
+  Building2,
+  GraduationCap,
+  HeartPulse,
+  Landmark,
+  Wallet,
+  Wheat,
+  Hammer,
+  Bus,
+  Briefcase,
+  Trees,
+  Shield,
+  Scale,
+  Map as MapIcon,
+  Wrench,
+  Factory,
+  Stethoscope,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import { PageShell } from "@/components/site/PageShell";
 import { HomeLayananSkeleton } from "@/components/site/Skeletons";
-import { homeStatsQueryOptions, opdListQueryOptions, layananCountByOpdQueryOptions } from "@/lib/queries";
+import {
+  homeStatsQueryOptions,
+  opdListQueryOptions,
+  layananCountByOpdQueryOptions,
+} from "@/lib/queries";
 import { getShowOpdDirectory, useSiteBranding } from "@/lib/site-settings";
 import heroImg from "@/assets/hero-city.jpg";
 
@@ -24,7 +48,8 @@ function iconForOpd(nama: string, singkatan: string): LucideIcon {
   if (/(pertanian|tani|perkebunan|peternakan)/.test(s)) return Wheat;
   if (/(pekerjaan umum|pu |pupr|cipta|bina marga)/.test(s)) return Hammer;
   if (/(perhubungan|dishub|transport)/.test(s)) return Bus;
-  if (/(tenaga kerja|disnaker|usaha|ukm|koperasi|perdagangan|perindustri)/.test(s)) return Briefcase;
+  if (/(tenaga kerja|disnaker|usaha|ukm|koperasi|perdagangan|perindustri)/.test(s))
+    return Briefcase;
   if (/(lingkungan|kehutanan|dlh)/.test(s)) return Trees;
   if (/(polisi|satpol|pol pp|trantib|keamanan|damkar)/.test(s)) return Shield;
   if (/(hukum|peradilan|advokat)/.test(s)) return Scale;
@@ -36,14 +61,20 @@ function iconForOpd(nama: string, singkatan: string): LucideIcon {
   return Building2;
 }
 
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Pemerintah Kabupaten Buton Selatan — Portal Resmi & Satu Data" },
-      { name: "description", content: "Portal resmi pelayanan publik dan satu data Kabupaten Buton Selatan. Ajukan layanan, lihat statistik, dan pantau kinerja pemerintah." },
+      {
+        name: "description",
+        content:
+          "Portal resmi pelayanan publik dan satu data Kabupaten Buton Selatan. Ajukan layanan, lihat statistik, dan pantau kinerja pemerintah.",
+      },
       { property: "og:title", content: "Pemerintah Kabupaten Buton Selatan — Portal Resmi" },
-      { property: "og:description", content: "Sentralisasi data dan pelayanan publik kota dalam satu portal." },
+      {
+        property: "og:description",
+        content: "Sentralisasi data dan pelayanan publik kota dalam satu portal.",
+      },
     ],
   }),
   loader: ({ context: { queryClient } }) => {
@@ -66,7 +97,10 @@ function StatsGrid() {
     { label: "Layanan Online", value: formatNumber(data.layananOnline) },
     { label: "Permohonan/bulan", value: formatNumber(data.permohonanBulanIni) },
     { label: "Dataset Terbuka", value: formatNumber(data.datasetTerbuka) },
-    { label: "Kepuasan Warga", value: data.kepuasanPersen !== null ? `${data.kepuasanPersen.toFixed(0)}%` : "—" },
+    {
+      label: "Kepuasan Warga",
+      value: data.kepuasanPersen !== null ? `${data.kepuasanPersen.toFixed(0)}%` : "—",
+    },
   ];
   return (
     <>
@@ -132,7 +166,11 @@ function HomePage() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const [showOpdDir, setShowOpdDir] = useState(true);
-  useEffect(() => { getShowOpdDirectory().then(setShowOpdDir).catch(() => {}); }, []);
+  useEffect(() => {
+    getShowOpdDirectory()
+      .then(setShowOpdDir)
+      .catch(() => {});
+  }, []);
   const branding = useSiteBranding();
 
   const submitSearch = (e: React.FormEvent) => {
@@ -146,33 +184,52 @@ function HomePage() {
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
         <div
           className="absolute inset-0 opacity-25 mix-blend-overlay"
-          style={{ backgroundImage: `url(${branding.hero_bg_url || heroImg})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{
+            backgroundImage: `url(${branding.hero_bg_url || heroImg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
           aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" aria-hidden />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"
+          aria-hidden
+        />
         <div className="container-page relative grid gap-8 py-12 md:py-16 lg:grid-cols-12 lg:gap-10">
           <motion.div initial={false} className="lg:col-span-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider backdrop-blur">
               <ShieldCheck className="h-3.5 w-3.5" /> {branding.hero_eyebrow}
             </span>
             <h1 className="mt-4 text-balance text-3xl font-bold leading-tight md:text-5xl">
-              {branding.hero_title_line1}<br />{branding.hero_title_line2}<br /><span className="text-gold">{branding.hero_title_line3}</span>
+              {branding.hero_title_line1}
+              <br />
+              {branding.hero_title_line2}
+              <br />
+              <span className="text-gold">{branding.hero_title_line3}</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm text-white/85 md:text-base">
               {branding.hero_subtitle}
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link to="/layanan" className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-primary shadow-elevated hover:bg-white/95">
+              <Link
+                to="/layanan"
+                className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-primary shadow-elevated hover:bg-white/95"
+              >
                 {branding.hero_btn_primary} <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/data" className="inline-flex h-11 items-center gap-2 rounded-md border border-white/30 bg-white/10 px-5 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
+              <Link
+                to="/data"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-white/30 bg-white/10 px-5 text-sm font-semibold text-white backdrop-blur hover:bg-white/15"
+              >
                 {branding.hero_btn_secondary}
               </Link>
-              
             </div>
 
-            <form onSubmit={submitSearch} className="mt-6 flex max-w-xl items-center gap-2 rounded-xl border border-white/20 bg-white/95 p-1.5 shadow-elevated">
+            <form
+              onSubmit={submitSearch}
+              className="mt-6 flex max-w-xl items-center gap-2 rounded-xl border border-white/20 bg-white/95 p-1.5 shadow-elevated"
+            >
               <Search className="ml-2 h-5 w-5 text-muted-foreground" />
               <input
                 value={q}
@@ -180,7 +237,10 @@ function HomePage() {
                 placeholder="Cari layanan: KTP, IMB, beasiswa…"
                 className="flex-1 bg-transparent px-2 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
-              <button type="submit" className="rounded-md bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              <button
+                type="submit"
+                className="rounded-md bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
                 Cari
               </button>
             </form>
@@ -201,11 +261,16 @@ function HomePage() {
         <section className="container-page py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-accent">{branding.direktori_eyebrow}</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-accent">
+                {branding.direktori_eyebrow}
+              </div>
               <h2 className="mt-1 text-2xl font-bold md:text-3xl">{branding.direktori_title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{branding.direktori_desc}</p>
             </div>
-            <Link to="/layanan" className="hidden text-sm font-medium text-primary hover:underline md:inline-flex">
+            <Link
+              to="/layanan"
+              className="hidden text-sm font-medium text-primary hover:underline md:inline-flex"
+            >
               Lihat semua layanan →
             </Link>
           </div>
@@ -215,7 +280,10 @@ function HomePage() {
           </Suspense>
 
           <div className="mt-6 text-center md:hidden">
-            <Link to="/layanan" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+            <Link
+              to="/layanan"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary"
+            >
               Lihat semua layanan <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -247,15 +315,19 @@ function HomePage() {
           <div className="grid items-center gap-6 md:grid-cols-2">
             <div>
               <h2 className="text-2xl font-bold md:text-3xl">{branding.cta_title}</h2>
-              <p className="mt-2 text-white/85">
-                {branding.cta_desc}
-              </p>
+              <p className="mt-2 text-white/85">{branding.cta_desc}</p>
             </div>
             <div className="flex flex-wrap gap-3 md:justify-end">
-              <Link to="/kontak" className="inline-flex h-11 items-center rounded-md bg-white px-5 text-sm font-semibold text-primary hover:bg-white/95">
+              <Link
+                to="/kontak"
+                className="inline-flex h-11 items-center rounded-md bg-white px-5 text-sm font-semibold text-primary hover:bg-white/95"
+              >
                 {branding.cta_btn_primary}
               </Link>
-              <Link to="/tentang" className="inline-flex h-11 items-center rounded-md border border-white/40 px-5 text-sm font-semibold text-white hover:bg-white/10">
+              <Link
+                to="/tentang"
+                className="inline-flex h-11 items-center rounded-md border border-white/40 px-5 text-sm font-semibold text-white hover:bg-white/10"
+              >
                 {branding.cta_btn_secondary}
               </Link>
             </div>

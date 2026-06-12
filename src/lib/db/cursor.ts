@@ -14,9 +14,7 @@ export function decodeCursor(s: string | null | undefined): Cursor | null {
   if (!s) return null;
   try {
     const raw =
-      typeof Buffer !== "undefined"
-        ? Buffer.from(s, "base64url").toString("utf8")
-        : atob(s);
+      typeof Buffer !== "undefined" ? Buffer.from(s, "base64url").toString("utf8") : atob(s);
     const obj = JSON.parse(raw) as Partial<Cursor>;
     if (typeof obj?.ts !== "string" || typeof obj?.id !== "string") return null;
     return { ts: obj.ts, id: obj.id };

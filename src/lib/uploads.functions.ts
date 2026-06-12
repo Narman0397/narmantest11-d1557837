@@ -6,7 +6,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getUserContext, canViewSubmission, canReviewSubmission } from "@/features/rbac/guards";
 import { enforceRateLimit, RateLimits } from "./security/rate-limit";
-import { createSignedDownload, createSignedUpload, removeObjects, loadStorageConfig, type StorageProvider } from "./storage/provider.server";
+import {
+  createSignedDownload,
+  createSignedUpload,
+  removeObjects,
+  loadStorageConfig,
+  type StorageProvider,
+} from "./storage/provider.server";
 
 const BUCKET = "form-submissions";
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25MB
@@ -170,17 +176,27 @@ export const getSignedPreview = createServerFn({ method: "POST" })
     const ctx = await getUserContext(supabaseAdmin, userId);
     const { data: f } = await supabaseAdmin
       .from("form_submission_files")
-      .select("storage_path, provider, submission_id, form_submissions!inner(user_id, opd_id, form_id, forms(opd_pemilik_id))")
+      .select(
+        "storage_path, provider, submission_id, form_submissions!inner(user_id, opd_id, form_id, forms(opd_pemilik_id))",
+      )
       .eq("id", data.fileId)
       .maybeSingle();
     if (!f || !f.storage_path) throw new Error("File tidak ditemukan");
-    const sub = (f as unknown as { form_submissions: { user_id: string; opd_id: string | null; forms: { opd_pemilik_id: string | null } } }).form_submissions;
+    const sub = (
+      f as unknown as {
+        form_submissions: {
+          user_id: string;
+          opd_id: string | null;
+          forms: { opd_pemilik_id: string | null };
+        };
+      }
+    ).form_submissions;
     const opd = sub.forms?.opd_pemilik_id ?? sub.opd_id;
     const allowed =
       canViewSubmission(ctx, { user_id: sub.user_id, opd_id: opd }) ||
       canReviewSubmission(ctx, { opd_id: opd });
     if (!allowed) throw new Error("Akses ditolak");
-    const provider = ((f as { provider?: StorageProvider }).provider) ?? "supabase";
+    const provider = (f as { provider?: StorageProvider }).provider ?? "supabase";
     const res = await createSignedDownload(BUCKET, f.storage_path, data.ttlSeconds, provider);
     return res;
   });
@@ -197,12 +213,13 @@ export const deleteSubmissionFile = createServerFn({ method: "POST" })
       .eq("id", data.fileId)
       .maybeSingle();
     if (!f || !f.storage_path) throw new Error("File tidak ditemukan");
-    const sub = (f as unknown as { form_submissions: { user_id: string; status: string } }).form_submissions;
+    const sub = (f as unknown as { form_submissions: { user_id: string; status: string } })
+      .form_submissions;
     if (sub.user_id !== userId) throw new Error("Akses ditolak");
     if (!["draft", "revision_required"].includes(sub.status)) {
       throw new Error("Tidak dapat hapus file pada status ini");
     }
-    const provider = ((f as { provider?: StorageProvider }).provider) ?? "supabase";
+    const provider = (f as { provider?: StorageProvider }).provider ?? "supabase";
     await removeObjects(BUCKET, [f.storage_path], provider);
     await supabaseAdmin.from("form_submission_files").delete().eq("id", f.id);
     return { ok: true };

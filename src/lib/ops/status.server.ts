@@ -29,15 +29,40 @@ export async function getOpsStatus(): Promise<OpsStatus> {
     { count: failuresLast24h },
     { count: rateHits },
   ] = await Promise.all([
-    supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "retrying"),
-    supabaseAdmin.from("retry_queue").select("id", { count: "exact", head: true }).eq("status", "dead_letter"),
-    supabaseAdmin.from("dead_letter_jobs").select("id", { count: "exact", head: true }).is("resolved_at", null),
+    supabaseAdmin
+      .from("retry_queue")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabaseAdmin
+      .from("retry_queue")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "retrying"),
+    supabaseAdmin
+      .from("retry_queue")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "dead_letter"),
+    supabaseAdmin
+      .from("dead_letter_jobs")
+      .select("id", { count: "exact", head: true })
+      .is("resolved_at", null),
     supabaseAdmin.from("dead_letter_jobs").select("id", { count: "exact", head: true }),
-    supabaseAdmin.from("form_submission_files").select("id", { count: "exact", head: true }).eq("cleanup_status", "orphaned"),
-    supabaseAdmin.from("cron_history").select("id", { count: "exact", head: true }).gte("started_at", oneDayAgo),
-    supabaseAdmin.from("cron_history").select("id", { count: "exact", head: true }).eq("status", "error").gte("started_at", oneDayAgo),
-    supabaseAdmin.from("rate_limit_hits").select("subject", { count: "exact", head: true }).gte("last_hit_at", oneHourAgo),
+    supabaseAdmin
+      .from("form_submission_files")
+      .select("id", { count: "exact", head: true })
+      .eq("cleanup_status", "orphaned"),
+    supabaseAdmin
+      .from("cron_history")
+      .select("id", { count: "exact", head: true })
+      .gte("started_at", oneDayAgo),
+    supabaseAdmin
+      .from("cron_history")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "error")
+      .gte("started_at", oneDayAgo),
+    supabaseAdmin
+      .from("rate_limit_hits")
+      .select("subject", { count: "exact", head: true })
+      .gte("last_hit_at", oneHourAgo),
   ]);
 
   return {

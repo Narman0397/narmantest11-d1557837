@@ -10,24 +10,47 @@ async function ctxOf(userId: string) {
   return { isSuper: c.isSuper, isAdminOpd: c.isAdminOpd, isAsn: c.isAsn, opdId: c.opdId };
 }
 
-const LIFECYCLE = ["pengadaan", "gudang", "aktif", "dipinjam", "mutasi", "maintenance", "rusak", "hilang", "dihapuskan"] as const;
+const LIFECYCLE = [
+  "pengadaan",
+  "gudang",
+  "aktif",
+  "dipinjam",
+  "mutasi",
+  "maintenance",
+  "rusak",
+  "hilang",
+  "dihapuskan",
+] as const;
 
 export const setAsetLifecycle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    aset_id: z.string().uuid(),
-    lifecycle_status: z.enum(LIFECYCLE),
-    catatan: z.string().max(500).optional().nullable(),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        aset_id: z.string().uuid(),
+        lifecycle_status: z.enum(LIFECYCLE),
+        catatan: z.string().max(500).optional().nullable(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
-    const { data: a } = await supabaseAdmin.from("aset").select("opd_id,lifecycle_status").eq("id", data.aset_id).maybeSingle();
+    const { data: a } = await supabaseAdmin
+      .from("aset")
+      .select("opd_id,lifecycle_status")
+      .eq("id", data.aset_id)
+      .maybeSingle();
     if (!a) throw new Error("Aset tidak ditemukan");
     if (!c.isSuper && !(c.isAdminOpd && c.opdId === a.opd_id)) throw new Error("Forbidden");
-    const { error } = await supabaseAdmin.from("aset").update({ lifecycle_status: data.lifecycle_status }).eq("id", data.aset_id);
+    const { error } = await supabaseAdmin
+      .from("aset")
+      .update({ lifecycle_status: data.lifecycle_status })
+      .eq("id", data.aset_id);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("aset_riwayat").insert({
-      aset_id: data.aset_id, oleh: context.userId, aksi: "ubah_status",
+      aset_id: data.aset_id,
+      oleh: context.userId,
+      aksi: "ubah_status",
       catatan: data.catatan ?? null,
       data: { dari: a.lifecycle_status, ke: data.lifecycle_status } as never,
     });
@@ -53,22 +76,34 @@ export const upsertCampaign = createServerFn({ method: "POST" })
     if (!c.isSuper) throw new Error("Forbidden");
     if (data.id) {
       const { id, ...upd } = data;
-      const { error } = await supabaseAdmin.from("aset_verification_campaign").update(upd).eq("id", id);
+      const { error } = await supabaseAdmin
+        .from("aset_verification_campaign")
+        .update(upd)
+        .eq("id", id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
     const { data: row, error } = await supabaseAdmin
       .from("aset_verification_campaign")
       .insert({ ...data, created_by: context.userId })
-      .select("id").single();
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
 
     // Generate items: snapshot aset milik OPD target
     const targets = data.target_opd_ids ?? [];
     if (targets.length > 0) {
-      const { data: asets } = await supabaseAdmin.from("aset").select("id,opd_id").in("opd_id", targets);
+      const { data: asets } = await supabaseAdmin
+        .from("aset")
+        .select("id,opd_id")
+        .in("opd_id", targets);
       if (asets && asets.length > 0) {
-        const items = asets.map((a) => ({ campaign_id: row.id, aset_id: a.id, opd_id: a.opd_id, status: "belum" }));
+        const items = asets.map((a) => ({
+          campaign_id: row.id,
+          aset_id: a.id,
+          opd_id: a.opd_id,
+          status: "belum",
+        }));
         await supabaseAdmin.from("aset_verification_item").insert(items);
       }
     }
@@ -81,7 +116,8 @@ export const listCampaigns = createServerFn({ method: "POST" })
     const { data, error } = await supabaseAdmin
       .from("aset_verification_campaign")
       .select("id,nama,deskripsi,periode_mulai,periode_selesai,target_opd_ids,status,created_at")
-      .order("created_at", { ascending: false }).limit(100);
+      .order("created_at", { ascending: false })
+      .limit(100);
     if (error) throw new Error(error.message);
     return { rows: data ?? [] };
   });
@@ -91,7 +127,9 @@ export const campaignProgress = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ campaign_id: z.string().uuid() }).parse(i))
   .handler(async ({ data }) => {
     const { data: rows, error } = await supabaseAdmin
-      .from("aset_verification_item").select("status,opd_id").eq("campaign_id", data.campaign_id);
+      .from("aset_verification_item")
+      .select("status,opd_id")
+      .eq("campaign_id", data.campaign_id);
     if (error) throw new Error(error.message);
     const total = rows?.length ?? 0;
     const verified = (rows ?? []).filter((r) => r.status === "selesai").length;
@@ -99,25 +137,35 @@ export const campaignProgress = createServerFn({ method: "POST" })
     (rows ?? []).forEach((r) => {
       const k = r.opd_id ?? "_";
       const cur = byOpd.get(k) ?? { total: 0, verified: 0 };
-      cur.total++; if (r.status === "selesai") cur.verified++;
+      cur.total++;
+      if (r.status === "selesai") cur.verified++;
       byOpd.set(k, cur);
     });
     return {
-      total, verified, persen: total ? Math.round((verified * 100) / total) : 0,
+      total,
+      verified,
+      persen: total ? Math.round((verified * 100) / total) : 0,
       per_opd: Array.from(byOpd, ([opd_id, v]) => ({ opd_id, ...v })),
     };
   });
 
 export const listCampaignItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    campaign_id: z.string().uuid(),
-    status: z.enum(["belum", "selesai", "perlu_verifikasi"]).optional(),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        campaign_id: z.string().uuid(),
+        status: z.enum(["belum", "selesai", "perlu_verifikasi"]).optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
-    let q = supabaseAdmin.from("aset_verification_item")
-      .select("id,status,verified_at,lat,lng,lokasi_text,foto_url,catatan,aset:aset!aset_id(id,kode,nama,kategori,lifecycle_status), opd:opd!opd_id(nama,singkatan)")
+    let q = supabaseAdmin
+      .from("aset_verification_item")
+      .select(
+        "id,status,verified_at,lat,lng,lokasi_text,foto_url,catatan,aset:aset!aset_id(id,kode,nama,kategori,lifecycle_status), opd:opd!opd_id(nama,singkatan)",
+      )
       .eq("campaign_id", data.campaign_id)
       .order("status", { ascending: true })
       .limit(500);
@@ -130,41 +178,60 @@ export const listCampaignItems = createServerFn({ method: "POST" })
 
 export const submitCampaignVerification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    item_id: z.string().uuid(),
-    lat: z.number().optional().nullable(),
-    lng: z.number().optional().nullable(),
-    lokasi_text: z.string().max(255).optional().nullable(),
-    foto_url: z.string().max(1000).optional().nullable(),
-    catatan: z.string().max(500).optional().nullable(),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        item_id: z.string().uuid(),
+        lat: z.number().optional().nullable(),
+        lng: z.number().optional().nullable(),
+        lokasi_text: z.string().max(255).optional().nullable(),
+        foto_url: z.string().max(1000).optional().nullable(),
+        catatan: z.string().max(500).optional().nullable(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
-    const { data: it } = await supabaseAdmin.from("aset_verification_item").select("id,opd_id,aset_id").eq("id", data.item_id).maybeSingle();
+    const { data: it } = await supabaseAdmin
+      .from("aset_verification_item")
+      .select("id,opd_id,aset_id")
+      .eq("id", data.item_id)
+      .maybeSingle();
     if (!it) throw new Error("Item verifikasi tidak ditemukan");
     if (!c.isSuper && c.opdId !== it.opd_id) throw new Error("Bukan untuk OPD Anda");
-    const { error } = await supabaseAdmin.from("aset_verification_item").update({
-      status: "selesai",
-      verified_at: new Date().toISOString(),
-      verified_by: context.userId,
-      lat: data.lat ?? null, lng: data.lng ?? null,
-      lokasi_text: data.lokasi_text ?? null,
-      foto_url: data.foto_url ?? null,
-      catatan: data.catatan ?? null,
-    }).eq("id", data.item_id);
+    const { error } = await supabaseAdmin
+      .from("aset_verification_item")
+      .update({
+        status: "selesai",
+        verified_at: new Date().toISOString(),
+        verified_by: context.userId,
+        lat: data.lat ?? null,
+        lng: data.lng ?? null,
+        lokasi_text: data.lokasi_text ?? null,
+        foto_url: data.foto_url ?? null,
+        catatan: data.catatan ?? null,
+      })
+      .eq("id", data.item_id);
     if (error) throw new Error(error.message);
-    await supabaseAdmin.from("aset").update({ last_verified_at: new Date().toISOString() }).eq("id", it.aset_id);
+    await supabaseAdmin
+      .from("aset")
+      .update({ last_verified_at: new Date().toISOString() })
+      .eq("id", it.aset_id);
     return { ok: true };
   });
 
 // ===== COMPLIANCE =====
 export const asetCompliance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ opd_id: z.string().uuid().optional().nullable() }).parse(i))
+  .inputValidator((i: unknown) =>
+    z.object({ opd_id: z.string().uuid().optional().nullable() }).parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
     const opd = c.isSuper ? (data.opd_id ?? null) : c.opdId;
-    const { data: row, error } = await supabaseAdmin.rpc("aset_compliance", { _opd_id: opd as string });
+    const { data: row, error } = await supabaseAdmin.rpc("aset_compliance", {
+      _opd_id: opd as string,
+    });
     if (error) throw new Error(error.message);
     return row;
   });

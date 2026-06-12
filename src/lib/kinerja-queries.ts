@@ -15,9 +15,7 @@ export type OpdKinerja = {
 
 export async function fetchAllOpdKinerja(): Promise<OpdKinerja[]> {
   // 1. Ambil semua OPD
-  const { data: opds, error: opdError } = await supabase
-    .from("opd")
-    .select("id, nama, singkatan");
+  const { data: opds, error: opdError } = await supabase.from("opd").select("id, nama, singkatan");
   if (opdError) throw opdError;
 
   // 2. Ambil agregat permohonan via RPC (bypass RLS, dapat diakses publik)
@@ -27,9 +25,14 @@ export async function fetchAllOpdKinerja(): Promise<OpdKinerja[]> {
   // 3. Ambil agregat rating per OPD via RPC publik
   const { data: ratingRows } = await supabase.rpc("opd_rating_agg");
   const ratingByOpd = new Map<string, { total: number; count: number }>();
-  ((ratingRows ?? []) as Array<{ opd_id: string; total_rating: number; jumlah_rating: number }>).forEach((r) => {
+  (
+    (ratingRows ?? []) as Array<{ opd_id: string; total_rating: number; jumlah_rating: number }>
+  ).forEach((r) => {
     if (!r.opd_id) return;
-    ratingByOpd.set(r.opd_id, { total: Number(r.total_rating) || 0, count: Number(r.jumlah_rating) || 0 });
+    ratingByOpd.set(r.opd_id, {
+      total: Number(r.total_rating) || 0,
+      count: Number(r.jumlah_rating) || 0,
+    });
   });
 
   // 4. Aggregate rows per OPD
@@ -54,7 +57,15 @@ export async function fetchAllOpdKinerja(): Promise<OpdKinerja[]> {
     if (!row.opd_id) continue;
     const cur: Agg = aggByOpd.get(row.opd_id) ?? {
       total: 0,
-      status_counts: { baru: 0, diproses: 0, menunggu_dokumen: 0, dikembalikan: 0, selesai: 0, ditolak: 0, dibatalkan: 0 },
+      status_counts: {
+        baru: 0,
+        diproses: 0,
+        menunggu_dokumen: 0,
+        dikembalikan: 0,
+        selesai: 0,
+        ditolak: 0,
+        dibatalkan: 0,
+      },
       totalHariSelesai: 0,
       jumlahSelesai: 0,
       tepatWaktu: 0,
@@ -74,7 +85,15 @@ export async function fetchAllOpdKinerja(): Promise<OpdKinerja[]> {
   const result: OpdKinerja[] = opds.map((opd) => {
     const a = aggByOpd.get(opd.id) ?? {
       total: 0,
-      status_counts: { baru: 0, diproses: 0, menunggu_dokumen: 0, dikembalikan: 0, selesai: 0, ditolak: 0, dibatalkan: 0 } as Record<StatusPermohonan, number>,
+      status_counts: {
+        baru: 0,
+        diproses: 0,
+        menunggu_dokumen: 0,
+        dikembalikan: 0,
+        selesai: 0,
+        ditolak: 0,
+        dibatalkan: 0,
+      } as Record<StatusPermohonan, number>,
       totalHariSelesai: 0,
       jumlahSelesai: 0,
       tepatWaktu: 0,

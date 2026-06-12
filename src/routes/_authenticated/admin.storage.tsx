@@ -2,12 +2,26 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Folder, FileIcon, Trash2, ChevronLeft, ExternalLink, RefreshCw, AlertCircle } from "lucide-react";
+import {
+  Folder,
+  FileIcon,
+  Trash2,
+  ChevronLeft,
+  ExternalLink,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
 import { useAuth } from "@/lib/auth-context";
-import { listStorageObjects, deleteStorageObject, getStorageCleanupConfig, setStorageCleanupConfig, runStorageCleanupNow } from "@/lib/admin-actions.functions";
+import {
+  listStorageObjects,
+  deleteStorageObject,
+  getStorageCleanupConfig,
+  setStorageCleanupConfig,
+  runStorageCleanupNow,
+} from "@/lib/admin-actions.functions";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/admin/storage")({
@@ -21,7 +35,14 @@ export const Route = createFileRoute("/_authenticated/admin/storage")({
   ),
 });
 
-type Item = { name: string; isFolder: boolean; size: number | null; mimetype: string | null; updated_at: string | null; signedUrl: string | null };
+type Item = {
+  name: string;
+  isFolder: boolean;
+  size: number | null;
+  mimetype: string | null;
+  updated_at: string | null;
+  signedUrl: string | null;
+};
 
 function StoragePage() {
   const { isSuperAdmin } = useAuth();
@@ -40,26 +61,38 @@ function StoragePage() {
       const cfg = await getStorageCleanupConfig();
       setCleanupEnabled(cfg.enabled);
       setCleanupMonths(cfg.months);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }
   async function saveCleanupConfig(enabled: boolean, months: number) {
     setCleanupSaving(true);
     try {
       await setStorageCleanupConfig({ data: { enabled, months } });
-      setCleanupEnabled(enabled); setCleanupMonths(months);
+      setCleanupEnabled(enabled);
+      setCleanupMonths(months);
       toast.success("Pengaturan disimpan");
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setCleanupSaving(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCleanupSaving(false);
+    }
   }
   async function runNow() {
     setCleanupRunning(true);
     try {
       const r = await runStorageCleanupNow();
       if ((r as { skipped?: boolean }).skipped) toast.message("Fitur cleanup nonaktif");
-      else toast.success(`Cleanup selesai: ${(r as { deleted?: number }).deleted ?? 0} berkas dihapus`);
+      else
+        toast.success(
+          `Cleanup selesai: ${(r as { deleted?: number }).deleted ?? 0} berkas dihapus`,
+        );
       load(prefix);
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setCleanupRunning(false); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCleanupRunning(false);
+    }
   }
 
   async function load(p: string) {
@@ -79,16 +112,27 @@ function StoragePage() {
       setLoadError(msg);
       toast.error(`Gagal memuat storage: ${msg}`);
       console.error("[admin.storage] load error", e);
+    } finally {
+      setLoading(false);
     }
-    finally { setLoading(false); }
   }
-  function retry() { load(loadError ? lastPrefix : prefix); }
-  useEffect(() => { if (isSuperAdmin) { load(""); loadCleanupConfig(); } }, [isSuperAdmin]);
+  function retry() {
+    load(loadError ? lastPrefix : prefix);
+  }
+  useEffect(() => {
+    if (isSuperAdmin) {
+      load("");
+      loadCleanupConfig();
+    }
+  }, [isSuperAdmin]);
 
-  function enter(name: string) { load(prefix ? `${prefix}/${name}` : name); }
+  function enter(name: string) {
+    load(prefix ? `${prefix}/${name}` : name);
+  }
   function up() {
     if (!prefix) return;
-    const parts = prefix.split("/"); parts.pop();
+    const parts = prefix.split("/");
+    parts.pop();
     load(parts.join("/"));
   }
   async function hapus(name: string) {
@@ -103,13 +147,22 @@ function StoragePage() {
     }
   }
 
-  if (!isSuperAdmin) return <AdminShell breadcrumb={[{ label: "Storage" }]}><div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">Hanya Super Admin.</div></AdminShell>;
+  if (!isSuperAdmin)
+    return (
+      <AdminShell breadcrumb={[{ label: "Storage" }]}>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+          Hanya Super Admin.
+        </div>
+      </AdminShell>
+    );
 
   return (
     <AdminShell breadcrumb={[{ label: "Storage" }]}>
       <div className="mb-4">
         <h1 className="font-display text-2xl font-bold">File Explorer</h1>
-        <p className="text-sm text-muted-foreground">Telusuri & kelola berkas pada bucket <code>berkas-permohonan</code>.</p>
+        <p className="text-sm text-muted-foreground">
+          Telusuri & kelola berkas pada bucket <code>berkas-permohonan</code>.
+        </p>
       </div>
 
       <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-soft">
@@ -123,16 +176,23 @@ function StoragePage() {
               />
               <div>
                 <div className="text-sm font-semibold">Pembersihan Otomatis Berkas</div>
-                <div className="text-xs text-muted-foreground">Hapus berkas lampiran yang lebih lama dari periode di bawah. Cron berjalan tiap jam.</div>
+                <div className="text-xs text-muted-foreground">
+                  Hapus berkas lampiran yang lebih lama dari periode di bawah. Cron berjalan tiap
+                  jam.
+                </div>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs text-muted-foreground">Lebih lama dari</label>
             <input
-              type="number" min={1} max={120}
+              type="number"
+              min={1}
+              max={120}
               value={cleanupMonths}
-              onChange={(e) => setCleanupMonths(Math.max(1, Math.min(120, Number(e.target.value) || 1)))}
+              onChange={(e) =>
+                setCleanupMonths(Math.max(1, Math.min(120, Number(e.target.value) || 1)))
+              }
               onBlur={() => saveCleanupConfig(cleanupEnabled, cleanupMonths)}
               disabled={cleanupSaving}
               className="h-9 w-20 rounded-md border border-border bg-background px-2 text-sm"
@@ -150,13 +210,22 @@ function StoragePage() {
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <button onClick={up} disabled={!prefix} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-40">
+        <button
+          onClick={up}
+          disabled={!prefix}
+          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-40"
+        >
           <ChevronLeft className="h-4 w-4" /> Naik
         </button>
-        <button onClick={() => load(prefix)} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm">
+        <button
+          onClick={() => load(prefix)}
+          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm"
+        >
           <RefreshCw className="h-4 w-4" /> Muat ulang
         </button>
-        <div className="ml-2 truncate rounded-md bg-muted px-3 py-1.5 text-xs font-mono">/ {prefix || "(root)"}</div>
+        <div className="ml-2 truncate rounded-md bg-muted px-3 py-1.5 text-xs font-mono">
+          / {prefix || "(root)"}
+        </div>
       </div>
 
       {loadError && (
@@ -188,16 +257,33 @@ function StoragePage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">Memuat…</td></tr>}
-            {!loading && loadError && items.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-12 text-center">
-                <div className="text-muted-foreground">Tidak dapat menampilkan berkas.</div>
-                <button onClick={retry} className="mt-3 inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted">
-                  <RefreshCw className="h-4 w-4" /> Coba lagi
-                </button>
-              </td></tr>
+            {loading && (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                  Memuat…
+                </td>
+              </tr>
             )}
-            {!loading && !loadError && items.length === 0 && <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">Folder kosong.</td></tr>}
+            {!loading && loadError && items.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center">
+                  <div className="text-muted-foreground">Tidak dapat menampilkan berkas.</div>
+                  <button
+                    onClick={retry}
+                    className="mt-3 inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+                  >
+                    <RefreshCw className="h-4 w-4" /> Coba lagi
+                  </button>
+                </td>
+              </tr>
+            )}
+            {!loading && !loadError && items.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                  Folder kosong.
+                </td>
+              </tr>
+            )}
             {items.map((it) => {
               const name = it?.name ?? "(tanpa nama)";
               const isFolder = !!it?.isFolder;
@@ -205,24 +291,43 @@ function StoragePage() {
                 <tr key={name} className="border-t border-border">
                   <td className="px-4 py-3">
                     {isFolder ? (
-                      <button onClick={() => enter(name)} className="inline-flex items-center gap-2 font-medium text-primary hover:underline">
+                      <button
+                        onClick={() => enter(name)}
+                        className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+                      >
                         <Folder className="h-4 w-4" /> {name}/
                       </button>
                     ) : (
-                      <span className="inline-flex items-center gap-2"><FileIcon className="h-4 w-4 text-muted-foreground" /> {name}</span>
+                      <span className="inline-flex items-center gap-2">
+                        <FileIcon className="h-4 w-4 text-muted-foreground" /> {name}
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{isFolder ? "folder" : (it?.mimetype ?? "file")}</td>
-                  <td className="px-4 py-3 text-xs">{it?.size != null ? formatBytes(it.size) : "—"}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{it?.updated_at ? new Date(it.updated_at).toLocaleString("id-ID") : "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {isFolder ? "folder" : (it?.mimetype ?? "file")}
+                  </td>
+                  <td className="px-4 py-3 text-xs">
+                    {it?.size != null ? formatBytes(it.size) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {it?.updated_at ? new Date(it.updated_at).toLocaleString("id-ID") : "—"}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {!isFolder && it?.signedUrl && (
-                      <a href={it.signedUrl} target="_blank" rel="noreferrer" className="mr-2 inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-muted">
+                      <a
+                        href={it.signedUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mr-2 inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-muted"
+                      >
                         <ExternalLink className="h-3.5 w-3.5" /> Buka
                       </a>
                     )}
                     {!isFolder && (
-                      <button onClick={() => hapus(name)} className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10">
+                      <button
+                        onClick={() => hapus(name)}
+                        className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                      >
                         <Trash2 className="h-3.5 w-3.5" /> Hapus
                       </button>
                     )}

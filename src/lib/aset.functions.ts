@@ -14,7 +14,6 @@ async function userCtx(userId: string) {
   return { isSuper: ctx.isSuper, isAdminOpd: ctx.isAdminOpd, isAsn: ctx.isAsn, opdId: ctx.opdId };
 }
 
-
 function genKode() {
   const ts = Date.now().toString(36).toUpperCase();
   const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -47,7 +46,8 @@ export const upsertAset = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => asetSchema.parse(input))
   .handler(async ({ data, context }) => {
     const ctx = await userCtx(context.userId);
-    if (!ctx.isSuper && !(ctx.isAdminOpd && ctx.opdId === data.opd_id)) throw new Error("Forbidden");
+    if (!ctx.isSuper && !(ctx.isAdminOpd && ctx.opdId === data.opd_id))
+      throw new Error("Forbidden");
     const rl = await checkRateLimit(context.userId, "aset_write", 60, 60);
     if (!rl.ok) throw new Error("Terlalu banyak permintaan");
     const correlationId = newCorrelationId();
@@ -77,7 +77,10 @@ export const upsertAset = createServerFn({ method: "POST" })
         throw e;
       }
       await supabaseAdmin.from("aset_riwayat").insert({
-        aset_id: id!, oleh: context.userId, aksi: "update", data: upd as never,
+        aset_id: id!,
+        oleh: context.userId,
+        aksi: "update",
+        data: upd as never,
       });
       log.info("aset.update.ok", { userId: context.userId, correlationId, id });
       return { ok: true, id };
@@ -87,13 +90,24 @@ export const upsertAset = createServerFn({ method: "POST" })
     return withIdempotency(key, 30_000, async () => {
       const kode = genKode();
       // qr_token diisi otomatis oleh trigger aset_set_qr_token; cast agar lulus type check
-      const { data: row, error } = await supabaseAdmin.from("aset").insert({ ...payload, kode } as never).select("id,kode").single();
+      const { data: row, error } = await supabaseAdmin
+        .from("aset")
+        .insert({ ...payload, kode } as never)
+        .select("id,kode")
+        .single();
       if (error) {
-        log.error("aset.create.fail", { userId: context.userId, correlationId, error: error.message });
+        log.error("aset.create.fail", {
+          userId: context.userId,
+          correlationId,
+          error: error.message,
+        });
         throw new Error(error.message);
       }
       await supabaseAdmin.from("aset_riwayat").insert({
-        aset_id: row.id, oleh: context.userId, aksi: "create", data: payload as never,
+        aset_id: row.id,
+        oleh: context.userId,
+        aksi: "create",
+        data: payload as never,
       });
       log.info("aset.create.ok", { userId: context.userId, correlationId, id: row.id });
       return { ok: true, id: row.id, kode: row.kode };
@@ -105,7 +119,11 @@ export const deleteAset = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const ctx = await userCtx(context.userId);
-    const { data: a } = await supabaseAdmin.from("aset").select("opd_id").eq("id", data.id).maybeSingle();
+    const { data: a } = await supabaseAdmin
+      .from("aset")
+      .select("opd_id")
+      .eq("id", data.id)
+      .maybeSingle();
     if (!a) throw new Error("Aset tidak ditemukan");
     if (!ctx.isSuper && !(ctx.isAdminOpd && ctx.opdId === a.opd_id)) throw new Error("Forbidden");
     const { error } = await supabaseAdmin.from("aset").delete().eq("id", data.id);
@@ -116,18 +134,22 @@ export const deleteAset = createServerFn({ method: "POST" })
 export const listAset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      opd_id: z.string().uuid().optional().nullable(),
-      q: z.string().max(120).optional().nullable(),
-      kategori: z.string().max(40).optional().nullable(),
-      mine: z.boolean().optional(),
-    }).parse(input),
+    z
+      .object({
+        opd_id: z.string().uuid().optional().nullable(),
+        q: z.string().max(120).optional().nullable(),
+        kategori: z.string().max(40).optional().nullable(),
+        mine: z.boolean().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const ctx = await userCtx(context.userId);
     let q = supabaseAdmin
       .from("aset")
-      .select("id,kode,qr_token,nama,kategori,merk,nomor_seri,opd_id,pemegang_user_id,lokasi_terkini,lat,lng,status,lifecycle_status,last_verified_at,garansi_sampai,kalibrasi_berikut,umur_ekonomis_bulan,metode_susut,nilai_perolehan,tanggal_perolehan,foto_url,updated_at, opd:opd!opd_id(nama,singkatan), pemegang:profiles!pemegang_user_id(nama_lengkap,nip)")
+      .select(
+        "id,kode,qr_token,nama,kategori,merk,nomor_seri,opd_id,pemegang_user_id,lokasi_terkini,lat,lng,status,lifecycle_status,last_verified_at,garansi_sampai,kalibrasi_berikut,umur_ekonomis_bulan,metode_susut,nilai_perolehan,tanggal_perolehan,foto_url,updated_at, opd:opd!opd_id(nama,singkatan), pemegang:profiles!pemegang_user_id(nama_lengkap,nip)",
+      )
       .order("updated_at", { ascending: false })
       .limit(500);
     if (data.mine) q = q.eq("pemegang_user_id", context.userId);
@@ -137,17 +159,19 @@ export const listAset = createServerFn({ method: "POST" })
       q = q.eq("opd_id", opd);
     } else if (data.opd_id) q = q.eq("opd_id", data.opd_id);
     if (data.kategori) q = q.eq("kategori", data.kategori);
-    if (data.q) q = q.or(`nama.ilike.%${data.q}%,kode.ilike.%${data.q}%,nomor_seri.ilike.%${data.q}%`);
+    if (data.q)
+      q = q.or(`nama.ilike.%${data.q}%,kode.ilike.%${data.q}%,nomor_seri.ilike.%${data.q}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     // Resolusi signed URL bila foto_url berupa path storage.
-    const enriched = await Promise.all((rows ?? []).map(async (r) => ({
-      ...r,
-      foto_url: await signFotoIfPath((r as { foto_url: string | null }).foto_url),
-    })));
+    const enriched = await Promise.all(
+      (rows ?? []).map(async (r) => ({
+        ...r,
+        foto_url: await signFotoIfPath((r as { foto_url: string | null }).foto_url),
+      })),
+    );
     return { rows: enriched };
   });
-
 
 export const resolveAsetByKode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -155,8 +179,11 @@ export const resolveAsetByKode = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: row, error } = await supabaseAdmin
       .from("aset")
-      .select("id,kode,nama,kategori,merk,nomor_seri,opd_id,pemegang_user_id,lokasi_terkini,lat,lng,status,foto_url, opd:opd!opd_id(nama,singkatan), pemegang:profiles!pemegang_user_id(nama_lengkap)")
-      .eq("kode", data.kode).maybeSingle();
+      .select(
+        "id,kode,nama,kategori,merk,nomor_seri,opd_id,pemegang_user_id,lokasi_terkini,lat,lng,status,foto_url, opd:opd!opd_id(nama,singkatan), pemegang:profiles!pemegang_user_id(nama_lengkap)",
+      )
+      .eq("kode", data.kode)
+      .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Aset tidak ditemukan");
     return row;
@@ -165,23 +192,28 @@ export const resolveAsetByKode = createServerFn({ method: "POST" })
 export const scanAset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      kode: z.string().min(3).max(80),
-      lat: z.number().optional().nullable(),
-      lng: z.number().optional().nullable(),
-      lokasi_text: z.string().max(255).optional().nullable(),
-      catatan: z.string().max(500).optional().nullable(),
-      // foto_url sekarang menerima path storage (mis. "uid/AST-.../hash.jpg")
-      // ATAU URL penuh untuk kompatibilitas data lama.
-      foto_url: z.string().max(1000).optional().nullable(),
-    }).parse(input),
+    z
+      .object({
+        kode: z.string().min(3).max(80),
+        lat: z.number().optional().nullable(),
+        lng: z.number().optional().nullable(),
+        lokasi_text: z.string().max(255).optional().nullable(),
+        catatan: z.string().max(500).optional().nullable(),
+        // foto_url sekarang menerima path storage (mis. "uid/AST-.../hash.jpg")
+        // ATAU URL penuh untuk kompatibilitas data lama.
+        foto_url: z.string().max(1000).optional().nullable(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const rl = await checkRateLimit(context.userId, "aset_scan", 60, 60);
     if (!rl.ok) throw new Error("Terlalu banyak scan");
 
     const { data: aset, error: aErr } = await supabaseAdmin
-      .from("aset").select("id,opd_id,pemegang_user_id").eq("kode", data.kode).maybeSingle();
+      .from("aset")
+      .select("id,opd_id,pemegang_user_id")
+      .eq("kode", data.kode)
+      .maybeSingle();
     if (aErr) throw new Error(aErr.message);
     if (!aset) throw new Error("Aset tidak ditemukan");
 
@@ -198,7 +230,12 @@ export const scanAset = createServerFn({ method: "POST" })
     const key = idemKey("aset:scan", context.userId, { kode: data.kode, minuteBucket });
     return withIdempotency(key, 60_000, async () => {
       // Update lokasi terkini
-      const update: { lat?: number | null; lng?: number | null; lokasi_terkini?: string | null; foto_url?: string | null } = {};
+      const update: {
+        lat?: number | null;
+        lng?: number | null;
+        lokasi_terkini?: string | null;
+        foto_url?: string | null;
+      } = {};
       if (data.lat !== null && data.lat !== undefined) update.lat = data.lat;
       if (data.lng !== null && data.lng !== undefined) update.lng = data.lng;
       if (data.lokasi_text) update.lokasi_terkini = data.lokasi_text;
@@ -229,22 +266,31 @@ async function signFotoIfPath(value: string | null | undefined): Promise<string 
   return data?.signedUrl ?? null;
 }
 
-
-
 export const assignAsetPemegang = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ aset_id: z.string().uuid(), pemegang_user_id: z.string().uuid().nullable() }).parse(input),
+    z
+      .object({ aset_id: z.string().uuid(), pemegang_user_id: z.string().uuid().nullable() })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const ctx = await userCtx(context.userId);
-    const { data: a } = await supabaseAdmin.from("aset").select("opd_id").eq("id", data.aset_id).maybeSingle();
+    const { data: a } = await supabaseAdmin
+      .from("aset")
+      .select("opd_id")
+      .eq("id", data.aset_id)
+      .maybeSingle();
     if (!a) throw new Error("Aset tidak ditemukan");
     if (!ctx.isSuper && !(ctx.isAdminOpd && ctx.opdId === a.opd_id)) throw new Error("Forbidden");
-    const { error } = await supabaseAdmin.from("aset").update({ pemegang_user_id: data.pemegang_user_id }).eq("id", data.aset_id);
+    const { error } = await supabaseAdmin
+      .from("aset")
+      .update({ pemegang_user_id: data.pemegang_user_id })
+      .eq("id", data.aset_id);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("aset_riwayat").insert({
-      aset_id: data.aset_id, oleh: context.userId, aksi: "pindah_pemegang",
+      aset_id: data.aset_id,
+      oleh: context.userId,
+      aksi: "pindah_pemegang",
       data: { pemegang_user_id: data.pemegang_user_id } as never,
     });
     return { ok: true };
@@ -256,7 +302,11 @@ export const listAsetRiwayat = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // Otorisasi: hanya super, admin_opd OPD pemilik, atau ASN pemegang aset.
     const ctx = await userCtx(context.userId);
-    const { data: aset } = await supabaseAdmin.from("aset").select("opd_id,pemegang_user_id").eq("id", data.aset_id).maybeSingle();
+    const { data: aset } = await supabaseAdmin
+      .from("aset")
+      .select("opd_id,pemegang_user_id")
+      .eq("id", data.aset_id)
+      .maybeSingle();
     if (!aset) throw new Error("Aset tidak ditemukan");
     const sameOpd = ctx.opdId && ctx.opdId === aset.opd_id;
     const isHolder = aset.pemegang_user_id === context.userId;
@@ -265,17 +315,20 @@ export const listAsetRiwayat = createServerFn({ method: "POST" })
     }
     const { data: rows, error } = await supabaseAdmin
       .from("aset_riwayat")
-      .select("id,aksi,catatan,lat,lng,lokasi_text,data,created_at, oleh_profile:profiles!oleh(nama_lengkap)")
+      .select(
+        "id,aksi,catatan,lat,lng,lokasi_text,data,created_at, oleh_profile:profiles!oleh(nama_lengkap)",
+      )
       .eq("aset_id", data.aset_id)
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
     // Sign foto_url di data jsonb bila berupa path.
-    const enriched = await Promise.all((rows ?? []).map(async (r) => {
-      const d = r.data as { foto_url?: string | null } | null;
-      if (!d || !d.foto_url) return r;
-      return { ...r, data: { ...d, foto_url: await signFotoIfPath(d.foto_url) } };
-    }));
+    const enriched = await Promise.all(
+      (rows ?? []).map(async (r) => {
+        const d = r.data as { foto_url?: string | null } | null;
+        if (!d || !d.foto_url) return r;
+        return { ...r, data: { ...d, foto_url: await signFotoIfPath(d.foto_url) } };
+      }),
+    );
     return { rows: enriched };
   });
-

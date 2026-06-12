@@ -11,13 +11,29 @@ import {
   rbacAuditForUser,
 } from "./admin.functions";
 import {
-  ASN_TYPES, POSITIONS, ASN_TYPE_LABEL, POSITION_LABEL,
-  type AsnType, type SystemPosition,
+  ASN_TYPES,
+  POSITIONS,
+  ASN_TYPE_LABEL,
+  POSITION_LABEL,
+  type AsnType,
+  type SystemPosition,
 } from "./constants";
 
-type Override = { permission_code: string; granted: boolean; expires_at: string | null; reason: string | null };
+type Override = {
+  permission_code: string;
+  granted: boolean;
+  expires_at: string | null;
+  reason: string | null;
+};
 type Catalog = { code: string; label: string; kategori: string; description: string | null };
-type Audit = { id: string; created_at: string; aksi: string; entitas: string; actor_name: string; target_name: string };
+type Audit = {
+  id: string;
+  created_at: string;
+  aksi: string;
+  entitas: string;
+  actor_name: string;
+  target_name: string;
+};
 type State = {
   profile: { asn_type: AsnType | null; system_position: SystemPosition | null } | null;
   overrides: Override[];
@@ -43,39 +59,62 @@ export function UserRbacPanel({ userId }: { userId: string }) {
   }, [userId]);
   useEffect(() => {
     if (tab === "audit" && audit === null) {
-      rbacAuditForUser({ data: { user_id: userId, limit: 30 } }).then((r) => setAudit(r.rows as Audit[]));
+      rbacAuditForUser({ data: { user_id: userId, limit: 30 } }).then((r) =>
+        setAudit(r.rows as Audit[]),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, userId]);
 
   if (!s) {
-    return <div className="px-4 py-6 text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin mr-1" /> Memuat detail RBAC…</div>;
+    return (
+      <div className="px-4 py-6 text-xs text-muted-foreground">
+        <Loader2 className="inline h-3 w-3 animate-spin mr-1" /> Memuat detail RBAC…
+      </div>
+    );
   }
 
-  async function saveMeta(patch: { asn_type?: AsnType | null; system_position?: SystemPosition | null }) {
-    setBusy(true); setMsg(null);
+  async function saveMeta(patch: {
+    asn_type?: AsnType | null;
+    system_position?: SystemPosition | null;
+  }) {
+    setBusy(true);
+    setMsg(null);
     try {
       await rbacUpdateProfileMeta({ data: { user_id: userId, ...patch } });
       setMsg("Tersimpan.");
       load();
-    } catch (e) { setMsg(e instanceof Error ? e.message : "Gagal menyimpan"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Gagal menyimpan");
+    } finally {
+      setBusy(false);
+    }
   }
   async function setOverride(code: string, granted: boolean) {
-    setBusy(true); setMsg(null);
+    setBusy(true);
+    setMsg(null);
     try {
-      await rbacSetPermissionOverride({ data: { user_id: userId, permission_code: code, granted } });
+      await rbacSetPermissionOverride({
+        data: { user_id: userId, permission_code: code, granted },
+      });
       load();
-    } catch (e) { setMsg(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
   async function clearOverride(code: string) {
-    setBusy(true); setMsg(null);
+    setBusy(true);
+    setMsg(null);
     try {
       await rbacRemovePermissionOverride({ data: { user_id: userId, permission_code: code } });
       load();
-    } catch (e) { setMsg(e instanceof Error ? e.message : "Gagal"); }
-    finally { setBusy(false); }
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const overrideMap = new Map(s.overrides.map((o) => [o.permission_code, o]));
@@ -90,16 +129,23 @@ export function UserRbacPanel({ userId }: { userId: string }) {
   return (
     <div className="border-t border-border bg-surface/40 px-4 py-4">
       <div className="mb-3 flex flex-wrap items-center gap-1 border-b border-border">
-        {([
-          ["klasifikasi", "Klasifikasi ASN"],
-          ["permissions", `Permission (${effectiveSet.size} aktif · ${s.overrides.length} override)`],
-          ["audit", "Audit RBAC"],
-        ] as [Tab, string][]).map(([k, label]) => (
+        {(
+          [
+            ["klasifikasi", "Klasifikasi ASN"],
+            [
+              "permissions",
+              `Permission (${effectiveSet.size} aktif · ${s.overrides.length} override)`,
+            ],
+            ["audit", "Audit RBAC"],
+          ] as [Tab, string][]
+        ).map(([k, label]) => (
           <button
             key={k}
             onClick={() => setTab(k)}
             className={`-mb-px border-b-2 px-3 py-1.5 text-xs font-semibold transition ${tab === k ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          >{label}</button>
+          >
+            {label}
+          </button>
         ))}
         {msg && <span className="ml-auto text-[11px] text-muted-foreground">{msg}</span>}
       </div>
@@ -115,7 +161,11 @@ export function UserRbacPanel({ userId }: { userId: string }) {
               className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
             >
               <option value="">— belum diatur —</option>
-              {Object.values(ASN_TYPES).map((v) => <option key={v} value={v}>{ASN_TYPE_LABEL[v]}</option>)}
+              {Object.values(ASN_TYPES).map((v) => (
+                <option key={v} value={v}>
+                  {ASN_TYPE_LABEL[v]}
+                </option>
+              ))}
             </select>
           </label>
           <label className="block">
@@ -123,15 +173,22 @@ export function UserRbacPanel({ userId }: { userId: string }) {
             <select
               disabled={busy}
               value={s.profile?.system_position ?? ""}
-              onChange={(e) => saveMeta({ system_position: (e.target.value || null) as SystemPosition | null })}
+              onChange={(e) =>
+                saveMeta({ system_position: (e.target.value || null) as SystemPosition | null })
+              }
               className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
             >
               <option value="">— belum diatur —</option>
-              {Object.values(POSITIONS).map((v) => <option key={v} value={v}>{POSITION_LABEL[v]}</option>)}
+              {Object.values(POSITIONS).map((v) => (
+                <option key={v} value={v}>
+                  {POSITION_LABEL[v]}
+                </option>
+              ))}
             </select>
           </label>
           <p className="sm:col-span-2 text-[11px] text-muted-foreground">
-            Klasifikasi ini tidak menggantikan Role utama; digunakan untuk workflow approval, targeting, dan filter dashboard.
+            Klasifikasi ini tidak menggantikan Role utama; digunakan untuk workflow approval,
+            targeting, dan filter dashboard.
           </p>
         </div>
       )}
@@ -139,18 +196,26 @@ export function UserRbacPanel({ userId }: { userId: string }) {
       {tab === "permissions" && (
         <div className="space-y-3">
           <p className="text-[11px] text-muted-foreground">
-            ✓ hijau = aktif lewat role. <strong>Grant</strong> memaksa aktif; <strong>Deny</strong> memaksa nonaktif; Hapus override mengembalikan ke role default.
+            ✓ hijau = aktif lewat role. <strong>Grant</strong> memaksa aktif; <strong>Deny</strong>{" "}
+            memaksa nonaktif; Hapus override mengembalikan ke role default.
           </p>
           {Array.from(groups.entries()).map(([kategori, items]) => (
             <div key={kategori}>
-              <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">{kategori}</div>
+              <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                {kategori}
+              </div>
               <ul className="divide-y divide-border rounded-md border border-border bg-card">
                 {items.map((p) => {
                   const ov = overrideMap.get(p.code);
                   const active = effectiveSet.has(p.code);
                   return (
-                    <li key={p.code} className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs">
-                      <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${active ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
+                    <li
+                      key={p.code}
+                      className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
+                    >
+                      <span
+                        className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${active ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}
+                      >
                         {active ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -158,18 +223,41 @@ export function UserRbacPanel({ userId }: { userId: string }) {
                           <span className="font-medium">{p.label}</span>
                           <code className="text-[10px] text-muted-foreground">{p.code}</code>
                           {ov && (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ov.granted ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ov.granted ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
+                            >
                               {ov.granted ? "GRANT" : "DENY"}
                             </span>
                           )}
                         </div>
-                        {p.description && <div className="mt-0.5 text-[11px] text-muted-foreground">{p.description}</div>}
+                        {p.description && (
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">
+                            {p.description}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button disabled={busy} onClick={() => setOverride(p.code, true)} className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success hover:bg-success/20">Grant</button>
-                        <button disabled={busy} onClick={() => setOverride(p.code, false)} className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[10px] font-semibold text-destructive hover:bg-destructive/20">Deny</button>
+                        <button
+                          disabled={busy}
+                          onClick={() => setOverride(p.code, true)}
+                          className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success hover:bg-success/20"
+                        >
+                          Grant
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() => setOverride(p.code, false)}
+                          className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-[10px] font-semibold text-destructive hover:bg-destructive/20"
+                        >
+                          Deny
+                        </button>
                         {ov && (
-                          <button disabled={busy} onClick={() => clearOverride(p.code)} className="rounded-md border border-border bg-background px-2 py-1 text-[10px] hover:bg-muted" aria-label="Hapus override">
+                          <button
+                            disabled={busy}
+                            onClick={() => clearOverride(p.code)}
+                            className="rounded-md border border-border bg-background px-2 py-1 text-[10px] hover:bg-muted"
+                            aria-label="Hapus override"
+                          >
                             <Trash2 className="h-3 w-3" />
                           </button>
                         )}
@@ -186,9 +274,13 @@ export function UserRbacPanel({ userId }: { userId: string }) {
       {tab === "audit" && (
         <div>
           {audit === null ? (
-            <div className="text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin mr-1" /> Memuat audit…</div>
+            <div className="text-xs text-muted-foreground">
+              <Loader2 className="inline h-3 w-3 animate-spin mr-1" /> Memuat audit…
+            </div>
           ) : audit.length === 0 ? (
-            <div className="text-xs text-muted-foreground">Belum ada aktivitas RBAC pada user ini.</div>
+            <div className="text-xs text-muted-foreground">
+              Belum ada aktivitas RBAC pada user ini.
+            </div>
           ) : (
             <ul className="divide-y divide-border rounded-md border border-border bg-card">
               {audit.map((a) => (
@@ -196,7 +288,9 @@ export function UserRbacPanel({ userId }: { userId: string }) {
                   <div className="flex flex-wrap items-baseline gap-2">
                     <span className="font-semibold">{a.aksi}</span>
                     <code className="text-[10px] text-muted-foreground">{a.entitas}</code>
-                    <span className="ml-auto text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString("id-ID")}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">
+                      {new Date(a.created_at).toLocaleString("id-ID")}
+                    </span>
                   </div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">
                     Oleh: {a.actor_name || "—"} → Target: {a.target_name || "—"}

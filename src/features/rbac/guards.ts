@@ -39,7 +39,12 @@ export async function getUserContext(supabase: SB, userId: string): Promise<Auth
   const [{ data: profile }, { data: roles }, { data: pej }] = await Promise.all([
     sb.from("profiles").select("opd_id,desa").eq("id", userId).maybeSingle(),
     sb.from("user_roles").select("role").eq("user_id", userId),
-    sb.from("pejabat").select("is_pimpinan,pimpinan_type").eq("user_id", userId).eq("aktif", true).maybeSingle(),
+    sb
+      .from("pejabat")
+      .select("is_pimpinan,pimpinan_type")
+      .eq("user_id", userId)
+      .eq("aktif", true)
+      .maybeSingle(),
   ]);
   const roleSet = new Set(((roles ?? []) as Array<{ role: string }>).map((r) => r.role));
   const isSuper = roleSet.has("super_admin");
@@ -124,7 +129,13 @@ export function canManageFormCtx(ctx: AuthzContext, formOpdId: string | null): b
 
 export function canAccessForm(
   ctx: AuthzContext,
-  form: { opd_pemilik_id?: string | null; opd_id?: string | null; target_role?: string | null; target_scope?: string | null; target_opd_ids?: string[] | null },
+  form: {
+    opd_pemilik_id?: string | null;
+    opd_id?: string | null;
+    target_role?: string | null;
+    target_scope?: string | null;
+    target_opd_ids?: string[] | null;
+  },
 ): boolean {
   if (ctx.isElevated) return true;
   const formOpd = form.opd_pemilik_id ?? form.opd_id ?? null;
@@ -156,7 +167,10 @@ export function canViewSubmission(
   return false;
 }
 
-export function canReviewSubmission(ctx: AuthzContext, submission: { opd_id?: string | null }): boolean {
+export function canReviewSubmission(
+  ctx: AuthzContext,
+  submission: { opd_id?: string | null },
+): boolean {
   if (ctx.isElevated) return true;
   return ctx.isAdminOpd && isSameOpd(ctx, submission.opd_id ?? null);
 }
