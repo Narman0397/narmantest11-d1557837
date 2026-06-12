@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Row = { id: string; user_id: string; tahun: number; jenis: string; kuota: number; terpakai: number; profile: { nama_lengkap: string } | null };
 
-export const Route = createFileRoute("/admin/asn/cuti-saldo")({
+export const Route = createFileRoute("/_authenticated/admin/asn/cuti-saldo")({
   head: () => ({ meta: [{ title: "Saldo Cuti — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "Admin" }, { label: "Saldo Cuti" }]}><Page /></AdminShell></AdminGuard>,
 });

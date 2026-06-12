@@ -11,7 +11,7 @@ import {
 import { listAset } from "@/lib/aset.functions";
 import { ArrowLeftRight, Wrench, BookOpen, QrCode, Check, X, Plus, Save } from "lucide-react";
 
-export const Route = createFileRoute("/admin/aset-extra")({
+export const Route = createFileRoute("/_authenticated/admin/aset-extra")({
   head: () => ({ meta: [{ title: "Admin — Aset Lanjutan" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

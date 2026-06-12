@@ -11,7 +11,7 @@ import { runSusutBulanan, listSusutHistory } from "@/lib/aset-susut.functions";
 import { toast } from "sonner";
 import { Play, BookOpen } from "lucide-react";
 
-export const Route = createFileRoute("/admin/aset/penyusutan")({
+export const Route = createFileRoute("/_authenticated/admin/aset/penyusutan")({
   head: () => ({ meta: [{ title: "Admin — Penyusutan Aset" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><SuperAdminOnly><Page /></SuperAdminOnly></AdminShell></AdminGuard>,
 });

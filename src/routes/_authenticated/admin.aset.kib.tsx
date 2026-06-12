@@ -11,7 +11,7 @@ import { setAsetKib, kibSummary } from "@/lib/aset-kib.functions";
 import { toast } from "sonner";
 import { Save, Layers } from "lucide-react";
 
-export const Route = createFileRoute("/admin/aset/kib")({
+export const Route = createFileRoute("/_authenticated/admin/aset/kib")({
   head: () => ({ meta: [{ title: "Admin — KIB Aset" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

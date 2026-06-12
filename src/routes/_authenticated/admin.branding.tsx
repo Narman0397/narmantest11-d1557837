@@ -17,7 +17,7 @@ import {
   type SiteBranding,
 } from "@/lib/site-settings";
 
-export const Route = createFileRoute("/admin/branding")({
+export const Route = createFileRoute("/_authenticated/admin/branding")({
   head: () => ({ meta: [{ title: "Kustomisasi Tampilan — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

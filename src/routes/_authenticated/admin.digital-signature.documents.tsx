@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 
-export const Route = createFileRoute("/admin/digital-signature/documents")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature/documents")({
   component: Page,
 });
 

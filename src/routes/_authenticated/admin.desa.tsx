@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { upsertDesa, deleteDesa } from "@/lib/admin-actions.functions";
 
-export const Route = createFileRoute("/admin/desa")({
+export const Route = createFileRoute("/_authenticated/admin/desa")({
   head: () => ({ meta: [{ title: "Master Desa — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

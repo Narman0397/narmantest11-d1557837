@@ -11,7 +11,7 @@ import { listOpname, openOpname, closeOpname, listOpnameItems, verifyOpnameItem 
 import { toast } from "sonner";
 import { ClipboardCheck, Plus, Lock, Check, X } from "lucide-react";
 
-export const Route = createFileRoute("/admin/aset/opname")({
+export const Route = createFileRoute("/_authenticated/admin/aset/opname")({
   head: () => ({ meta: [{ title: "Admin — Opname Aset" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

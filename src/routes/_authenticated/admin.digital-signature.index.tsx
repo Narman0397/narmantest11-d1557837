@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listSignedDocuments, listDocuments } from "@/features/digital-signature";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/admin/digital-signature/")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature/")({
   component: DashboardPage,
 });
 

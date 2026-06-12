@@ -9,7 +9,7 @@ import {
 } from "@/lib/asn-advanced.functions";
 import { listShifts, upsertShift, deleteShift } from "@/lib/shifts.functions";
 
-export const Route = createFileRoute("/admin/asn-kepatuhan")({
+export const Route = createFileRoute("/_authenticated/admin/asn-kepatuhan")({
   head: () => ({ meta: [{ title: "Kepatuhan Kehadiran ASN" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

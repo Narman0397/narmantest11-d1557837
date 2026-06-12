@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { invalidateBerita } from "@/lib/queries";
 import { upsertBerita, deleteBerita } from "@/lib/admin-actions.functions";
 
-export const Route = createFileRoute("/admin/cms")({
+export const Route = createFileRoute("/_authenticated/admin/cms")({
   head: () => ({ meta: [{ title: "CMS — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

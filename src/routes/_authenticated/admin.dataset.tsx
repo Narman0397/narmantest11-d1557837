@@ -9,7 +9,7 @@ import {
 import { migrateDatasetToForm } from "@/lib/forms-extras.functions";
 import { Plus, X, FileSpreadsheet, Eye, Power, Save, ArrowRightCircle } from "lucide-react";
 
-export const Route = createFileRoute("/admin/dataset")({
+export const Route = createFileRoute("/_authenticated/admin/dataset")({
   head: () => ({ meta: [{ title: "Admin — Dataset" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

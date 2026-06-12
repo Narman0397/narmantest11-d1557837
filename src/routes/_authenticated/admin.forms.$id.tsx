@@ -20,7 +20,7 @@ import { FormLivePreview } from "@/features/forms/builder/FormLivePreview";
 import type { FormMeta, Target } from "@/features/forms/builder/types";
 import { Send, Archive, ArrowLeft, Globe, FileSpreadsheet, Save } from "lucide-react";
 
-export const Route = createFileRoute("/admin/forms/$id")({
+export const Route = createFileRoute("/_authenticated/admin/forms/$id")({
   head: () => ({ meta: [{ title: "Admin — Edit Form" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

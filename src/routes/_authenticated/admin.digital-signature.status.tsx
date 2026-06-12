@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/admin/digital-signature/status")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature/status")({
   component: Page,
 });
 

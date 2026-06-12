@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FileSignature, Plus, Check, X } from "lucide-react";
 
-export const Route = createFileRoute("/admin/aset/bast")({
+export const Route = createFileRoute("/_authenticated/admin/aset/bast")({
   head: () => ({ meta: [{ title: "Admin — BAST Aset" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell><Page /></AdminShell></AdminGuard>,
 });

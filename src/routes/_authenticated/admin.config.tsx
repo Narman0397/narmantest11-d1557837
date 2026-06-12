@@ -18,7 +18,7 @@ import { getShowOpdDirectory } from "@/lib/site-settings";
 import { getAccessMode, setAccessMode, type AccessMode, type AccessSettingKey } from "@/lib/access-mode";
 import { DataTerpaduManager } from "@/components/admin/DataTerpaduManager";
 
-export const Route = createFileRoute("/admin/config")({
+export const Route = createFileRoute("/_authenticated/admin/config")({
   head: () => ({ meta: [{ title: "Konfigurasi Sistem — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

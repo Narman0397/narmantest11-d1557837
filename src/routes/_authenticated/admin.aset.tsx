@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { listAset, upsertAset, deleteAset, listAsetRiwayat } from "@/lib/aset.functions";
 import { downloadQrPng, QrImage } from "@/components/asn/QrPrintable";
 
-export const Route = createFileRoute("/admin/aset")({
+export const Route = createFileRoute("/_authenticated/admin/aset")({
   head: () => ({ meta: [{ title: "Modul Aset — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

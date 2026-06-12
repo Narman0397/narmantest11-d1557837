@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { listKantorQR, regenerateKantorQR, listAbsensiAdmin } from "@/lib/asn.functions";
 import { QrImage, downloadQrPng } from "@/components/asn/QrPrintable";
 
-export const Route = createFileRoute("/admin/asn")({
+export const Route = createFileRoute("/_authenticated/admin/asn")({
   head: () => ({ meta: [{ title: "Modul ASN — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

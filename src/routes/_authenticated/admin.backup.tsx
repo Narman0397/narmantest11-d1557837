@@ -13,7 +13,7 @@ import { exportTable, enqueueJob, importBackup, createSnapshot, listSnapshots, g
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, History, RotateCcw, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/backup")({
+export const Route = createFileRoute("/_authenticated/admin/backup")({
   head: () => ({ meta: [{ title: "Backup Data — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

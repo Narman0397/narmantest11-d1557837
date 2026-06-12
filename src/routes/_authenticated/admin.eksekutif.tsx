@@ -8,7 +8,7 @@ import { asetCompliance } from "@/lib/aset-advanced.functions";
 import { opdSkorKomposit, type SkorRow } from "@/lib/kinerja.functions";
 import { Trophy, AlertTriangle } from "lucide-react";
 
-export const Route = createFileRoute("/admin/eksekutif")({
+export const Route = createFileRoute("/_authenticated/admin/eksekutif")({
   head: () => ({ meta: [{ title: "Dashboard Pimpinan" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

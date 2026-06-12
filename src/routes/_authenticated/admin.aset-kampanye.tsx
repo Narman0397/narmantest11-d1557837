@@ -6,7 +6,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { listCampaigns, upsertCampaign, campaignProgress } from "@/lib/aset-advanced.functions";
 
-export const Route = createFileRoute("/admin/aset-kampanye")({
+export const Route = createFileRoute("/_authenticated/admin/aset-kampanye")({
   head: () => ({ meta: [{ title: "Kampanye Verifikasi Aset" }, { name: "robots", content: "noindex" }] }),
   component: () => (<AdminGuard><Page /></AdminGuard>),
 });

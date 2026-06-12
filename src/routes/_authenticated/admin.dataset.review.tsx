@@ -8,7 +8,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { listPendingReviews, reviewSubmission } from "@/lib/dataset-review.functions";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/admin/dataset/review")({
+export const Route = createFileRoute("/_authenticated/admin/dataset/review")({
   head: () => ({ meta: [{ title: "Review Dataset — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 
-export const Route = createFileRoute("/admin/digital-signature")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature")({
   head: () => ({ meta: [{ title: "Tanda Tangan Digital — Admin" }] }),
   component: () => (
     <AdminGuard>

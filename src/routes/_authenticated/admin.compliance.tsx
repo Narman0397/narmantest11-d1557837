@@ -10,7 +10,7 @@ import { listChecklist, updateChecklistItem, complianceSummary } from "@/lib/com
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/admin/compliance")({
+export const Route = createFileRoute("/_authenticated/admin/compliance")({
   head: () => ({ meta: [{ title: "Compliance — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

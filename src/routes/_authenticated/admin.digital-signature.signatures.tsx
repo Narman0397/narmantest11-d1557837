@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
-export const Route = createFileRoute("/admin/digital-signature/signatures")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature/signatures")({
   component: Page,
 });
 

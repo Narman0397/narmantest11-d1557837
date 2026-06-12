@@ -11,7 +11,7 @@ import { fmtDateTime } from "@/lib/permohonan";
 import { auditExplorerList } from "@/lib/ops/audit.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/audit")({
+export const Route = createFileRoute("/_authenticated/admin/audit")({
   head: () => ({ meta: [{ title: "Audit Log — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <AdminGuard>

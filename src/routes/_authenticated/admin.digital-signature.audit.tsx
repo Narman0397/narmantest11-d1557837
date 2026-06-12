@@ -5,7 +5,7 @@ import { listDocumentAudit } from "@/features/digital-signature";
 import { DocumentAuditTable } from "@/features/digital-signature/components/DocumentAuditTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/admin/digital-signature/audit")({
+export const Route = createFileRoute("/_authenticated/admin/digital-signature/audit")({
   component: Page,
 });
 

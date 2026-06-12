@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 type Row = { id: string; opd_id: string | null; nama: string; jam_masuk: string; jam_pulang: string; toleransi_menit: number; jenis: string; aktif: boolean };
 
-export const Route = createFileRoute("/admin/asn/shift")({
+export const Route = createFileRoute("/_authenticated/admin/asn/shift")({
   head: () => ({ meta: [{ title: "Shift Kerja — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "Admin" }, { label: "Shift Kerja" }]}><Page /></AdminShell></AdminGuard>,
 });

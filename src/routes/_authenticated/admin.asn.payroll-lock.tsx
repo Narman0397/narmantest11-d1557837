@@ -16,7 +16,7 @@ type Row = {
   opd: { nama: string; singkatan: string } | null;
 };
 
-export const Route = createFileRoute("/admin/asn/payroll-lock")({
+export const Route = createFileRoute("/_authenticated/admin/asn/payroll-lock")({
   head: () => ({ meta: [{ title: "Kunci Payroll — Admin" }, { name: "robots", content: "noindex" }] }),
   component: () => <AdminGuard><AdminShell breadcrumb={[{ label: "Admin" }, { label: "Payroll Lock" }]}><Page /></AdminShell></AdminGuard>,
 });
