@@ -131,12 +131,8 @@ export const exportFormSubmissionsXlsx = createServerFn({ method: "POST" })
     if (data.status) subQ = subQ.eq("status", data.status);
     const { data: subs } = await subQ;
 
-    const ExcelJS = await import("exceljs");
-    const wb = new ExcelJS.Workbook();
-    wb.creator = "Portal Pemerintah — Form Builder";
-    wb.created = new Date();
-    const ws = wb.addWorksheet("Submissions");
-    ws.columns = [
+    const { buildXlsxBuffer } = await import("./xlsx-writer.server");
+    const columns = [
       { header: "No", key: "no", width: 5 },
       { header: "OPD", key: "opd", width: 26 },
       { header: "Nama", key: "nama", width: 26 },
@@ -145,10 +141,7 @@ export const exportFormSubmissionsXlsx = createServerFn({ method: "POST" })
       ...cols.map((k) => ({ header: k.label, key: k.kode, width: Math.max(14, Math.min(40, k.label.length + 6)) })),
       { header: "Submitted", key: "waktu", width: 22 },
     ];
-    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E40AF" } };
-
-    (subs ?? []).forEach((s, i) => {
+    const rowsOut = (subs ?? []).map((s, i) => {
       const u = s.user as { nama_lengkap?: string; nip?: string } | null;
       const o = s.opd as { nama?: string } | null;
       const d = (s.data ?? {}) as Record<string, unknown>;
@@ -158,18 +151,18 @@ export const exportFormSubmissionsXlsx = createServerFn({ method: "POST" })
         waktu: s.submitted_at ? new Date(s.submitted_at).toLocaleString("id-ID") : "-",
       };
       for (const k of cols) row[k.kode] = (d[k.kode] ?? "") as unknown;
-      ws.addRow(row);
+      return row;
     });
-    ws.views = [{ state: "frozen", ySplit: 1 }];
 
-    const buffer = await wb.xlsx.writeBuffer();
+    const buffer = buildXlsxBuffer([{ name: "Submissions", columns, rows: rowsOut }]);
     const path = `forms/${data.form_id}/${Date.now()}.xlsx`;
     const { error: upErr } = await supabaseAdmin.storage.from("share-files")
-      .upload(path, buffer as ArrayBuffer, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", upsert: true });
+      .upload(path, buffer, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", upsert: true });
     if (upErr) throw new Error(upErr.message);
     const { data: signed } = await supabaseAdmin.storage.from("share-files").createSignedUrl(path, 60 * 60);
     return { url: signed?.signedUrl ?? "", filename: `form-${data.form_id}-${Date.now()}.xlsx`, count: (subs ?? []).length };
   });
+
 
 // ===== Version diff helper =====
 export const getSubmissionVersions = createServerFn({ method: "POST" })

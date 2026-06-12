@@ -245,16 +245,17 @@ export const exportSubmissionsXlsx = createServerFn({ method: "POST" })
       .select("data,submitted_at,opd_id, user:profiles!oleh_user_id(nama_lengkap,nip,jabatan), opd:opd!opd_id(nama,singkatan)")
       .eq("template_id", data.template_id).eq("status", "final");
 
-    const ExcelJS = await import("exceljs");
-    const wb = new ExcelJS.Workbook();
-    wb.creator = "Portal Pemerintah — Modul Berbagi Data";
-    wb.created = new Date();
+    const { buildXlsxBuffer } = await import("./xlsx-writer.server");
 
     const kolom = (tpl.kolom as unknown as KolomDef[]) ?? [];
     const layout = (tpl.excel_layout as { sheet_name?: string; group_by?: string }) ?? {};
 
-    const ws = wb.addWorksheet(layout.sheet_name || "Rangkuman");
-    ws.columns = [
+    const rows = subs ?? [];
+    const sorted = layout.group_by === "opd"
+      ? [...rows].sort((a, b) => ((a.opd as { nama?: string } | null)?.nama ?? "").localeCompare((b.opd as { nama?: string } | null)?.nama ?? ""))
+      : rows;
+
+    const summaryCols = [
       { header: "No", key: "no", width: 5 },
       { header: "OPD", key: "opd", width: 28 },
       { header: "Nama", key: "nama", width: 26 },
@@ -263,17 +264,7 @@ export const exportSubmissionsXlsx = createServerFn({ method: "POST" })
       ...kolom.map((k) => ({ header: k.label, key: k.key, width: Math.max(14, Math.min(40, k.label.length + 6)) })),
       { header: "Waktu Submit", key: "waktu", width: 22 },
     ];
-    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E40AF" } };
-    ws.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
-    ws.getRow(1).height = 24;
-
-    const rows = subs ?? [];
-    const sorted = layout.group_by === "opd"
-      ? [...rows].sort((a, b) => ((a.opd as { nama?: string } | null)?.nama ?? "").localeCompare((b.opd as { nama?: string } | null)?.nama ?? ""))
-      : rows;
-
-    sorted.forEach((s, i) => {
+    const summaryRows = sorted.map((s, i) => {
       const u = s.user as { nama_lengkap?: string; nip?: string; jabatan?: string } | null;
       const o = s.opd as { nama?: string; singkatan?: string } | null;
       const d = (s.data ?? {}) as Record<string, string | number | null>;
@@ -286,47 +277,37 @@ export const exportSubmissionsXlsx = createServerFn({ method: "POST" })
         waktu: s.submitted_at ? new Date(s.submitted_at).toLocaleString("id-ID") : "-",
       };
       for (const k of kolom) row[k.key] = d[k.key] ?? "";
-      ws.addRow(row);
+      return row;
     });
 
-    ws.eachRow({ includeEmpty: false }, (r) => {
-      r.eachCell((c) => {
-        c.border = { top: { style: "thin", color: { argb: "FFE5E7EB" } }, left: { style: "thin", color: { argb: "FFE5E7EB" } }, right: { style: "thin", color: { argb: "FFE5E7EB" } }, bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
-        c.alignment = { vertical: "middle", wrapText: true };
-      });
-    });
-    ws.views = [{ state: "frozen", ySplit: 1 }];
-    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columns.length } };
-
-    // Sheet 2 — Per OPD
-    const ws2 = wb.addWorksheet("Per OPD");
-    ws2.columns = [{ header: "OPD", key: "opd", width: 36 }, { header: "Jumlah Submission", key: "n", width: 22 }];
-    ws2.getRow(1).font = { bold: true };
     const byOpd = new Map<string, number>();
     rows.forEach((s) => {
       const nama = (s.opd as { nama?: string } | null)?.nama ?? "Tanpa OPD";
       byOpd.set(nama, (byOpd.get(nama) ?? 0) + 1);
     });
-    Array.from(byOpd.entries()).sort((a, b) => b[1] - a[1]).forEach(([opd, n]) => ws2.addRow({ opd, n }));
+    const opdRows = Array.from(byOpd.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([opd, n]) => ({ opd, n }));
 
-    // Sheet 3 — Metadata
-    const ws3 = wb.addWorksheet("Metadata");
-    ws3.columns = [{ header: "Field", key: "k", width: 24 }, { header: "Value", key: "v", width: 50 }];
-    ws3.getRow(1).font = { bold: true };
-    ws3.addRows([
+    const metaRows = [
       { k: "Judul Template", v: tpl.judul },
       { k: "Kode", v: tpl.kode ?? "-" },
       { k: "OPD Pemilik", v: (tpl.opd as { nama?: string } | null)?.nama ?? "-" },
       { k: "Deadline", v: tpl.deadline ? new Date(tpl.deadline).toLocaleString("id-ID") : "-" },
       { k: "Total Submission", v: rows.length },
       { k: "Diekspor", v: new Date().toLocaleString("id-ID") },
+    ];
+
+    const buffer = buildXlsxBuffer([
+      { name: layout.sheet_name || "Rangkuman", columns: summaryCols, rows: summaryRows },
+      { name: "Per OPD", columns: [{ header: "OPD", key: "opd", width: 36 }, { header: "Jumlah Submission", key: "n", width: 22 }], rows: opdRows },
+      { name: "Metadata", columns: [{ header: "Field", key: "k", width: 24 }, { header: "Value", key: "v", width: 50 }], rows: metaRows },
     ]);
 
-    const buffer = await wb.xlsx.writeBuffer();
     const path = `exports/${data.template_id}/${Date.now()}.xlsx`;
     const { error: upErr } = await supabaseAdmin.storage
       .from("share-files")
-      .upload(path, buffer as ArrayBuffer, {
+      .upload(path, buffer, {
         contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         upsert: true,
       });
@@ -335,3 +316,4 @@ export const exportSubmissionsXlsx = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     return { url: signed.signedUrl, filename: `${(tpl.kode ?? "dataset")}-${Date.now()}.xlsx` };
   });
+
