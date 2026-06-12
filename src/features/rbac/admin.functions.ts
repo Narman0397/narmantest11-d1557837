@@ -243,9 +243,7 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
     const auditRows = (rows ?? []) as AuditRow[];
     const ids = Array.from(
       new Set(
-        auditRows
-          .flatMap((r) => [r.user_id, r.target_user_id])
-          .filter((x): x is string => !!x),
+        auditRows.flatMap((r) => [r.user_id, r.target_user_id]).filter((x): x is string => !!x),
       ),
     );
     const profMap = new Map<string, string>();
@@ -281,11 +279,7 @@ export const rbacAuditList = createServerFn({ method: "POST" })
     } & Record<string, unknown>;
     const rows = (data ?? []) as AuditRow[];
     const ids = Array.from(
-      new Set(
-        rows
-          .flatMap((r) => [r.user_id, r.target_user_id])
-          .filter((x): x is string => !!x),
-      ),
+      new Set(rows.flatMap((r) => [r.user_id, r.target_user_id]).filter((x): x is string => !!x)),
     );
     const profMap = new Map<string, string>();
     if (ids.length) {
