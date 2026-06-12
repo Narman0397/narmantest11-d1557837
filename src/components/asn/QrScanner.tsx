@@ -34,7 +34,11 @@ function friendlyError(e: unknown): string {
   if (name === "NotFoundError" || all.includes("not found") || all.includes("no camera")) {
     return "Kamera tidak ditemukan pada perangkat ini.";
   }
-  if (name === "NotReadableError" || all.includes("in use") || all.includes("could not start video")) {
+  if (
+    name === "NotReadableError" ||
+    all.includes("in use") ||
+    all.includes("could not start video")
+  ) {
     return "Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut atau muat ulang halaman.";
   }
   if (name === "OverconstrainedError" || all.includes("overconstrained")) {
@@ -71,7 +75,9 @@ export function QrScanner({ onResult, paused }: Props) {
   // callback — ini mencegah restart-loop ketika parent re-render (GPS update,
   // realtime subscription, dsb).
   const onResultRef = useRef(onResult);
-  useEffect(() => { onResultRef.current = onResult; }, [onResult]);
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
 
   const containerId = useRef(`qr-${Math.random().toString(36).slice(2, 8)}`);
   const phaseRef = useRef<Phase>("idle");
@@ -109,7 +115,10 @@ export function QrScanner({ onResult, paused }: Props) {
       let html5: Html5QrcodeLike | null = null;
       try {
         const mod = await loadHtml5Qrcode();
-        if (cancelled) { setPhaseBoth("idle"); return; }
+        if (cancelled) {
+          setPhaseBoth("idle");
+          return;
+        }
         html5 = new mod.Html5Qrcode(containerId.current) as unknown as Html5QrcodeLike;
         instanceRef.current = html5;
 
@@ -117,16 +126,30 @@ export function QrScanner({ onResult, paused }: Props) {
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 240, height: 240 } },
           (decodedText: string) => {
-            try { onResultRef.current(decodedText); } catch (err) { console.warn("[qr-scanner] onResult threw", err); }
+            try {
+              onResultRef.current(decodedText);
+            } catch (err) {
+              console.warn("[qr-scanner] onResult threw", err);
+            }
           },
-          () => { /* per-frame scan misses are noisy; ignore */ },
+          () => {
+            /* per-frame scan misses are noisy; ignore */
+          },
         );
 
         if (cancelled || wantsStopRef.current) {
           // Cleanup datang saat start berjalan — segera stop.
           setPhaseBoth("stopping");
-          try { await html5.stop(); } catch { /* noop */ }
-          try { html5.clear(); } catch { /* noop */ }
+          try {
+            await html5.stop();
+          } catch {
+            /* noop */
+          }
+          try {
+            html5.clear();
+          } catch {
+            /* noop */
+          }
           instanceRef.current = null;
           setPhaseBoth("idle");
           return;
@@ -137,8 +160,16 @@ export function QrScanner({ onResult, paused }: Props) {
         setError(friendlyError(e));
         // Bersihkan instance jika sempat dibuat.
         if (html5) {
-          try { await html5.stop(); } catch { /* noop */ }
-          try { html5.clear(); } catch { /* noop */ }
+          try {
+            await html5.stop();
+          } catch {
+            /* noop */
+          }
+          try {
+            html5.clear();
+          } catch {
+            /* noop */
+          }
         }
         instanceRef.current = null;
         setPhaseBoth("idle");
@@ -154,10 +185,17 @@ export function QrScanner({ onResult, paused }: Props) {
       // oleh blok start setelah resolve. Bila sudah running, stop sekarang.
       if (phaseRef.current === "running") {
         setPhaseBoth("stopping");
-        inst.stop()
-          .catch(() => { /* noop */ })
+        inst
+          .stop()
+          .catch(() => {
+            /* noop */
+          })
           .finally(() => {
-            try { inst.clear(); } catch { /* noop */ }
+            try {
+              inst.clear();
+            } catch {
+              /* noop */
+            }
             if (instanceRef.current === inst) instanceRef.current = null;
             setPhaseBoth("idle");
           });
@@ -187,7 +225,9 @@ export function QrScanner({ onResult, paused }: Props) {
     <div className="overflow-hidden rounded-xl border border-border bg-black/90">
       <div id={containerId.current} className="aspect-square w-full" />
       {phase === "starting" && !error && (
-        <div className="bg-surface/90 px-3 py-2 text-xs text-muted-foreground">Menyiapkan kamera…</div>
+        <div className="bg-surface/90 px-3 py-2 text-xs text-muted-foreground">
+          Menyiapkan kamera…
+        </div>
       )}
       {error && (
         <div className="space-y-2 bg-destructive/90 px-3 py-2 text-xs text-destructive-foreground">

@@ -21,9 +21,12 @@ export function SuperAdminOnly({ children }: { children: ReactNode }) {
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-destructive/15 text-destructive">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h1 className="mt-3 font-display text-xl font-bold text-foreground">403 — Akses Khusus Super Admin</h1>
+          <h1 className="mt-3 font-display text-xl font-bold text-foreground">
+            403 — Akses Khusus Super Admin
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Halaman sistem ini hanya dapat diakses oleh Super Admin. Hubungi Super Admin jika Anda memerlukan akses.
+            Halaman sistem ini hanya dapat diakses oleh Super Admin. Hubungi Super Admin jika Anda
+            memerlukan akses.
           </p>
           <Link
             to="/admin"

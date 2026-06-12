@@ -40,7 +40,9 @@ export function PaginationBar({
               aria-label="Jumlah per halaman"
             >
               {pageSizeOptions.map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
             </select>
           </label>

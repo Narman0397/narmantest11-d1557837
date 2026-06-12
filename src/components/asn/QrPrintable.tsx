@@ -43,11 +43,16 @@ export async function downloadQrPng(value: string, filename: string, size = 512)
   try {
     const branding = await getSiteBranding().catch(() => null);
     const canvas = document.createElement("canvas");
-    canvas.width = size; canvas.height = size;
+    canvas.width = size;
+    canvas.height = size;
     await QRCode.toCanvas(canvas, value, { width: size, margin: 2, errorCorrectionLevel: "H" });
     if (branding?.logo_url) await drawCenterLogo(canvas, branding.logo_url);
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
-    a.href = url; a.download = filename; a.click();
-  } catch { /* noop */ }
+    a.href = url;
+    a.download = filename;
+    a.click();
+  } catch {
+    /* noop */
+  }
 }

@@ -73,29 +73,43 @@ function Page() {
       setLoadingHistori(false);
     }
   }
-  useEffect(() => { loadConfig(); }, []);
-  useEffect(() => { if (tab === "histori") loadHistori(); }, [tab]);
+  useEffect(() => {
+    loadConfig();
+  }, []);
+  useEffect(() => {
+    if (tab === "histori") loadHistori();
+  }, [tab]);
 
   async function onSave(row: OpdRow) {
     setBusy(row.id);
     try {
-      await updateOpdFormat({ data: {
-        opd_id: row.id,
-        format: row.nomor_surat_format || "{kode}/{seq}/{singkatan}/{tahun}",
-        kode: row.nomor_surat_kode || "470",
-      }});
+      await updateOpdFormat({
+        data: {
+          opd_id: row.id,
+          format: row.nomor_surat_format || "{kode}/{seq}/{singkatan}/{tahun}",
+          kode: row.nomor_surat_kode || "470",
+        },
+      });
       toast.success(`Format ${row.singkatan} disimpan`);
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setBusy(null); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function onPreview(row: OpdRow) {
     try {
-      const r = await previewNomorFormat({ data: {
-        opd_id: row.id, format: row.nomor_surat_format || undefined,
-      }});
+      const r = await previewNomorFormat({
+        data: {
+          opd_id: row.id,
+          format: row.nomor_surat_format || undefined,
+        },
+      });
       toast.info(`Preview: ${r.preview}`);
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   }
 
   return (
@@ -110,9 +124,12 @@ function Page() {
           </p>
         </div>
         <div className="flex gap-1 rounded-md border border-border bg-card p-1 text-sm">
-          {(["konfig","histori"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`rounded px-3 py-1 ${tab===t?"bg-primary text-primary-foreground":"text-muted-foreground"}`}>
+          {(["konfig", "histori"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`rounded px-3 py-1 ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
               {t === "konfig" ? "Konfigurasi" : "Histori"}
             </button>
           ))}
@@ -142,7 +159,9 @@ function Page() {
                     <input
                       value={row.nomor_surat_kode ?? ""}
                       onChange={(e) => {
-                        const next = [...opds]; next[i] = { ...row, nomor_surat_kode: e.target.value }; setOpds(next);
+                        const next = [...opds];
+                        next[i] = { ...row, nomor_surat_kode: e.target.value };
+                        setOpds(next);
                       }}
                       className="h-8 w-20 rounded border border-border bg-background px-2 text-xs"
                       placeholder="470"
@@ -152,7 +171,9 @@ function Page() {
                     <input
                       value={row.nomor_surat_format ?? ""}
                       onChange={(e) => {
-                        const next = [...opds]; next[i] = { ...row, nomor_surat_format: e.target.value }; setOpds(next);
+                        const next = [...opds];
+                        next[i] = { ...row, nomor_surat_format: e.target.value };
+                        setOpds(next);
                       }}
                       className="h-8 w-full min-w-[260px] rounded border border-border bg-background px-2 font-mono text-xs"
                       placeholder="{kode}/{seq}/{singkatan}/{tahun}"
@@ -161,9 +182,17 @@ function Page() {
                   <td className="px-3 py-2 text-right font-mono text-xs">{row.last_number}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1">
-                      <button onClick={() => onPreview(row)} className="rounded border border-border px-2 py-1 text-xs hover:bg-muted">Preview</button>
-                      <button onClick={() => onSave(row)} disabled={busy===row.id}
-                        className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs text-primary-foreground disabled:opacity-50">
+                      <button
+                        onClick={() => onPreview(row)}
+                        className="rounded border border-border px-2 py-1 text-xs hover:bg-muted"
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => onSave(row)}
+                        disabled={busy === row.id}
+                        className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs text-primary-foreground disabled:opacity-50"
+                      >
                         <Save className="h-3 w-3" /> Simpan
                       </button>
                     </div>
@@ -171,12 +200,17 @@ function Page() {
                 </tr>
               ))}
               {opds.length === 0 && (
-                <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">Memuat…</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                    Memuat…
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
           <div className="border-t border-border p-3 text-xs text-muted-foreground">
-            Placeholder yang didukung: <code>{"{kode}"}</code>, <code>{"{seq}"}</code>, <code>{"{singkatan}"}</code>, <code>{"{tahun}"}</code>
+            Placeholder yang didukung: <code>{"{kode}"}</code>, <code>{"{seq}"}</code>,{" "}
+            <code>{"{singkatan}"}</code>, <code>{"{tahun}"}</code>
           </div>
         </div>
       )}
@@ -194,7 +228,10 @@ function Page() {
                 className="h-9 w-72 rounded-md border border-border bg-background pl-7 pr-3 text-sm"
               />
             </div>
-            <button onClick={loadHistori} className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs hover:bg-muted">
+            <button
+              onClick={loadHistori}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs hover:bg-muted"
+            >
               <RefreshCw className={`h-3 w-3 ${loadingHistori ? "animate-spin" : ""}`} /> Cari
             </button>
           </div>
@@ -209,16 +246,30 @@ function Page() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {loadingHistori && <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">Memuat…</td></tr>}
+                {loadingHistori && (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                      Memuat…
+                    </td>
+                  </tr>
+                )}
                 {!loadingHistori && issued.length === 0 && (
-                  <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">Tidak ada hasil.</td></tr>
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                      Tidak ada hasil.
+                    </td>
+                  </tr>
                 )}
                 {issued.map((r) => (
                   <tr key={r.id}>
                     <td className="px-3 py-2 font-mono text-xs">{r.nomor}</td>
                     <td className="px-3 py-2 text-xs">{r.tahun}</td>
-                    <td className="px-3 py-2 text-xs font-mono">{r.permohonan_id?.slice(0,8) ?? "—"}</td>
-                    <td className="px-3 py-2 text-xs">{new Date(r.issued_at).toLocaleString("id-ID")}</td>
+                    <td className="px-3 py-2 text-xs font-mono">
+                      {r.permohonan_id?.slice(0, 8) ?? "—"}
+                    </td>
+                    <td className="px-3 py-2 text-xs">
+                      {new Date(r.issued_at).toLocaleString("id-ID")}
+                    </td>
                   </tr>
                 ))}
               </tbody>

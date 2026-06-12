@@ -8,8 +8,9 @@ export const getEffectivePermissions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .rpc("get_effective_permissions", { _user_id: userId });
+    const { data, error } = await (supabase as any).rpc("get_effective_permissions", {
+      _user_id: userId,
+    });
     if (error) {
       return { permissions: [] as string[] };
     }

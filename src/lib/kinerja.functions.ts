@@ -5,50 +5,74 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { checkRateLimit } from "@/integrations/supabase/rate-limit.server";
 
-export type TrendRow = { bulan: string; masuk: number; selesai: number; on_time: number; selesai_dengan_sla: number };
+export type TrendRow = {
+  bulan: string;
+  masuk: number;
+  selesai: number;
+  on_time: number;
+  selesai_dengan_sla: number;
+};
 export type LayananAggRow = {
-  layanan_id: string; layanan_judul: string; opd_id: string | null; opd_singkatan: string | null;
-  kategori: string | null; total: number; selesai: number; on_time: number;
-  selesai_dengan_sla: number; rata_hari_selesai: number;
+  layanan_id: string;
+  layanan_judul: string;
+  opd_id: string | null;
+  opd_singkatan: string | null;
+  kategori: string | null;
+  total: number;
+  selesai: number;
+  on_time: number;
+  selesai_dengan_sla: number;
+  rata_hari_selesai: number;
 };
 export type SkorRow = {
-  opd_id: string; opd_nama: string; opd_singkatan: string; kategori: string[] | null;
-  total: number; selesai: number; sla_pct: number | null; rating_avg: number;
-  completion_pct: number | null; skor: number;
+  opd_id: string;
+  opd_nama: string;
+  opd_singkatan: string;
+  kategori: string[] | null;
+  total: number;
+  selesai: number;
+  sla_pct: number | null;
+  rating_avg: number;
+  completion_pct: number | null;
+  skor: number;
 };
 
 export const opdKinerjaTrend = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => z.object({
-    opd_id: z.string().uuid().optional(),
-    months: z.number().int().min(1).max(36).default(12),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        opd_id: z.string().uuid().optional(),
+        months: z.number().int().min(1).max(36).default(12),
+      })
+      .parse(i),
+  )
   .handler(async ({ data }) => {
     const { data: rows, error } = await supabaseAdmin.rpc("opd_kinerja_trend", {
-      _opd: data.opd_id, _months: data.months,
+      _opd: data.opd_id,
+      _months: data.months,
     });
     if (error) throw new Error(error.message);
     return { rows: (rows ?? []) as TrendRow[] };
   });
 
-export const layananKinerjaAgg = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const { data, error } = await supabaseAdmin.rpc("layanan_kinerja_agg");
-    if (error) throw new Error(error.message);
-    return { rows: (data ?? []) as LayananAggRow[] };
-  });
+export const layananKinerjaAgg = createServerFn({ method: "POST" }).handler(async () => {
+  const { data, error } = await supabaseAdmin.rpc("layanan_kinerja_agg");
+  if (error) throw new Error(error.message);
+  return { rows: (data ?? []) as LayananAggRow[] };
+});
 
-export const opdSkorKomposit = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const { data, error } = await supabaseAdmin.rpc("opd_skor_komposit");
-    if (error) throw new Error(error.message);
-    return { rows: (data ?? []) as SkorRow[] };
-  });
+export const opdSkorKomposit = createServerFn({ method: "POST" }).handler(async () => {
+  const { data, error } = await supabaseAdmin.rpc("opd_skor_komposit");
+  if (error) throw new Error(error.message);
+  return { rows: (data ?? []) as SkorRow[] };
+});
 
 export const opdKategoriBenchmark = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ kategori: z.string().min(1).max(80) }).parse(i))
   .handler(async ({ data }) => {
-    const { data: rows, error } = await supabaseAdmin
-      .rpc("opd_kategori_benchmark", { _kategori: data.kategori });
+    const { data: rows, error } = await supabaseAdmin.rpc("opd_kategori_benchmark", {
+      _kategori: data.kategori,
+    });
     if (error) throw new Error(error.message);
     return { rows: rows ?? [] };
   });
@@ -62,8 +86,9 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
 
     const { data: skorRows, error: e1 } = await supabaseAdmin.rpc("opd_skor_komposit");
     if (e1) throw new Error(e1.message);
-    const { data: trendRows, error: e2 } = await supabaseAdmin
-      .rpc("opd_kinerja_trend", { _months: 12 });
+    const { data: trendRows, error: e2 } = await supabaseAdmin.rpc("opd_kinerja_trend", {
+      _months: 12,
+    });
     if (e2) throw new Error(e2.message);
     const { data: layananRows, error: e3 } = await supabaseAdmin.rpc("layanan_kinerja_agg");
     if (e3) throw new Error(e3.message);
@@ -81,12 +106,19 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
       { header: "Completion %", key: "comp", width: 14 },
       { header: "Skor Komposit", key: "skor", width: 16 },
     ];
-    const sorted = [...(skorRows as SkorRow[] ?? [])].sort((a, b) => (b.skor ?? 0) - (a.skor ?? 0));
+    const sorted = [...((skorRows as SkorRow[]) ?? [])].sort(
+      (a, b) => (b.skor ?? 0) - (a.skor ?? 0),
+    );
     const leaderRows = sorted.map((r, i) => ({
-      rank: i + 1, opd: r.opd_nama, singkatan: r.opd_singkatan,
-      total: r.total, selesai: r.selesai,
-      sla: r.sla_pct ?? "—", rating: r.rating_avg ?? "—",
-      comp: r.completion_pct ?? "—", skor: r.skor ?? "—",
+      rank: i + 1,
+      opd: r.opd_nama,
+      singkatan: r.opd_singkatan,
+      total: r.total,
+      selesai: r.selesai,
+      sla: r.sla_pct ?? "—",
+      rating: r.rating_avg ?? "—",
+      comp: r.completion_pct ?? "—",
+      skor: r.skor ?? "—",
     }));
 
     const trendCols = [
@@ -96,9 +128,12 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
       { header: "Tepat Waktu", key: "on_time", width: 14 },
       { header: "Selesai dgn SLA", key: "sla", width: 16 },
     ];
-    const trendOut = (trendRows as TrendRow[] ?? []).map((r) => ({
-      bulan: r.bulan, masuk: r.masuk, selesai: r.selesai,
-      on_time: r.on_time, sla: r.selesai_dengan_sla,
+    const trendOut = ((trendRows as TrendRow[]) ?? []).map((r) => ({
+      bulan: r.bulan,
+      masuk: r.masuk,
+      selesai: r.selesai,
+      on_time: r.on_time,
+      sla: r.selesai_dengan_sla,
     }));
 
     const layananCols = [
@@ -109,9 +144,12 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
       { header: "Tepat Waktu", key: "on_time", width: 14 },
       { header: "Rata Hari Selesai", key: "rata", width: 18 },
     ];
-    const layananOut = (layananRows as LayananAggRow[] ?? []).map((r) => ({
-      judul: r.layanan_judul, opd: r.opd_singkatan ?? "-",
-      total: r.total, selesai: r.selesai, on_time: r.on_time,
+    const layananOut = ((layananRows as LayananAggRow[]) ?? []).map((r) => ({
+      judul: r.layanan_judul,
+      opd: r.opd_singkatan ?? "-",
+      total: r.total,
+      selesai: r.selesai,
+      on_time: r.on_time,
       rata: r.rata_hari_selesai ? Number(r.rata_hari_selesai).toFixed(2) : "-",
     }));
 
@@ -122,16 +160,14 @@ export const exportKinerjaXlsx = createServerFn({ method: "POST" })
     ]);
 
     const path = `kinerja/${Date.now()}.xlsx`;
-    const { error: upErr } = await supabaseAdmin.storage
-      .from("share-files")
-      .upload(path, buffer, {
-        contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        upsert: true,
-      });
+    const { error: upErr } = await supabaseAdmin.storage.from("share-files").upload(path, buffer, {
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      upsert: true,
+    });
     if (upErr) throw new Error(upErr.message);
     const { data: signed, error: sErr } = await supabaseAdmin.storage
-      .from("share-files").createSignedUrl(path, 60 * 60);
+      .from("share-files")
+      .createSignedUrl(path, 60 * 60);
     if (sErr) throw new Error(sErr.message);
     return { url: signed.signedUrl, filename: `kinerja-opd-${Date.now()}.xlsx` };
   });
-

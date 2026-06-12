@@ -33,13 +33,19 @@ export async function runStorageCleanupServer(): Promise<Record<string, unknown>
   });
 
   const { data: enabledRow } = await admin
-    .from("app_setting").select("value").eq("key", "storage_cleanup_enabled").maybeSingle();
+    .from("app_setting")
+    .select("value")
+    .eq("key", "storage_cleanup_enabled")
+    .maybeSingle();
   const enabledVal = (enabledRow as { value?: unknown } | null)?.value;
   const enabled = enabledVal === true || enabledVal === "true";
   if (!enabled) return { skipped: true, reason: "disabled" };
 
   const { data: monthsRow } = await admin
-    .from("app_setting").select("value").eq("key", "storage_cleanup_months").maybeSingle();
+    .from("app_setting")
+    .select("value")
+    .eq("key", "storage_cleanup_months")
+    .maybeSingle();
   const monthsVal = (monthsRow as { value?: unknown } | null)?.value;
   const months = Math.max(1, Math.min(120, Number(monthsVal) || 6));
 
@@ -51,16 +57,25 @@ export async function runStorageCleanupServer(): Promise<Record<string, unknown>
     db: { schema: "storage" as never },
   });
 
-  const { data: objs, error } = await (storageAdmin
-    .from("objects" as never) as unknown as {
+  const { data: objs, error } = await (
+    storageAdmin.from("objects" as never) as unknown as {
       select: (c: string) => {
-        eq: (k: string, v: string) => {
-          lt: (k: string, v: string) => {
-            limit: (n: number) => Promise<{ data: { name: string }[] | null; error: { message: string } | null }>;
+        eq: (
+          k: string,
+          v: string,
+        ) => {
+          lt: (
+            k: string,
+            v: string,
+          ) => {
+            limit: (
+              n: number,
+            ) => Promise<{ data: { name: string }[] | null; error: { message: string } | null }>;
           };
         };
       };
-    })
+    }
+  )
     .select("name")
     .eq("bucket_id", "berkas-permohonan")
     .lt("created_at", cutoff.toISOString())

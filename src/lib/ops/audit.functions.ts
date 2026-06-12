@@ -6,10 +6,16 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decodeCursor, encodeCursor } from "@/lib/db/cursor";
 
 async function assertViewer(userId: string) {
-  const { data: isSuper } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+  const { data: isSuper } = await supabaseAdmin.rpc("has_role", {
+    _user_id: userId,
+    _role: "super_admin",
+  });
   if (isSuper === true) return;
   // admin_pemda role may not exist in enum; rely on permission flag below.
-  const { data: hasPerm } = await supabaseAdmin.rpc("has_permission", { _user_id: userId, _permission_code: "can_view_audit_logs" });
+  const { data: hasPerm } = await supabaseAdmin.rpc("has_permission", {
+    _user_id: userId,
+    _permission_code: "can_view_audit_logs",
+  });
   if (hasPerm !== true) throw new Error("Forbidden");
 }
 
@@ -45,7 +51,9 @@ export const auditExplorerList = createServerFn({ method: "POST" })
     await assertViewer((context as { userId: string }).userId);
     let q = supabaseAdmin
       .from("audit_log")
-      .select("id,created_at,user_email,aksi,entitas,entitas_id,request_id,data_sebelum,data_sesudah")
+      .select(
+        "id,created_at,user_email,aksi,entitas,entitas_id,request_id,data_sebelum,data_sesudah",
+      )
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(data.limit);
@@ -58,9 +66,10 @@ export const auditExplorerList = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const list = rows ?? [];
     const last = list[list.length - 1];
-    const nextCursor = list.length === data.limit && last
-      ? encodeCursor({ ts: last.created_at as string, id: last.id as string })
-      : null;
+    const nextCursor =
+      list.length === data.limit && last
+        ? encodeCursor({ ts: last.created_at as string, id: last.id as string })
+        : null;
     return { items: list, nextCursor };
   });
 
@@ -69,7 +78,10 @@ export const auditDistinctEntities = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertViewer((context as { userId: string }).userId);
     const { data } = await supabaseAdmin
-      .from("audit_log").select("entitas").not("entitas", "is", null).limit(1000);
+      .from("audit_log")
+      .select("entitas")
+      .not("entitas", "is", null)
+      .limit(1000);
     const set = new Set<string>((data ?? []).map((r) => r.entitas).filter((x): x is string => !!x));
     return Array.from(set).sort();
   });

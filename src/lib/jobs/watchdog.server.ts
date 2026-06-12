@@ -41,12 +41,8 @@ export async function runCronWatchdog(): Promise<WatchdogReport> {
     /* non-fatal */
   }
 
-  const stallCutoff = new Date(
-    Date.now() - STALL_THRESHOLD_MIN * 60 * 1000,
-  ).toISOString();
-  const failWindow = new Date(
-    Date.now() - RECENT_FAIL_WINDOW_HOURS * 3600 * 1000,
-  ).toISOString();
+  const stallCutoff = new Date(Date.now() - STALL_THRESHOLD_MIN * 60 * 1000).toISOString();
+  const failWindow = new Date(Date.now() - RECENT_FAIL_WINDOW_HOURS * 3600 * 1000).toISOString();
 
   // 1) Mark stalled runs
   try {

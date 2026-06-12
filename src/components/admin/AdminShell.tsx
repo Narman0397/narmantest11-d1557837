@@ -3,7 +3,28 @@
 // dan ditampilkan sebagai drawer pada perangkat mobile (Android).
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, Inbox, Users, FileClock, Database as DbIcon, ChevronRight, LogOut, Building2, Newspaper, UserSquare2, Star, MessageSquare, ListChecks, ScanLine, MapPin, Menu, X, Boxes, Hash, ShieldCheck } from "lucide-react";
+import {
+  LayoutDashboard,
+  Inbox,
+  Users,
+  FileClock,
+  Database as DbIcon,
+  ChevronRight,
+  LogOut,
+  Building2,
+  Newspaper,
+  UserSquare2,
+  Star,
+  MessageSquare,
+  ListChecks,
+  ScanLine,
+  MapPin,
+  Menu,
+  X,
+  Boxes,
+  Hash,
+  ShieldCheck,
+} from "lucide-react";
 
 import lambang from "@/assets/lambang.png";
 import { useAuth } from "@/lib/auth-context";
@@ -47,7 +68,12 @@ const pemdaNav: NavItem[] = [
   { to: "/admin/asn-kepatuhan", label: "Kepatuhan Absensi", icon: ScanLine },
   { to: "/admin/aset", label: "Aset Pemda", icon: Boxes },
   { to: "/admin/dataset", label: "Pelaporan Data", icon: DbIcon },
-  { to: "/admin/audit", label: "Riwayat Audit", icon: FileClock, permission: "can_view_audit_logs" },
+  {
+    to: "/admin/audit",
+    label: "Riwayat Audit",
+    icon: FileClock,
+    permission: "can_view_audit_logs",
+  },
 ];
 
 // Pimpinan Daerah: read-only dashboard. Bupati mendapat tambahan link approval/disposisi.
@@ -56,7 +82,12 @@ const pimpinanNav: NavItem[] = [
   { to: "/kinerja-opd", label: "Kinerja OPD", icon: ListChecks },
 ];
 const bupatiExtraNav: NavItem[] = [
-  { to: "/admin/digital-signature", label: "Tanda Tangan Digital", icon: ShieldCheck, permission: "executive.sign" },
+  {
+    to: "/admin/digital-signature",
+    label: "Tanda Tangan Digital",
+    icon: ShieldCheck,
+    permission: "executive.sign",
+  },
 ];
 
 // F5.9 — Sidebar Super Admin diorganisir per grup operasional.
@@ -104,9 +135,7 @@ const superNavGroups: NavGroup[] = [
   },
   {
     title: "Konten Website",
-    items: [
-      { to: "/admin/cms", label: "Berita & Halaman", icon: Newspaper },
-    ],
+    items: [{ to: "/admin/cms", label: "Berita & Halaman", icon: Newspaper }],
   },
   {
     title: "Pemda & Eksekutif",
@@ -118,9 +147,7 @@ const superNavGroups: NavGroup[] = [
   },
   {
     title: "Data & Laporan",
-    items: [
-      { to: "/admin/dataset", label: "Pelaporan Data", icon: DbIcon },
-    ],
+    items: [{ to: "/admin/dataset", label: "Pelaporan Data", icon: DbIcon }],
   },
   {
     title: "Data Governance",
@@ -131,8 +158,6 @@ const superNavGroups: NavGroup[] = [
     ],
   },
 ];
-
-
 
 export function AdminShell({
   children,
@@ -145,22 +170,37 @@ export function AdminShell({
   opdAktifId?: string;
   onChangeOpd?: (id: string) => void;
 }) {
-  const { isSuperAdmin, isAdminDesa, isAdminPemda, isAdminOpd, can, signOut, isPimpinan, isBupati } = useAuth();
+  const {
+    isSuperAdmin,
+    isAdminDesa,
+    isAdminPemda,
+    isAdminOpd,
+    can,
+    signOut,
+    isPimpinan,
+    isBupati,
+  } = useAuth();
   const [opdList, setOpdList] = useState<Opd[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const branding = useSiteBranding();
 
   useEffect(() => {
-    supabase.from("opd").select("id,nama,singkatan").order("nama").then(({ data }) => {
-      setOpdList((data ?? []) as Opd[]);
-    });
+    supabase
+      .from("opd")
+      .select("id,nama,singkatan")
+      .order("nama")
+      .then(({ data }) => {
+        setOpdList((data ?? []) as Opd[]);
+      });
   }, []);
 
   // Kunci scroll saat drawer mobile terbuka.
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   const opd = opdList.find((o) => o.id === opdAktifId);
@@ -168,27 +208,26 @@ export function AdminShell({
   const rawNav: NavItem[] = isSuperAdmin
     ? []
     : isPimpinan
-    ? [...pimpinanNav, ...(isBupati ? bupatiExtraNav : [])]
-    : isAdminPemda
-    ? pemdaNav
-    : isAdminDesa && !isAdminOpd
-    ? desaBaseNav
-    : baseNav;
+      ? [...pimpinanNav, ...(isBupati ? bupatiExtraNav : [])]
+      : isAdminPemda
+        ? pemdaNav
+        : isAdminDesa && !isAdminOpd
+          ? desaBaseNav
+          : baseNav;
   // Filter berdasarkan permission granular (super_admin selalu lolos via can()).
   const primaryNav = rawNav.filter((it) => (it.permission ? can(it.permission) : true));
 
   const currentRole: RbacRole | null = isSuperAdmin
     ? "super_admin"
     : isAdminPemda
-    ? "admin_pemda"
-    : isPimpinan
-    ? "pimpinan"
-    : isAdminOpd
-    ? "admin_opd"
-    : isAdminDesa
-    ? "admin_desa"
-    : null;
-
+      ? "admin_pemda"
+      : isPimpinan
+        ? "pimpinan"
+        : isAdminOpd
+          ? "admin_opd"
+          : isAdminDesa
+            ? "admin_desa"
+            : null;
 
   function NavLinks({ onItem }: { onItem?: () => void }) {
     return (
@@ -218,24 +257,27 @@ export function AdminShell({
             Dashboard
           </Link>
         )}
-        {isSuperAdmin && superNavGroups.map((group) => (
-          <div key={group.title}>
-            <div className="my-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground">{group.title}</div>
+        {isSuperAdmin &&
+          superNavGroups.map((group) => (
+            <div key={group.title}>
+              <div className="my-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {group.title}
+              </div>
 
-            {group.items.map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                onClick={onItem}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-surface-foreground hover:bg-primary-soft hover:text-primary"
-                activeProps={{ className: "bg-primary-soft text-primary" }}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        ))}
+              {group.items.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  onClick={onItem}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-surface-foreground hover:bg-primary-soft hover:text-primary"
+                  activeProps={{ className: "bg-primary-soft text-primary" }}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ))}
       </nav>
     );
   }
@@ -252,10 +294,18 @@ export function AdminShell({
             <Menu className="h-5 w-5" />
           </button>
           <Link to="/" className="flex items-center gap-2 min-w-0">
-            <img src={branding.logo_url || lambang} alt="" className="h-8 w-8 shrink-0 object-contain" />
+            <img
+              src={branding.logo_url || lambang}
+              alt=""
+              className="h-8 w-8 shrink-0 object-contain"
+            />
             <div className="hidden sm:block leading-tight">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin</div>
-              <div className="font-display text-sm font-bold">{branding.admin_brand_name || branding.brand_name}</div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Admin
+              </div>
+              <div className="font-display text-sm font-bold">
+                {branding.admin_brand_name || branding.brand_name}
+              </div>
             </div>
           </Link>
           <div className="ml-auto flex items-center gap-2">
@@ -271,7 +321,9 @@ export function AdminShell({
                 >
                   <option value="">Semua OPD</option>
                   {opdList.map((o) => (
-                    <option key={o.id} value={o.id}>{o.singkatan}</option>
+                    <option key={o.id} value={o.id}>
+                      {o.singkatan}
+                    </option>
                   ))}
                 </select>
               </>
@@ -298,7 +350,9 @@ export function AdminShell({
           </div>
           <NavLinks />
           <div className="mt-auto p-4 text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">← Kembali ke Portal Warga</Link>
+            <Link to="/" className="hover:text-primary">
+              ← Kembali ke Portal Warga
+            </Link>
           </div>
         </aside>
 
@@ -312,10 +366,18 @@ export function AdminShell({
             <aside className="relative h-full w-72 max-w-[85vw] flex flex-col border-r border-border bg-background shadow-elevated animate-in slide-in-from-left duration-200 overflow-y-auto">
               <div className="flex items-center justify-between border-b border-border p-3">
                 <div className="flex items-center gap-2">
-                  <img src={branding.logo_url || lambang} alt="" className="h-7 w-7 object-contain" />
+                  <img
+                    src={branding.logo_url || lambang}
+                    alt=""
+                    className="h-7 w-7 object-contain"
+                  />
                   <div className="leading-tight">
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin</div>
-                    <div className="text-sm font-display font-bold">{branding.admin_brand_name || branding.brand_name}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Admin
+                    </div>
+                    <div className="text-sm font-display font-bold">
+                      {branding.admin_brand_name || branding.brand_name}
+                    </div>
                   </div>
                 </div>
                 <button
@@ -329,12 +391,16 @@ export function AdminShell({
               <div className="p-3">
                 <div className="rounded-lg bg-gradient-primary p-3 text-primary-foreground shadow-soft">
                   <div className="text-[10px] uppercase opacity-80">OPD</div>
-                  <div className="text-sm font-semibold leading-tight">{opd?.nama ?? "Semua OPD"}</div>
+                  <div className="text-sm font-semibold leading-tight">
+                    {opd?.nama ?? "Semua OPD"}
+                  </div>
                 </div>
               </div>
               <NavLinks onItem={() => setMobileOpen(false)} />
               <div className="mt-auto p-4 text-xs text-muted-foreground border-t border-border">
-                <Link to="/" onClick={() => setMobileOpen(false)} className="hover:text-primary">← Kembali ke Portal Warga</Link>
+                <Link to="/" onClick={() => setMobileOpen(false)} className="hover:text-primary">
+                  ← Kembali ke Portal Warga
+                </Link>
               </div>
             </aside>
           </div>
@@ -344,12 +410,16 @@ export function AdminShell({
           {breadcrumb && breadcrumb.length > 0 && (
             <div className="border-b border-border bg-background/60 px-4 py-2 md:px-6">
               <nav className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Link to="/admin" className="hover:text-primary">Admin</Link>
+                <Link to="/admin" className="hover:text-primary">
+                  Admin
+                </Link>
                 {breadcrumb.map((b, i) => (
                   <span key={i} className="flex items-center gap-1">
                     <ChevronRight className="h-3 w-3" />
                     {b.to ? (
-                      <Link to={b.to} className="hover:text-primary">{b.label}</Link>
+                      <Link to={b.to} className="hover:text-primary">
+                        {b.label}
+                      </Link>
                     ) : (
                       <span className="text-foreground font-medium">{b.label}</span>
                     )}
@@ -388,7 +458,9 @@ export function StatCard({
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
         {Icon && (
           <span className={`grid h-8 w-8 place-items-center rounded-md ${toneClass}`}>
             <Icon className="h-4 w-4" />

@@ -13,35 +13,47 @@ function token(len = 24): string {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const buf = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
   const h = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(h), (x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-
 export const generateDokumenFinal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      permohonan_id: z.string().uuid(),
-      site_origin: z.string().url().optional(),
-    }).parse(i),
+    z
+      .object({
+        permohonan_id: z.string().uuid(),
+        site_origin: z.string().url().optional(),
+      })
+      .parse(i),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
     // RBAC: super_admin atau admin_opd dari OPD pemilik
     const { data: p } = await supabaseAdmin
       .from("permohonan")
-      .select("id,kode,judul,kategori,status,nomor_surat,opd_id,pemohon_id,dokumen_final_path,tanggal_masuk,deskripsi, opd:opd!opd_id(nama,singkatan)")
+      .select(
+        "id,kode,judul,kategori,status,nomor_surat,opd_id,pemohon_id,dokumen_final_path,tanggal_masuk,deskripsi, opd:opd!opd_id(nama,singkatan)",
+      )
       .eq("id", data.permohonan_id)
       .maybeSingle();
     if (!p) throw new Error("Permohonan tidak ditemukan");
     if (!p.nomor_surat) throw new Error("Terbitkan nomor surat terlebih dahulu");
 
-    const { data: roleSuper } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    const { data: roleSuper } = await supabaseAdmin.rpc("has_role", {
+      _user_id: userId,
+      _role: "super_admin",
+    });
     let allowed = !!roleSuper;
     if (!allowed) {
-      const { data: roleOpd } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin_opd" });
+      const { data: roleOpd } = await supabaseAdmin.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin_opd",
+      });
       const { data: myOpd } = await supabaseAdmin.rpc("get_user_opd", { _user_id: userId });
       allowed = !!roleOpd && myOpd === p.opd_id;
     }
@@ -49,7 +61,10 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
 
     // Pemohon
     const { data: prof } = await supabaseAdmin
-      .from("profiles").select("nama_lengkap,nik").eq("id", p.pemohon_id).maybeSingle();
+      .from("profiles")
+      .select("nama_lengkap,nik")
+      .eq("id", p.pemohon_id)
+      .maybeSingle();
 
     const tok = token();
     const origin = data.site_origin ?? "";
@@ -72,30 +87,61 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
     const opdSingkatan = opdRel?.singkatan ?? "OPD";
     let y = 800;
     const draw = (t: string, x: number, yy: number, size = 11, bold = false) =>
-      page.drawText(t, { x, y: yy, size, font: bold ? fontBold : font, color: rgb(0.1, 0.1, 0.15) });
+      page.drawText(t, {
+        x,
+        y: yy,
+        size,
+        font: bold ? fontBold : font,
+        color: rgb(0.1, 0.1, 0.15),
+      });
 
-    draw("PEMERINTAH DAERAH", 50, y, 10, true); y -= 14;
-    draw(opdNama.toUpperCase(), 50, y, 14, true); y -= 14;
-    draw(`(${opdSingkatan})`, 50, y, 10); y -= 8;
-    page.drawLine({ start: { x: 50, y: y - 4 }, end: { x: 545, y: y - 4 }, thickness: 1, color: rgb(0.1, 0.1, 0.15) });
-    page.drawLine({ start: { x: 50, y: y - 7 }, end: { x: 545, y: y - 7 }, thickness: 0.5, color: rgb(0.1, 0.1, 0.15) });
+    draw("PEMERINTAH DAERAH", 50, y, 10, true);
+    y -= 14;
+    draw(opdNama.toUpperCase(), 50, y, 14, true);
+    y -= 14;
+    draw(`(${opdSingkatan})`, 50, y, 10);
+    y -= 8;
+    page.drawLine({
+      start: { x: 50, y: y - 4 },
+      end: { x: 545, y: y - 4 },
+      thickness: 1,
+      color: rgb(0.1, 0.1, 0.15),
+    });
+    page.drawLine({
+      start: { x: 50, y: y - 7 },
+      end: { x: 545, y: y - 7 },
+      thickness: 0.5,
+      color: rgb(0.1, 0.1, 0.15),
+    });
     y -= 36;
 
-    draw(`Nomor   : ${p.nomor_surat}`, 50, y); y -= 16;
-    draw(`Perihal : ${p.kategori}`, 50, y); y -= 24;
+    draw(`Nomor   : ${p.nomor_surat}`, 50, y);
+    y -= 16;
+    draw(`Perihal : ${p.kategori}`, 50, y);
+    y -= 24;
 
-    draw("Berdasarkan permohonan yang diajukan kepada kami:", 50, y); y -= 20;
-    draw(`Kode Permohonan : ${p.kode}`, 70, y); y -= 14;
-    draw(`Pemohon         : ${prof?.nama_lengkap ?? "-"} (NIK: ${prof?.nik ?? "-"})`, 70, y); y -= 14;
-    draw(`Judul           : ${p.judul}`, 70, y); y -= 14;
-    draw(`Tanggal Masuk   : ${new Date(p.tanggal_masuk).toLocaleDateString("id-ID")}`, 70, y); y -= 20;
+    draw("Berdasarkan permohonan yang diajukan kepada kami:", 50, y);
+    y -= 20;
+    draw(`Kode Permohonan : ${p.kode}`, 70, y);
+    y -= 14;
+    draw(`Pemohon         : ${prof?.nama_lengkap ?? "-"} (NIK: ${prof?.nik ?? "-"})`, 70, y);
+    y -= 14;
+    draw(`Judul           : ${p.judul}`, 70, y);
+    y -= 14;
+    draw(`Tanggal Masuk   : ${new Date(p.tanggal_masuk).toLocaleDateString("id-ID")}`, 70, y);
+    y -= 20;
 
-    draw("Dengan ini dinyatakan bahwa permohonan tersebut telah selesai diproses dan", 50, y); y -= 14;
-    draw("dokumen ini diterbitkan sebagai output resmi atas layanan dimaksud.", 50, y); y -= 28;
+    draw("Dengan ini dinyatakan bahwa permohonan tersebut telah selesai diproses dan", 50, y);
+    y -= 14;
+    draw("dokumen ini diterbitkan sebagai output resmi atas layanan dimaksud.", 50, y);
+    y -= 28;
 
     if (p.deskripsi) {
       const lines = wrap(p.deskripsi, 90).slice(0, 6);
-      for (const ln of lines) { draw(ln, 50, y, 10); y -= 12; }
+      for (const ln of lines) {
+        draw(ln, 50, y, 10);
+        y -= 12;
+      }
       y -= 8;
     }
 
@@ -111,7 +157,8 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
     const path = `dokumen-final/${p.id}/${tok}.pdf`;
 
     const { error: upErr } = await supabaseAdmin.storage.from(BUCKET).upload(path, bytes, {
-      contentType: "application/pdf", upsert: true,
+      contentType: "application/pdf",
+      upsert: true,
     });
     if (upErr) throw new Error(`Gagal upload: ${upErr.message}`);
 
@@ -129,12 +176,23 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
     await supabaseAdmin.from("permohonan").update({ dokumen_final_path: path }).eq("id", p.id);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "dokumen.generate", entitas: "permohonan",
-      entitas_id: p.id, data_sesudah: { token: tok, sha256: hash },
+      user_id: userId,
+      aksi: "dokumen.generate",
+      entitas: "permohonan",
+      entitas_id: p.id,
+      data_sesudah: { token: tok, sha256: hash },
     });
 
-    const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(path, 60 * 30);
-    return { token: tok, path, sha256: hash, signed_url: signed?.signedUrl ?? null, verify_url: verifyUrl };
+    const { data: signed } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUrl(path, 60 * 30);
+    return {
+      token: tok,
+      path,
+      sha256: hash,
+      signed_url: signed?.signedUrl ?? null,
+      verify_url: verifyUrl,
+    };
   });
 
 export const getDokumenFinalSignedUrl = createServerFn({ method: "POST" })
@@ -142,18 +200,26 @@ export const getDokumenFinalSignedUrl = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ permohonan_id: z.string().uuid() }).parse(i))
   .handler(async ({ data }) => {
     const { data: p } = await supabaseAdmin
-      .from("permohonan").select("dokumen_final_path").eq("id", data.permohonan_id).maybeSingle();
+      .from("permohonan")
+      .select("dokumen_final_path")
+      .eq("id", data.permohonan_id)
+      .maybeSingle();
     if (!p?.dokumen_final_path) return { signed_url: null };
-    const { data: s } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(p.dokumen_final_path, 60 * 30);
+    const { data: s } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUrl(p.dokumen_final_path, 60 * 30);
     return { signed_url: s?.signedUrl ?? null };
   });
 
 function wrap(text: string, w: number): string[] {
   const words = text.replace(/\s+/g, " ").trim().split(" ");
-  const out: string[] = []; let cur = "";
+  const out: string[] = [];
+  let cur = "";
   for (const word of words) {
-    if ((cur + " " + word).trim().length > w) { if (cur) out.push(cur); cur = word; }
-    else cur = cur ? cur + " " + word : word;
+    if ((cur + " " + word).trim().length > w) {
+      if (cur) out.push(cur);
+      cur = word;
+    } else cur = cur ? cur + " " + word : word;
   }
   if (cur) out.push(cur);
   return out;

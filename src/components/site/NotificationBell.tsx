@@ -22,7 +22,16 @@ type Notif = {
   created_at: string;
 };
 
-type Kategori = "all" | "assignment" | "review" | "approval" | "rejection" | "revision" | "upload" | "sharing" | "system";
+type Kategori =
+  | "all"
+  | "assignment"
+  | "review"
+  | "approval"
+  | "rejection"
+  | "revision"
+  | "upload"
+  | "sharing"
+  | "system";
 
 const KATEGORI_LABELS: { value: Kategori; label: string }[] = [
   { value: "all", label: "Semua" },
@@ -65,7 +74,9 @@ export function NotificationBell() {
           data: { page: targetPage, pageSize: PAGE_SIZE, kategori: targetKategori },
         })) as unknown as { rows: Notif[]; total: number };
         setTotal(r.total ?? 0);
-        setRows((prev) => (opts.reset || targetPage === 0 ? r.rows ?? [] : [...prev, ...(r.rows ?? [])]));
+        setRows((prev) =>
+          opts.reset || targetPage === 0 ? (r.rows ?? []) : [...prev, ...(r.rows ?? [])],
+        );
         setPage(targetPage);
       } finally {
         setLoading(false);
@@ -85,11 +96,16 @@ export function NotificationBell() {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
     // F4.6 — gate realtime via feature flag (default ON, override via app_setting flag.enable_realtime).
-    import("@/lib/feature-flags").then(({ isFeatureEnabled }) => isFeatureEnabled("enable_realtime")).then((on) => {
-      if (cancelled || !on) return;
-      unsubscribe = subscribeUserNotifications(user.id, () => setCount((c) => c + 1));
-    });
-    return () => { cancelled = true; unsubscribe?.(); };
+    import("@/lib/feature-flags")
+      .then(({ isFeatureEnabled }) => isFeatureEnabled("enable_realtime"))
+      .then((on) => {
+        if (cancelled || !on) return;
+        unsubscribe = subscribeUserNotifications(user.id, () => setCount((c) => c + 1));
+      });
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [user?.id, refreshCount]);
 
   // Load list when opening or changing kategori
@@ -175,7 +191,9 @@ export function NotificationBell() {
                 <div className="px-3 py-6 text-center text-xs text-muted-foreground">Memuat…</div>
               )}
               {!loading && rows.length === 0 && (
-                <div className="px-3 py-10 text-center text-xs text-muted-foreground">Tidak ada notifikasi</div>
+                <div className="px-3 py-10 text-center text-xs text-muted-foreground">
+                  Tidak ada notifikasi
+                </div>
               )}
               {rows.map((n) => {
                 const content = (
@@ -183,7 +201,9 @@ export function NotificationBell() {
                     className={`flex flex-col gap-0.5 border-b border-border/60 px-3 py-2 text-sm transition hover:bg-muted ${n.dibaca ? "opacity-70" : "bg-primary/[0.03]"}`}
                   >
                     <span className="font-medium leading-tight">{n.judul}</span>
-                    {n.body && <span className="line-clamp-2 text-xs text-muted-foreground">{n.body}</span>}
+                    {n.body && (
+                      <span className="line-clamp-2 text-xs text-muted-foreground">{n.body}</span>
+                    )}
                     <span className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                       {new Date(n.created_at).toLocaleString("id-ID")}
                     </span>

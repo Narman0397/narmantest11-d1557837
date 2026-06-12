@@ -17,7 +17,8 @@ function DashboardPage() {
   const totalSigned = signedQ.data?.signed.filter((r) => r.status === "signed").length ?? 0;
   const totalRevoked = signedQ.data?.signed.filter((r) => r.status === "revoked").length ?? 0;
   const totalDocs = docsQ.data?.documents.length ?? 0;
-  const totalVerif = signedQ.data?.signed.reduce((acc, r) => acc + (r.verification_count ?? 0), 0) ?? 0;
+  const totalVerif =
+    signedQ.data?.signed.reduce((acc, r) => acc + (r.verification_count ?? 0), 0) ?? 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -32,8 +33,12 @@ function DashboardPage() {
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-sm text-muted-foreground">{label}</CardTitle></CardHeader>
-      <CardContent><div className="text-3xl font-bold">{value}</div></CardContent>
+      <CardHeader>
+        <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-bold">{value}</div>
+      </CardContent>
     </Card>
   );
 }

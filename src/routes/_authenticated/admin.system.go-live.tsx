@@ -9,7 +9,9 @@ import { runGoLiveChecks } from "@/lib/ops/golive.functions";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/system/go-live")({
-  head: () => ({ meta: [{ title: "Go-Live Checklist — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Go-Live Checklist — Admin" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <SuperAdminOnly>
@@ -19,7 +21,12 @@ export const Route = createFileRoute("/_authenticated/admin/system/go-live")({
   ),
 });
 
-type Check = { kategori: string; item: string; status: "pass" | "warning" | "fail"; detail: string };
+type Check = {
+  kategori: string;
+  item: string;
+  status: "pass" | "warning" | "fail";
+  detail: string;
+};
 
 function Page() {
   const fn = useServerFn(runGoLiveChecks);
@@ -44,25 +51,37 @@ function Page() {
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
           <div className="text-xs uppercase text-muted-foreground">Warning</div>
-          <div className="mt-1 font-display text-3xl font-bold text-gold-foreground">{summary.warning}</div>
+          <div className="mt-1 font-display text-3xl font-bold text-gold-foreground">
+            {summary.warning}
+          </div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
           <div className="text-xs uppercase text-muted-foreground">Fail</div>
-          <div className="mt-1 font-display text-3xl font-bold text-destructive">{summary.fail}</div>
+          <div className="mt-1 font-display text-3xl font-bold text-destructive">
+            {summary.fail}
+          </div>
         </div>
       </div>
 
-      {isLoading && <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">Memuat…</div>}
+      {isLoading && (
+        <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
+          Memuat…
+        </div>
+      )}
 
       <div className="space-y-4">
         {Object.entries(grouped).map(([kat, items]) => (
           <div key={kat} className="rounded-xl border border-border bg-card shadow-soft">
-            <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{kat}</div>
+            <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {kat}
+            </div>
             <ul className="divide-y divide-border">
               {items.map((c, i) => (
                 <li key={i} className="flex items-center gap-3 px-4 py-3 text-sm">
                   {c.status === "pass" && <CheckCircle2 className="h-5 w-5 text-success" />}
-                  {c.status === "warning" && <AlertTriangle className="h-5 w-5 text-gold-foreground" />}
+                  {c.status === "warning" && (
+                    <AlertTriangle className="h-5 w-5 text-gold-foreground" />
+                  )}
                   {c.status === "fail" && <XCircle className="h-5 w-5 text-destructive" />}
                   <div className="flex-1">
                     <div className="font-medium">{c.item}</div>

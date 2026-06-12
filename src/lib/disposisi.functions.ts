@@ -7,12 +7,14 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export const dispose = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      permohonan_id: z.string().uuid(),
-      to_user: z.string().uuid(),
-      level: z.enum(["kepala_opd", "kabid", "staf", "review"]),
-      note: z.string().max(1000).optional(),
-    }).parse(i),
+    z
+      .object({
+        permohonan_id: z.string().uuid(),
+        to_user: z.string().uuid(),
+        level: z.enum(["kepala_opd", "kabid", "staf", "review"]),
+        note: z.string().max(1000).optional(),
+      })
+      .parse(i),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -28,7 +30,10 @@ export const dispose = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    await supabaseAdmin.from("permohonan").update({ current_disposition_id: row.id }).eq("id", data.permohonan_id);
+    await supabaseAdmin
+      .from("permohonan")
+      .update({ current_disposition_id: row.id })
+      .eq("id", data.permohonan_id);
     await supabaseAdmin.from("audit_log").insert({
       user_id: context.userId,
       aksi: "disposisi.create",
@@ -45,7 +50,9 @@ export const myDisposisiInbox = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data, error } = await supabase
       .from("submission_dispositions")
-      .select("id,level,note,status,created_at,permohonan_id, permohonan:permohonan!permohonan_id(kode,judul,status)")
+      .select(
+        "id,level,note,status,created_at,permohonan_id, permohonan:permohonan!permohonan_id(kode,judul,status)",
+      )
       .eq("to_user", context.userId)
       .in("status", ["pending", "accepted"])
       .order("created_at", { ascending: false })
@@ -57,14 +64,17 @@ export const myDisposisiInbox = createServerFn({ method: "POST" })
 export const actDisposisi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      action: z.enum(["accept", "done", "reject"]),
-      note: z.string().max(1000).optional(),
-    }).parse(i),
+    z
+      .object({
+        id: z.string().uuid(),
+        action: z.enum(["accept", "done", "reject"]),
+        note: z.string().max(1000).optional(),
+      })
+      .parse(i),
   )
   .handler(async ({ data, context }) => {
-    const status = data.action === "accept" ? "accepted" : data.action === "done" ? "done" : "rejected";
+    const status =
+      data.action === "accept" ? "accepted" : data.action === "done" ? "done" : "rejected";
     const { error } = await context.supabase
       .from("submission_dispositions")
       .update({ status, acted_at: new Date().toISOString(), note: data.note ?? undefined })

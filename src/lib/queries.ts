@@ -6,8 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  * Dipanggil dari admin (CMS, OPD) agar pengunjung melihat data terbaru
  * tanpa perlu reload paksa.
  */
-export const invalidateBerita = (qc: QueryClient) =>
-  qc.invalidateQueries({ queryKey: ["berita"] });
+export const invalidateBerita = (qc: QueryClient) => qc.invalidateQueries({ queryKey: ["berita"] });
 
 export const invalidateLayanan = (qc: QueryClient) =>
   Promise.all([
@@ -22,7 +21,6 @@ export const invalidateOpd = (qc: QueryClient) =>
     // detail layanan menyertakan info OPD pengelola
     qc.invalidateQueries({ queryKey: ["layanan"] }),
   ]);
-
 
 export type Berita = {
   id: string;
@@ -64,14 +62,21 @@ export const homeStatsQueryOptions = () =>
       startOfMonth.setHours(0, 0, 0, 0);
 
       const [layananRes, permohonanRes, datasetRes, ratingRes] = await Promise.all([
-        supabase.from("layanan_publik").select("*", { count: "exact", head: true }).eq("aktif", true),
+        supabase
+          .from("layanan_publik")
+          .select("*", { count: "exact", head: true })
+          .eq("aktif", true),
         supabase.rpc("count_permohonan_bulan_ini"),
-        supabase.from("data_terpadu_item").select("*", { count: "exact", head: true }).eq("aktif", true),
+        supabase
+          .from("data_terpadu_item")
+          .select("*", { count: "exact", head: true })
+          .eq("aktif", true),
         supabase.from("permohonan_rating").select("skor"),
       ]);
 
       const ratings = (ratingRes.data ?? []) as { skor: number }[];
-      const avg = ratings.length > 0 ? ratings.reduce((s, r) => s + r.skor, 0) / ratings.length : null;
+      const avg =
+        ratings.length > 0 ? ratings.reduce((s, r) => s + r.skor, 0) / ratings.length : null;
       const kepuasanPersen = avg !== null ? (avg / 10) * 100 : null;
 
       return {
@@ -101,7 +106,9 @@ export const layananAllWithOpdQueryOptions = () =>
     queryFn: async (): Promise<LayananWithOpd[]> => {
       const { data, error } = await supabase
         .from("layanan_publik")
-        .select("id,judul,slug,deskripsi,sla_hari,urutan,opd:opd!opd_id(id,singkatan,nama,kategori)")
+        .select(
+          "id,judul,slug,deskripsi,sla_hari,urutan,opd:opd!opd_id(id,singkatan,nama,kategori)",
+        )
         .eq("aktif", true)
         .order("urutan");
       if (error) throw error;

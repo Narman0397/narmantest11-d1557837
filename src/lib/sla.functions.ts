@@ -20,7 +20,9 @@ export const getSlaTimeline = createServerFn({ method: "POST" })
       .eq("permohonan_id", data.permohonan_id)
       .order("started_at", { ascending: true });
     if (error) throw new Error(error.message);
-    const { data: eff } = await supabase.rpc("fn_permohonan_effective_sla_seconds", { _id: data.permohonan_id });
+    const { data: eff } = await supabase.rpc("fn_permohonan_effective_sla_seconds", {
+      _id: data.permohonan_id,
+    });
     return { events: rows ?? [], effective_seconds: (eff as number | null) ?? 0 };
   });
 
@@ -31,9 +33,15 @@ export const forcePauseSla = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     if (!(await isSuper(context.userId))) throw new Error("Forbidden");
-    await supabaseAdmin.from("permohonan").update({ sla_paused_at: new Date().toISOString() }).eq("id", data.permohonan_id);
+    await supabaseAdmin
+      .from("permohonan")
+      .update({ sla_paused_at: new Date().toISOString() })
+      .eq("id", data.permohonan_id);
     await supabaseAdmin.from("submission_sla_events").insert({
-      permohonan_id: data.permohonan_id, event_type: "pause", reason: data.reason, actor: context.userId,
+      permohonan_id: data.permohonan_id,
+      event_type: "pause",
+      reason: data.reason,
+      actor: context.userId,
     });
     return { ok: true };
   });
@@ -45,18 +53,32 @@ export const forceResumeSla = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     if (!(await isSuper(context.userId))) throw new Error("Forbidden");
-    const { data: p } = await supabaseAdmin.from("permohonan").select("sla_paused_at,sla_total_pause_seconds").eq("id", data.permohonan_id).maybeSingle();
+    const { data: p } = await supabaseAdmin
+      .from("permohonan")
+      .select("sla_paused_at,sla_total_pause_seconds")
+      .eq("id", data.permohonan_id)
+      .maybeSingle();
     if (!p?.sla_paused_at) throw new Error("SLA tidak sedang pause");
     const dur = Math.max(0, Math.floor((Date.now() - new Date(p.sla_paused_at).getTime()) / 1000));
-    await supabaseAdmin.from("permohonan").update({
-      sla_paused_at: null,
-      sla_total_pause_seconds: (p.sla_total_pause_seconds ?? 0) + dur,
-    }).eq("id", data.permohonan_id);
-    await supabaseAdmin.from("submission_sla_events")
+    await supabaseAdmin
+      .from("permohonan")
+      .update({
+        sla_paused_at: null,
+        sla_total_pause_seconds: (p.sla_total_pause_seconds ?? 0) + dur,
+      })
+      .eq("id", data.permohonan_id);
+    await supabaseAdmin
+      .from("submission_sla_events")
       .update({ ended_at: new Date().toISOString(), duration_seconds: dur })
-      .eq("permohonan_id", data.permohonan_id).eq("event_type", "pause").is("ended_at", null);
+      .eq("permohonan_id", data.permohonan_id)
+      .eq("event_type", "pause")
+      .is("ended_at", null);
     await supabaseAdmin.from("submission_sla_events").insert({
-      permohonan_id: data.permohonan_id, event_type: "resume", duration_seconds: dur, reason: data.reason, actor: context.userId,
+      permohonan_id: data.permohonan_id,
+      event_type: "resume",
+      duration_seconds: dur,
+      reason: data.reason,
+      actor: context.userId,
     });
     return { ok: true, duration_seconds: dur };
   });

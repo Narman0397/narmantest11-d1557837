@@ -25,7 +25,11 @@ export function FormFieldsTab({
   }
   return (
     <div className="space-y-3">
-      {readOnly && <p className="text-xs text-amber-600">Field hanya dapat diubah saat form berstatus draft.</p>}
+      {readOnly && (
+        <p className="text-xs text-amber-600">
+          Field hanya dapat diubah saat form berstatus draft.
+        </p>
+      )}
       {fields.map((f, i) => (
         <FieldEditor
           key={i}
@@ -44,8 +48,19 @@ export function FormFieldsTab({
       ))}
       {!readOnly && (
         <div className="flex gap-2">
-          <button onClick={() => setFields([...fields, emptyField(fields.length)])} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"><Plus className="h-4 w-4" /> Tambah Field</button>
-          <button onClick={onSave} disabled={busy} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Save className="h-4 w-4" /> Simpan Semua Field</button>
+          <button
+            onClick={() => setFields([...fields, emptyField(fields.length)])}
+            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <Plus className="h-4 w-4" /> Tambah Field
+          </button>
+          <button
+            onClick={onSave}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            <Save className="h-4 w-4" /> Simpan Semua Field
+          </button>
         </div>
       )}
     </div>

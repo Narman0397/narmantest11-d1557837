@@ -77,10 +77,7 @@ export async function checkRateLimit(
 }
 
 /** Convenience wrapper: check + throw on exceed. */
-export async function enforceRateLimit(
-  subject: string,
-  opts: RateLimitOptions,
-): Promise<void> {
+export async function enforceRateLimit(subject: string, opts: RateLimitOptions): Promise<void> {
   await checkRateLimit(subject, opts);
 }
 

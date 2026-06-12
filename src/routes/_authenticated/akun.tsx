@@ -11,9 +11,10 @@ import { getMyVerificationToken, getMyVerificationDetail } from "@/lib/verificat
 import { AsnClassificationBadge, RoleBadge, usePermissions, type AppRole } from "@/features/rbac";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
 
-
 export const Route = createFileRoute("/_authenticated/akun")({
-  head: () => ({ meta: [{ title: "Akun Saya — Portal Buton Selatan" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Akun Saya — Portal Buton Selatan" }, { name: "robots", content: "noindex" }],
+  }),
   component: AkunPage,
 });
 
@@ -29,7 +30,10 @@ function AkunPage() {
   const [desaList, setDesaList] = useState<DesaRow[]>([]);
   const [form, setForm] = useState({ nama_lengkap: "", nik: "", no_hp: "", desa: "" });
   const [savingProfile, setSavingProfile] = useState(false);
-  const [verDetail, setVerDetail] = useState<{ verified_at: string | null; verifier: Verifier | null } | null>(null);
+  const [verDetail, setVerDetail] = useState<{
+    verified_at: string | null;
+    verifier: Verifier | null;
+  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   async function loadToken() {
@@ -49,8 +53,15 @@ function AkunPage() {
   useEffect(() => {
     if (!user) return;
     refreshProfile();
-    const t = setInterval(() => { refreshProfile(); }, isVerified ? 60000 : 30000);
-    const onFocus = () => { refreshProfile(); };
+    const t = setInterval(
+      () => {
+        refreshProfile();
+      },
+      isVerified ? 60000 : 30000,
+    );
+    const onFocus = () => {
+      refreshProfile();
+    };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
     return () => {
@@ -63,14 +74,24 @@ function AkunPage() {
 
   // Detail verifikasi (siapa & kapan)
   useEffect(() => {
-    if (!user || !isVerified) { setVerDetail(null); return; }
-    getMyVerificationDetail().then((r) => setVerDetail(r as { verified_at: string | null; verifier: Verifier | null })).catch(() => {});
+    if (!user || !isVerified) {
+      setVerDetail(null);
+      return;
+    }
+    getMyVerificationDetail()
+      .then((r) => setVerDetail(r as { verified_at: string | null; verifier: Verifier | null }))
+      .catch(() => {});
   }, [user, isVerified, profile?.verified_at]);
 
   useEffect(() => {
-    supabase.from("desa").select("id,nama").eq("aktif", true).order("nama").then(({ data }) => {
-      setDesaList((data ?? []) as DesaRow[]);
-    });
+    supabase
+      .from("desa")
+      .select("id,nama")
+      .eq("aktif", true)
+      .order("nama")
+      .then(({ data }) => {
+        setDesaList((data ?? []) as DesaRow[]);
+      });
   }, []);
 
   useEffect(() => {
@@ -91,7 +112,11 @@ function AkunPage() {
 
   useEffect(() => {
     if (!token || !canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, token, { width: 260, margin: 2, errorCorrectionLevel: "M" }).catch(() => {});
+    QRCode.toCanvas(canvasRef.current, token, {
+      width: 260,
+      margin: 2,
+      errorCorrectionLevel: "M",
+    }).catch(() => {});
   }, [token]);
 
   function downloadQR() {
@@ -126,13 +151,23 @@ function AkunPage() {
     }
   }
 
-  if (loading) return <PageShell><div className="container-page py-16 text-center text-muted-foreground">Memuat…</div></PageShell>;
+  if (loading)
+    return (
+      <PageShell>
+        <div className="container-page py-16 text-center text-muted-foreground">Memuat…</div>
+      </PageShell>
+    );
   if (!user) {
     return (
       <PageShell>
         <div className="container-page py-16 text-center">
           <p className="mb-4 text-muted-foreground">Silakan masuk untuk melihat akun Anda.</p>
-          <Link to="/auth" className="inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground">Masuk</Link>
+          <Link
+            to="/auth"
+            className="inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground"
+          >
+            Masuk
+          </Link>
         </div>
       </PageShell>
     );
@@ -140,7 +175,11 @@ function AkunPage() {
 
   return (
     <PageShell>
-      <PageHero eyebrow="Akun Saya" title="Profil & Verifikasi" description="Perbarui data diri Anda dan tunjukkan QR code kepada Admin Desa untuk verifikasi." />
+      <PageHero
+        eyebrow="Akun Saya"
+        title="Profil & Verifikasi"
+        description="Perbarui data diri Anda dan tunjukkan QR code kepada Admin Desa untuk verifikasi."
+      />
       <section className="container-page py-10">
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
@@ -166,10 +205,16 @@ function AkunPage() {
                 <div className="rounded-md border border-border bg-surface/60 p-3">
                   <div className="text-xs font-semibold text-muted-foreground">Peran & Izin</div>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    {roles.length === 0 && <span className="text-xs text-muted-foreground">Warga</span>}
-                    {roles.map((r) => <RoleBadge key={r} role={r as AppRole} />)}
+                    {roles.length === 0 && (
+                      <span className="text-xs text-muted-foreground">Warga</span>
+                    )}
+                    {roles.map((r) => (
+                      <RoleBadge key={r} role={r as AppRole} />
+                    ))}
                   </div>
-                  <div className="mt-2"><AsnClassificationBadge /></div>
+                  <div className="mt-2">
+                    <AsnClassificationBadge />
+                  </div>
                   {permissions.size > 0 && (
                     <details className="mt-2 text-xs text-muted-foreground">
                       <summary className="cursor-pointer select-none font-medium hover:text-foreground">
@@ -177,7 +222,12 @@ function AkunPage() {
                       </summary>
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {[...permissions].sort().map((p) => (
-                          <span key={p} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">{p}</span>
+                          <span
+                            key={p}
+                            className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                          >
+                            {p}
+                          </span>
                         ))}
                       </div>
                     </details>
@@ -187,37 +237,60 @@ function AkunPage() {
 
               {isVerified && (
                 <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-success">
-                  Akun Anda telah diverifikasi. Nama, NIK, No. HP, dan Desa terkunci. Untuk perubahan data atau pindah desa, silakan hubungi Admin Desa.
+                  Akun Anda telah diverifikasi. Nama, NIK, No. HP, dan Desa terkunci. Untuk
+                  perubahan data atau pindah desa, silakan hubungi Admin Desa.
                 </div>
               )}
               <Field label="Nama Lengkap">
-                <input value={form.nama_lengkap} disabled={isVerified}
+                <input
+                  value={form.nama_lengkap}
+                  disabled={isVerified}
                   onChange={(e) => setForm((f) => ({ ...f, nama_lengkap: e.target.value }))}
-                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60" />
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                />
               </Field>
               <Field label="NIK">
-                <input value={form.nik} disabled={isVerified}
-                  onChange={(e) => setForm((f) => ({ ...f, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))}
-                  inputMode="numeric" maxLength={16}
-                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm font-mono disabled:cursor-not-allowed disabled:opacity-60" />
+                <input
+                  value={form.nik}
+                  disabled={isVerified}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, nik: e.target.value.replace(/\D/g, "").slice(0, 16) }))
+                  }
+                  inputMode="numeric"
+                  maxLength={16}
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm font-mono disabled:cursor-not-allowed disabled:opacity-60"
+                />
               </Field>
               <Field label="No. HP">
-                <input value={form.no_hp} disabled={isVerified}
+                <input
+                  value={form.no_hp}
+                  disabled={isVerified}
                   onChange={(e) => setForm((f) => ({ ...f, no_hp: e.target.value }))}
-                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60" />
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                />
               </Field>
               <Field label="Desa">
-                <select value={form.desa} disabled={isVerified}
+                <select
+                  value={form.desa}
+                  disabled={isVerified}
                   onChange={(e) => setForm((f) => ({ ...f, desa: e.target.value }))}
-                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <option value="">— Pilih Desa —</option>
-                  {desaList.map((d) => <option key={d.id} value={d.nama}>{d.nama}</option>)}
+                  {desaList.map((d) => (
+                    <option key={d.id} value={d.nama}>
+                      {d.nama}
+                    </option>
+                  ))}
                 </select>
               </Field>
 
               {!isVerified && (
-                <button onClick={saveProfile} disabled={savingProfile}
-                  className="mt-2 inline-flex h-10 items-center gap-2 rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                <button
+                  onClick={saveProfile}
+                  disabled={savingProfile}
+                  className="mt-2 inline-flex h-10 items-center gap-2 rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
                   <Save className="h-4 w-4" /> {savingProfile ? "Menyimpan…" : "Simpan Profil"}
                 </button>
               )}
@@ -232,7 +305,9 @@ function AkunPage() {
 
           <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
             <h2 className="font-display text-lg font-bold">QR Code Verifikasi</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Tunjukkan ke Admin Desa untuk discan. Token sekali pakai, berlaku 30 hari.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tunjukkan ke Admin Desa untuk discan. Token sekali pakai, berlaku 30 hari.
+            </p>
             <div className="mt-5 grid place-items-center">
               {isVerified ? (
                 <div className="w-full rounded-lg border border-dashed border-success/40 bg-success/5 p-6 text-sm text-success">
@@ -259,22 +334,40 @@ function AkunPage() {
                       </span>
                     </div>
                     {verDetail?.verifier?.email && verDetail.verifier.nama_lengkap && (
-                      <div className="text-[11px] text-muted-foreground">{verDetail.verifier.email}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {verDetail.verifier.email}
+                      </div>
                     )}
                   </div>
                 </div>
               ) : (
                 <>
-                  <canvas ref={canvasRef} className="rounded-md border border-border bg-white p-2" />
+                  <canvas
+                    ref={canvasRef}
+                    className="rounded-md border border-border bg-white p-2"
+                  />
                   <div className="mt-4 flex gap-2">
-                    <button onClick={loadToken} disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-xs hover:bg-muted">
-                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} /> Muat ulang
+                    <button
+                      onClick={loadToken}
+                      disabled={busy}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-xs hover:bg-muted"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} /> Muat
+                      ulang
                     </button>
-                    <button onClick={downloadQR} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground">
+                    <button
+                      onClick={downloadQR}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
+                    >
                       <Download className="h-3.5 w-3.5" /> Unduh QR
                     </button>
                   </div>
-                  <button onClick={() => { refreshProfile(); }} className="mt-3 text-xs text-muted-foreground hover:text-primary">
+                  <button
+                    onClick={() => {
+                      refreshProfile();
+                    }}
+                    className="mt-3 text-xs text-muted-foreground hover:text-primary"
+                  >
                     Cek status lagi
                   </button>
                 </>

@@ -62,7 +62,9 @@ export async function enqueueNotification(args: EnqueueArgs): Promise<void> {
         maxAttempts: 4,
         delaySec: 10,
       });
-    } catch { /* never block caller */ }
+    } catch {
+      /* never block caller */
+    }
   }
 }
 
@@ -103,7 +105,17 @@ export const listMyNotifications = createServerFn({ method: "POST" })
         pageSize: z.number().int().min(1).max(50).default(20),
         onlyUnread: z.boolean().default(false),
         kategori: z
-          .enum(["all", "assignment", "review", "approval", "rejection", "revision", "upload", "sharing", "system"])
+          .enum([
+            "all",
+            "assignment",
+            "review",
+            "approval",
+            "rejection",
+            "revision",
+            "upload",
+            "sharing",
+            "system",
+          ])
           .default("all"),
       })
       .parse(input ?? {}),

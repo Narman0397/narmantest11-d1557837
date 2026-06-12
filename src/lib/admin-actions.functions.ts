@@ -33,20 +33,25 @@ async function ensureProfileForUser(userId: string) {
   if (!user) throw new Error("User auth tidak ditemukan");
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const username = typeof meta.username === "string" && meta.username.trim()
-    ? meta.username.trim().toLowerCase()
-    : (user.email ?? "").split("@")[0] || null;
-  const nama = typeof meta.nama_lengkap === "string" && meta.nama_lengkap.trim()
-    ? meta.nama_lengkap.trim()
-    : username ?? "";
-  const { error: insertError } = await supabaseAdmin.from("profiles").upsert({
-    id: userId,
-    username,
-    nama_lengkap: nama,
-    no_hp: typeof meta.no_hp === "string" ? meta.no_hp : null,
-    nik: typeof meta.nik === "string" ? meta.nik : null,
-    desa: typeof meta.desa === "string" ? meta.desa : null,
-  }, { onConflict: "id" });
+  const username =
+    typeof meta.username === "string" && meta.username.trim()
+      ? meta.username.trim().toLowerCase()
+      : (user.email ?? "").split("@")[0] || null;
+  const nama =
+    typeof meta.nama_lengkap === "string" && meta.nama_lengkap.trim()
+      ? meta.nama_lengkap.trim()
+      : (username ?? "");
+  const { error: insertError } = await supabaseAdmin.from("profiles").upsert(
+    {
+      id: userId,
+      username,
+      nama_lengkap: nama,
+      no_hp: typeof meta.no_hp === "string" ? meta.no_hp : null,
+      nik: typeof meta.nik === "string" ? meta.nik : null,
+      desa: typeof meta.desa === "string" ? meta.desa : null,
+    },
+    { onConflict: "id" },
+  );
   if (insertError) throw new Error(insertError.message);
 }
 
@@ -56,7 +61,6 @@ async function assertAdminOrSuper(userId: string) {
   if (!ctx.isSuper && !ctx.isAdminOpd) throw new Error("Forbidden: admin only");
   return { isSuper: ctx.isSuper, opdId: ctx.opdId };
 }
-
 
 function slugify(s: string) {
   return s
@@ -74,7 +78,12 @@ const setRoleSchema = z.object({
   role: z.enum(["warga", "admin_opd", "super_admin", "admin_desa", "asn"]),
   opd_id: z.string().uuid().nullable().optional(),
   desa: z.string().trim().min(2).max(120).nullable().optional(),
-  nip: z.string().trim().regex(/^\d{8,20}$/).nullable().optional(),
+  nip: z
+    .string()
+    .trim()
+    .regex(/^\d{8,20}$/)
+    .nullable()
+    .optional(),
   jabatan: z.string().trim().min(2).max(160).nullable().optional(),
 });
 
@@ -134,7 +143,11 @@ export const setUserRole = createServerFn({ method: "POST" })
 
 // ============= ENQUEUE JOB =============
 const enqueueSchema = z.object({
-  job_type: z.string().min(1).max(64).regex(/^[a-z0-9_.\-]+$/),
+  job_type: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[a-z0-9_.\-]+$/),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -159,8 +172,16 @@ export const enqueueJob = createServerFn({ method: "POST" })
 // ============= EXPORT DATA (BACKUP) =============
 const exportSchema = z.object({
   tabel: z.enum([
-    "profiles", "user_roles", "opd", "permohonan", "permohonan_riwayat",
-    "audit_log", "job_queue", "kategori_layanan", "berita", "layanan_publik",
+    "profiles",
+    "user_roles",
+    "opd",
+    "permohonan",
+    "permohonan_riwayat",
+    "audit_log",
+    "job_queue",
+    "kategori_layanan",
+    "berita",
+    "layanan_publik",
   ]),
 });
 
@@ -173,12 +194,10 @@ export const exportTable = createServerFn({ method: "POST" })
     const rl = await checkRateLimit(userId, "export", 10, 60);
     if (!rl.ok) throw new Error("Too many requests");
 
-    const rows = await fetchAllChunked<Record<string, unknown>>(
-      supabaseAdmin,
-      data.tabel,
-      "*",
-      { pageSize: 2000, maxRows: 50_000 },
-    );
+    const rows = await fetchAllChunked<Record<string, unknown>>(supabaseAdmin, data.tabel, "*", {
+      pageSize: 2000,
+      maxRows: 50_000,
+    });
 
     await supabaseAdmin.from("audit_log").insert({
       user_id: userId,
@@ -216,7 +235,10 @@ export const listUsers = createServerFn({ method: "POST" })
       );
     }
 
-    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 200,
+    });
     if (error) {
       console.error("[listUsers] supabaseAdmin.auth.admin.listUsers error:", error);
       throw new Error(`Gagal memanggil Supabase Admin API: ${error.message}`);
@@ -224,7 +246,12 @@ export const listUsers = createServerFn({ method: "POST" })
 
     const ids = list.users.map((u) => u.id);
     const [{ data: profiles }, { data: roles }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id,nama_lengkap,nik,no_hp,opd_id,status,desa,verified_at,jabatan,asn_type,system_position").in("id", ids),
+      supabaseAdmin
+        .from("profiles")
+        .select(
+          "id,nama_lengkap,nik,no_hp,opd_id,status,desa,verified_at,jabatan,asn_type,system_position",
+        )
+        .in("id", ids),
       supabaseAdmin.from("user_roles").select("user_id,role").in("user_id", ids),
     ]);
     const profMap = new Map(profiles?.map((p) => [p.id, p]) ?? []);
@@ -242,10 +269,13 @@ export const listUsers = createServerFn({ method: "POST" })
         no_hp: profMap.get(u.id)?.no_hp ?? null,
         opd_id: profMap.get(u.id)?.opd_id ?? null,
         desa: (profMap.get(u.id) as { desa?: string | null } | undefined)?.desa ?? null,
-        verified_at: (profMap.get(u.id) as { verified_at?: string | null } | undefined)?.verified_at ?? null,
+        verified_at:
+          (profMap.get(u.id) as { verified_at?: string | null } | undefined)?.verified_at ?? null,
         jabatan: (profMap.get(u.id) as { jabatan?: string | null } | undefined)?.jabatan ?? null,
         asn_type: (profMap.get(u.id) as { asn_type?: string | null } | undefined)?.asn_type ?? null,
-        system_position: (profMap.get(u.id) as { system_position?: string | null } | undefined)?.system_position ?? null,
+        system_position:
+          (profMap.get(u.id) as { system_position?: string | null } | undefined)?.system_position ??
+          null,
         status: profMap.get(u.id)?.status ?? "active",
         role: roleMap.get(u.id) ?? "warga",
       })),
@@ -275,7 +305,10 @@ export const setUserSuspended = createServerFn({ method: "POST" })
     } as Parameters<typeof supabaseAdmin.auth.admin.updateUserById>[1]);
     if (bErr) throw new Error(bErr.message);
 
-    await supabaseAdmin.from("profiles").update({ status: data.suspend ? "suspended" : "active" }).eq("id", data.user_id);
+    await supabaseAdmin
+      .from("profiles")
+      .update({ status: data.suspend ? "suspended" : "active" })
+      .eq("id", data.user_id);
 
     await supabaseAdmin.from("audit_log").insert({
       user_id: userId,
@@ -304,7 +337,10 @@ export const forceSignOut = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "user.force_logout", entitas: "user", entitas_id: data.user_id,
+      user_id: userId,
+      aksi: "user.force_logout",
+      entitas: "user",
+      entitas_id: data.user_id,
     });
     return { ok: true };
   });
@@ -328,7 +364,10 @@ export const sendPasswordReset = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "user.password_reset_sent", entitas: "user", user_email: data.email,
+      user_id: userId,
+      aksi: "user.password_reset_sent",
+      entitas: "user",
+      user_email: data.email,
     });
     return { ok: true };
   });
@@ -354,12 +393,28 @@ export const upsertOpd = createServerFn({ method: "POST" })
     if (data.id) {
       const { error } = await supabaseAdmin.from("opd").update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
-      await supabaseAdmin.from("audit_log").insert({ user_id: userId, aksi: "opd.updated", entitas: "opd", entitas_id: data.id, data_sesudah: payload as never });
+      await supabaseAdmin.from("audit_log").insert({
+        user_id: userId,
+        aksi: "opd.updated",
+        entitas: "opd",
+        entitas_id: data.id,
+        data_sesudah: payload as never,
+      });
       return { ok: true, id: data.id };
     } else {
-      const { data: row, error } = await supabaseAdmin.from("opd").insert(payload).select("id").single();
+      const { data: row, error } = await supabaseAdmin
+        .from("opd")
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) throw new Error(error.message);
-      await supabaseAdmin.from("audit_log").insert({ user_id: userId, aksi: "opd.created", entitas: "opd", entitas_id: row.id, data_sesudah: payload as never });
+      await supabaseAdmin.from("audit_log").insert({
+        user_id: userId,
+        aksi: "opd.created",
+        entitas: "opd",
+        entitas_id: row.id,
+        data_sesudah: payload as never,
+      });
       return { ok: true, id: row.id };
     }
   });
@@ -372,7 +427,9 @@ export const deleteOpd = createServerFn({ method: "POST" })
     await assertSuperAdmin(userId);
     const { error } = await supabaseAdmin.from("opd").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
-    await supabaseAdmin.from("audit_log").insert({ user_id: userId, aksi: "opd.deleted", entitas: "opd", entitas_id: data.id });
+    await supabaseAdmin
+      .from("audit_log")
+      .insert({ user_id: userId, aksi: "opd.deleted", entitas: "opd", entitas_id: data.id });
     return { ok: true };
   });
 
@@ -401,11 +458,18 @@ export const upsertKategori = createServerFn({ method: "POST" })
       aktif: data.aktif,
     };
     if (data.id) {
-      const { error } = await supabaseAdmin.from("kategori_layanan").update(payload).eq("id", data.id);
+      const { error } = await supabaseAdmin
+        .from("kategori_layanan")
+        .update(payload)
+        .eq("id", data.id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: row, error } = await supabaseAdmin.from("kategori_layanan").insert(payload).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("kategori_layanan")
+      .insert(payload)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
@@ -454,7 +518,11 @@ export const upsertBerita = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: row, error } = await supabaseAdmin.from("berita").insert(payload).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("berita")
+      .insert(payload)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
@@ -498,7 +566,10 @@ export const upsertLayanan = createServerFn({ method: "POST" })
       opdId = ctx.opdId;
       if (data.id) {
         const { data: existing } = await supabaseAdmin
-          .from("layanan_publik").select("opd_id").eq("id", data.id).maybeSingle();
+          .from("layanan_publik")
+          .select("opd_id")
+          .eq("id", data.id)
+          .maybeSingle();
         if (!existing || existing.opd_id !== ctx.opdId) {
           throw new Error("Forbidden: layanan bukan milik OPD Anda");
         }
@@ -518,11 +589,18 @@ export const upsertLayanan = createServerFn({ method: "POST" })
       sla_hari: data.sla_hari,
     };
     if (data.id) {
-      const { error } = await supabaseAdmin.from("layanan_publik").update(payload).eq("id", data.id);
+      const { error } = await supabaseAdmin
+        .from("layanan_publik")
+        .update(payload)
+        .eq("id", data.id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: row, error } = await supabaseAdmin.from("layanan_publik").insert(payload).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("layanan_publik")
+      .insert(payload)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
@@ -534,7 +612,10 @@ export const deleteLayanan = createServerFn({ method: "POST" })
     const ctx = await assertAdminOrSuper(context.userId);
     if (!ctx.isSuper) {
       const { data: existing } = await supabaseAdmin
-        .from("layanan_publik").select("opd_id").eq("id", data.id).maybeSingle();
+        .from("layanan_publik")
+        .select("opd_id")
+        .eq("id", data.id)
+        .maybeSingle();
       if (!existing || existing.opd_id !== ctx.opdId) {
         throw new Error("Forbidden: layanan bukan milik OPD Anda");
       }
@@ -566,7 +647,9 @@ export const listStorageObjects = createServerFn({ method: "POST" })
           try {
             const s = await createSignedDownload("berkas-permohonan", fullPath, 3600);
             signedUrl = s.url;
-          } catch { signedUrl = null; }
+          } catch {
+            signedUrl = null;
+          }
         }
         return { ...r, signedUrl };
       }),
@@ -585,7 +668,10 @@ export const deleteStorageObject = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests");
     await removeObjects("berkas-permohonan", [data.path]);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "storage.deleted", entitas: "storage", entitas_id: data.path,
+      user_id: context.userId,
+      aksi: "storage.deleted",
+      entitas: "storage",
+      entitas_id: data.path,
     });
     return { ok: true };
   });
@@ -681,14 +767,26 @@ export const upsertPejabat = createServerFn({ method: "POST" })
       const { error } = await supabaseAdmin.from("pejabat").update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
       await supabaseAdmin.from("audit_log").insert({
-        user_id: context.userId, aksi: "pejabat.updated", entitas: "pejabat", entitas_id: data.id, data_sesudah: payload as never,
+        user_id: context.userId,
+        aksi: "pejabat.updated",
+        entitas: "pejabat",
+        entitas_id: data.id,
+        data_sesudah: payload as never,
       });
       return { ok: true, id: data.id };
     }
-    const { data: row, error } = await supabaseAdmin.from("pejabat").insert(payload).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("pejabat")
+      .insert(payload)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "pejabat.created", entitas: "pejabat", entitas_id: row.id, data_sesudah: payload as never,
+      user_id: context.userId,
+      aksi: "pejabat.created",
+      entitas: "pejabat",
+      entitas_id: row.id,
+      data_sesudah: payload as never,
     });
     return { ok: true, id: row.id };
   });
@@ -701,7 +799,10 @@ export const deletePejabat = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("pejabat").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "pejabat.deleted", entitas: "pejabat", entitas_id: data.id,
+      user_id: context.userId,
+      aksi: "pejabat.deleted",
+      entitas: "pejabat",
+      entitas_id: data.id,
     });
     return { ok: true };
   });
@@ -741,7 +842,10 @@ export const deletePermohonan = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "permohonan.deleted", entitas: "permohonan", entitas_id: data.id,
+      user_id: userId,
+      aksi: "permohonan.deleted",
+      entitas: "permohonan",
+      entitas_id: data.id,
       data_sebelum: row as never,
     });
     return { ok: true };
@@ -758,13 +862,19 @@ export const deleteLaporan = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests");
 
     const { data: row } = await supabaseAdmin
-      .from("laporan_masyarakat").select("*").eq("id", data.id).maybeSingle();
+      .from("laporan_masyarakat")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
 
     const { error } = await supabaseAdmin.from("laporan_masyarakat").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "laporan.deleted", entitas: "laporan_masyarakat", entitas_id: data.id,
+      user_id: userId,
+      aksi: "laporan.deleted",
+      entitas: "laporan_masyarakat",
+      entitas_id: data.id,
       data_sebelum: row as never,
     });
     return { ok: true };
@@ -773,10 +883,21 @@ export const deleteLaporan = createServerFn({ method: "POST" })
 // ============= SNAPSHOT / POINT-IN-TIME RECOVERY =============
 // Tabel yang ikut di-snapshot
 const SNAPSHOT_TABLES = [
-  "profiles", "user_roles", "opd", "kategori_layanan", "layanan_publik",
-  "berita", "pejabat", "data_terpadu_item", "app_setting",
-  "permohonan", "permohonan_riwayat", "permohonan_rating",
-  "laporan_masyarakat", "audit_log", "job_queue",
+  "profiles",
+  "user_roles",
+  "opd",
+  "kategori_layanan",
+  "layanan_publik",
+  "berita",
+  "pejabat",
+  "data_terpadu_item",
+  "app_setting",
+  "permohonan",
+  "permohonan_riwayat",
+  "permohonan_rating",
+  "laporan_masyarakat",
+  "audit_log",
+  "job_queue",
 ] as const;
 
 type SnapshotTable = (typeof SNAPSHOT_TABLES)[number];
@@ -804,10 +925,12 @@ async function buildSnapshotPayload() {
 export const createSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      label: z.string().min(2).max(120).optional(),
-      tipe: z.enum(["manual", "auto"]).default("manual"),
-    }).parse(input),
+    z
+      .object({
+        label: z.string().min(2).max(120).optional(),
+        tipe: z.enum(["manual", "auto"]).default("manual"),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -845,7 +968,10 @@ export const createSnapshot = createServerFn({ method: "POST" })
     }
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "snapshot.created", entitas: "backup_snapshot", entitas_id: row.id,
+      user_id: userId,
+      aksi: "snapshot.created",
+      entitas: "backup_snapshot",
+      entitas_id: row.id,
       data_sesudah: { counts, size } as never,
     });
     return { ok: true, snapshot: row };
@@ -892,7 +1018,10 @@ export const restoreSnapshot = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests");
 
     const { data: row, error } = await supabaseAdmin
-      .from("backup_snapshot").select("data, label, created_at").eq("id", data.id).maybeSingle();
+      .from("backup_snapshot")
+      .select("data, label, created_at")
+      .eq("id", data.id)
+      .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Snapshot tidak ditemukan");
 
@@ -911,14 +1040,20 @@ export const restoreSnapshot = createServerFn({ method: "POST" })
         const { error: upErr, count } = await supabaseAdmin
           .from(t as RestoreTable)
           .upsert(chunk as never, { onConflict: "id", count: "exact" });
-        if (upErr) { lastError = upErr.message; break; }
+        if (upErr) {
+          lastError = upErr.message;
+          break;
+        }
         inserted += count ?? chunk.length;
       }
       summary[t] = lastError ? { inserted, error: lastError } : { inserted };
     }
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "snapshot.restored", entitas: "backup_snapshot", entitas_id: data.id,
+      user_id: userId,
+      aksi: "snapshot.restored",
+      entitas: "backup_snapshot",
+      entitas_id: data.id,
       data_sesudah: { summary, restored_to: row.created_at } as never,
     });
     return { ok: true, summary, restored_to: row.created_at, label: row.label };
@@ -933,7 +1068,10 @@ export const deleteSnapshot = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("backup_snapshot").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "snapshot.deleted", entitas: "backup_snapshot", entitas_id: data.id,
+      user_id: context.userId,
+      aksi: "snapshot.deleted",
+      entitas: "backup_snapshot",
+      entitas_id: data.id,
     });
     return { ok: true };
   });
@@ -944,7 +1082,8 @@ export const getStorageCleanupConfig = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertSuperAdmin(context.userId);
     const { data } = await supabaseAdmin
-      .from("app_setting").select("key,value")
+      .from("app_setting")
+      .select("key,value")
       .in("key", ["storage_cleanup_enabled", "storage_cleanup_months"]);
     const map = new Map((data ?? []).map((r) => [r.key, r.value]));
     const enabledVal = map.get("storage_cleanup_enabled");
@@ -958,10 +1097,12 @@ export const getStorageCleanupConfig = createServerFn({ method: "POST" })
 export const setStorageCleanupConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      enabled: z.boolean(),
-      months: z.number().int().min(1).max(120),
-    }).parse(input),
+    z
+      .object({
+        enabled: z.boolean(),
+        months: z.number().int().min(1).max(120),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
@@ -973,8 +1114,10 @@ export const setStorageCleanupConfig = createServerFn({ method: "POST" })
       { onConflict: "key" },
     );
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "storage_cleanup.config",
-      entitas: "app_setting", data_sesudah: data as never,
+      user_id: context.userId,
+      aksi: "storage_cleanup.config",
+      entitas: "app_setting",
+      data_sesudah: data as never,
     });
     return { ok: true };
   });
@@ -994,11 +1137,16 @@ export const runStorageCleanupNow = createServerFn({ method: "POST" })
 export const setWakilAmbil = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      permohonan_id: z.string().uuid(),
-      nama: z.string().trim().min(2).max(120),
-      nik: z.string().trim().regex(/^\d{16}$/, "NIK harus 16 digit angka"),
-    }).parse(input),
+    z
+      .object({
+        permohonan_id: z.string().uuid(),
+        nama: z.string().trim().min(2).max(120),
+        nik: z
+          .string()
+          .trim()
+          .regex(/^\d{16}$/, "NIK harus 16 digit angka"),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -1010,7 +1158,8 @@ export const setWakilAmbil = createServerFn({ method: "POST" })
     if (getErr) throw new Error(getErr.message);
     if (!row) throw new Error("Permohonan tidak ditemukan");
     if (row.pemohon_id !== userId) throw new Error("Bukan permohonan Anda");
-    if (row.status !== "selesai") throw new Error("Hanya berlaku untuk permohonan berstatus selesai");
+    if (row.status !== "selesai")
+      throw new Error("Hanya berlaku untuk permohonan berstatus selesai");
 
     const { error } = await supabaseAdmin
       .from("permohonan")
@@ -1022,8 +1171,10 @@ export const setWakilAmbil = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "permohonan.wakil_ambil_set",
-      entitas: "permohonan", entitas_id: data.permohonan_id,
+      user_id: userId,
+      aksi: "permohonan.wakil_ambil_set",
+      entitas: "permohonan",
+      entitas_id: data.permohonan_id,
       data_sesudah: { nama: data.nama, nik: data.nik } as never,
     });
     return { ok: true };
@@ -1035,7 +1186,10 @@ export const clearWakilAmbil = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { data: row } = await supabaseAdmin
-      .from("permohonan").select("pemohon_id").eq("id", data.permohonan_id).maybeSingle();
+      .from("permohonan")
+      .select("pemohon_id")
+      .eq("id", data.permohonan_id)
+      .maybeSingle();
     if (!row || row.pemohon_id !== userId) throw new Error("Bukan permohonan Anda");
     const { error } = await supabaseAdmin
       .from("permohonan")
@@ -1044,7 +1198,6 @@ export const clearWakilAmbil = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
 
 // ============= VERIFIKASI AKUN STAFF (admin_opd / admin_desa) OLEH SUPER ADMIN =============
 const verifyStaffSchema = z.object({
@@ -1077,7 +1230,6 @@ export const setUserVerified = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-
 // ============= MASTER DESA (SUPER ADMIN) =============
 const desaSchema = z.object({
   id: z.string().uuid().optional(),
@@ -1099,10 +1251,18 @@ export const upsertDesa = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: row, error } = await supabaseAdmin.from("desa").insert(payload).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("desa")
+      .insert(payload)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "desa.created", entitas: "desa", entitas_id: row.id, data_sesudah: payload as never,
+      user_id: context.userId,
+      aksi: "desa.created",
+      entitas: "desa",
+      entitas_id: row.id,
+      data_sesudah: payload as never,
     });
     return { ok: true, id: row.id };
   });
@@ -1115,36 +1275,40 @@ export const deleteDesa = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("desa").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "desa.deleted", entitas: "desa", entitas_id: data.id,
+      user_id: context.userId,
+      aksi: "desa.deleted",
+      entitas: "desa",
+      entitas_id: data.id,
     });
     return { ok: true };
   });
 
 // ============= TOGGLE SETTING SEDERHANA (SUPER ADMIN) =============
-const ALLOWED_SETTING_KEYS = new Set([
-  "permohonan_require_verification",
-  "show_opd_directory",
-]);
+const ALLOWED_SETTING_KEYS = new Set(["permohonan_require_verification", "show_opd_directory"]);
 
 export const setSiteToggle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      key: z.string().min(2).max(64),
-      value: z.record(z.string(), z.unknown()),
-    }).parse(input),
+    z
+      .object({
+        key: z.string().min(2).max(64),
+        value: z.record(z.string(), z.unknown()),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
     if (!ALLOWED_SETTING_KEYS.has(data.key)) throw new Error("Key tidak diizinkan");
-    const { error } = await supabaseAdmin.from("app_setting").upsert(
-      { key: data.key, value: data.value as never },
-      { onConflict: "key" },
-    );
+    const { error } = await supabaseAdmin
+      .from("app_setting")
+      .upsert({ key: data.key, value: data.value as never }, { onConflict: "key" });
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("audit_log").insert({
-      user_id: context.userId, aksi: "site.setting_changed", entitas: "app_setting",
-      entitas_id: data.key, data_sesudah: data.value as never,
+      user_id: context.userId,
+      aksi: "site.setting_changed",
+      entitas: "app_setting",
+      entitas_id: data.key,
+      data_sesudah: data.value as never,
     });
     return { ok: true };
   });
@@ -1162,7 +1326,9 @@ export const deleteUser = createServerFn({ method: "POST" })
 
     // Tolak hapus super admin lain (didukung trigger DB juga).
     const { data: roles } = await supabaseAdmin
-      .from("user_roles").select("role").eq("user_id", data.user_id);
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user_id);
     if ((roles ?? []).some((r) => r.role === "super_admin")) {
       throw new Error("Tidak dapat menghapus akun Super Admin");
     }
@@ -1175,7 +1341,10 @@ export const deleteUser = createServerFn({ method: "POST" })
     await supabaseAdmin.from("profiles").delete().eq("id", data.user_id);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "user.deleted", entitas: "user", entitas_id: data.user_id,
+      user_id: userId,
+      aksi: "user.deleted",
+      entitas: "user",
+      entitas_id: data.user_id,
     });
     return { ok: true };
   });

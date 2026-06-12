@@ -4,15 +4,25 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { LayananOpdPageSkeleton } from "@/components/site/Skeletons";
 import { FileText, Search, LayoutGrid } from "lucide-react";
-import { layananAllWithOpdQueryOptions, opdListQueryOptions, layananCountByOpdQueryOptions } from "@/lib/queries";
+import {
+  layananAllWithOpdQueryOptions,
+  opdListQueryOptions,
+  layananCountByOpdQueryOptions,
+} from "@/lib/queries";
 
 export const Route = createFileRoute("/layanan/")({
   head: () => ({
     meta: [
       { title: "Layanan Publik — Pemerintah Kabupaten Buton Selatan" },
-      { name: "description", content: "Katalog layanan publik Kabupaten Buton Selatan dari seluruh OPD." },
+      {
+        name: "description",
+        content: "Katalog layanan publik Kabupaten Buton Selatan dari seluruh OPD.",
+      },
       { property: "og:title", content: "Katalog Layanan Publik Buton Selatan" },
-      { property: "og:description", content: "Telusuri layanan berdasarkan kategori dan dinas pengelola." },
+      {
+        property: "og:description",
+        content: "Telusuri layanan berdasarkan kategori dan dinas pengelola.",
+      },
     ],
   }),
   loader: ({ context: { queryClient } }) => {
@@ -108,9 +118,17 @@ function LayananPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="font-medium">{o.singkatan}</div>
-                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${opdAktif === o.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{o.jumlah}</span>
+                        <span
+                          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${opdAktif === o.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                        >
+                          {o.jumlah}
+                        </span>
                       </div>
-                      <div className={`text-[11px] truncate ${opdAktif === o.id ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{o.nama}</div>
+                      <div
+                        className={`text-[11px] truncate ${opdAktif === o.id ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                      >
+                        {o.nama}
+                      </div>
                     </button>
                   </li>
                 ))}
@@ -122,7 +140,8 @@ function LayananPage() {
           <div>
             <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Menampilkan <span className="font-semibold text-foreground">{filtered.length}</span> layanan
+                Menampilkan <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
+                layanan
               </span>
             </div>
 

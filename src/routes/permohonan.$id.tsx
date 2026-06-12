@@ -1,7 +1,17 @@
 // Detail permohonan — DB real, dengan ubah status, tambah catatan, lihat berkas.
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, IdCard, Paperclip, Clock, Send, Loader2, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  IdCard,
+  Paperclip,
+  Clock,
+  Send,
+  Loader2,
+  Download,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminGuard } from "@/components/admin/AdminGuard";
@@ -11,13 +21,9 @@ import { STATUS_LABEL, STATUS_TONE, fmtDateTime, type StatusPermohonan } from "@
 import { logAudit } from "@/lib/audit";
 import { PermohonanGovernancePanel } from "@/components/admin/PermohonanGovernancePanel";
 
-
 export const Route = createFileRoute("/permohonan/$id")({
   head: ({ params }) => ({
-    meta: [
-      { title: `Permohonan ${params.id} — Admin` },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: `Permohonan ${params.id} — Admin` }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <AdminGuard>
@@ -26,7 +32,15 @@ export const Route = createFileRoute("/permohonan/$id")({
   ),
 });
 
-const STATUS_OPTIONS: StatusPermohonan[] = ["baru", "diproses", "menunggu_dokumen", "dikembalikan", "selesai", "ditolak", "dibatalkan"];
+const STATUS_OPTIONS: StatusPermohonan[] = [
+  "baru",
+  "diproses",
+  "menunggu_dokumen",
+  "dikembalikan",
+  "selesai",
+  "ditolak",
+  "dibatalkan",
+];
 
 type Permohonan = {
   id: string;
@@ -53,7 +67,16 @@ type Permohonan = {
   profiles: { nama_lengkap: string; nik: string | null; no_hp: string | null } | null;
 };
 
-type Riwayat = { id: string; ts?: string; created_at: string; aksi: string; catatan: string | null; oleh: string | null; nama_petugas?: string | null; email_petugas?: string | null };
+type Riwayat = {
+  id: string;
+  ts?: string;
+  created_at: string;
+  aksi: string;
+  catatan: string | null;
+  oleh: string | null;
+  nama_petugas?: string | null;
+  email_petugas?: string | null;
+};
 type Berkas = { name: string; size: number };
 
 function DetailPermohonan() {
@@ -102,8 +125,9 @@ function DetailPermohonan() {
       setStatusBaru((row as { status: StatusPermohonan }).status);
 
       // Riwayat dengan info petugas (nama + email) via RPC
-      const { data: rws, error: rwsErr } = await supabase
-        .rpc("riwayat_dengan_petugas", { _permohonan_id: id });
+      const { data: rws, error: rwsErr } = await supabase.rpc("riwayat_dengan_petugas", {
+        _permohonan_id: id,
+      });
       if (rwsErr) {
         // Fallback ke tabel mentah jika RPC belum tersedia
         const { data: raw } = await supabase
@@ -134,13 +158,17 @@ function DetailPermohonan() {
     }
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [id]);
 
-  const pemohonFolder = useMemo(() => item ? `${item.pemohon_id}/${item.id}` : "", [item]);
+  const pemohonFolder = useMemo(() => (item ? `${item.pemohon_id}/${item.id}` : ""), [item]);
 
   async function downloadBerkas(name: string) {
     const path = `${pemohonFolder}/${name}`;
-    const { data, error } = await supabase.storage.from("berkas-permohonan").createSignedUrl(path, 60);
+    const { data, error } = await supabase.storage
+      .from("berkas-permohonan")
+      .createSignedUrl(path, 60);
     if (error || !data?.signedUrl) return toast.error("Gagal membuat link unduh");
     window.open(data.signedUrl, "_blank");
   }
@@ -154,7 +182,9 @@ function DetailPermohonan() {
     setBusy(true);
     try {
       const oldStatus = item.status;
-      const updatePayload: { status: StatusPermohonan; alasan_penolakan?: string } = { status: statusBaru };
+      const updatePayload: { status: StatusPermohonan; alasan_penolakan?: string } = {
+        status: statusBaru,
+      };
       if (statusBaru === "ditolak") updatePayload.alasan_penolakan = catatanStatus.trim();
       const { error } = await supabase
         .from("permohonan")
@@ -209,7 +239,9 @@ function DetailPermohonan() {
   if (loading) {
     return (
       <AdminShell breadcrumb={[{ label: "Permohonan", to: "/admin" }, { label: id }]}>
-        <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        <div className="grid place-items-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
       </AdminShell>
     );
   }
@@ -218,8 +250,13 @@ function DetailPermohonan() {
       <AdminShell breadcrumb={[{ label: "Permohonan", to: "/admin" }]}>
         <div className="rounded-xl border border-border bg-card p-12 text-center">
           <h1 className="font-display text-xl font-bold">Permohonan tidak ditemukan</h1>
-          <p className="mt-2 text-sm text-muted-foreground">ID tidak terdaftar atau Anda tidak memiliki akses.</p>
-          <button onClick={() => navigate({ to: "/admin" })} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+          <p className="mt-2 text-sm text-muted-foreground">
+            ID tidak terdaftar atau Anda tidak memiliki akses.
+          </p>
+          <button
+            onClick={() => navigate({ to: "/admin" })}
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary"
+          >
             <ArrowLeft className="h-4 w-4" /> Kembali
           </button>
         </div>
@@ -231,17 +268,28 @@ function DetailPermohonan() {
     <AdminShell breadcrumb={[{ label: "Permohonan", to: "/admin" }, { label: item.kode }]}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-xs text-muted-foreground">{item.opd?.singkatan} · {item.kategori}</div>
+          <div className="text-xs text-muted-foreground">
+            {item.opd?.singkatan} · {item.kategori}
+          </div>
           <h1 className="truncate font-display text-xl font-bold md:text-2xl">{item.judul}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
             <span className="font-mono text-muted-foreground">{item.kode}</span>
-            <span className={`rounded-full border px-2 py-0.5 font-medium ${STATUS_TONE[item.status]}`}>{STATUS_LABEL[item.status]}</span>
+            <span
+              className={`rounded-full border px-2 py-0.5 font-medium ${STATUS_TONE[item.status]}`}
+            >
+              {STATUS_LABEL[item.status]}
+            </span>
             {item.prioritas && (
-              <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground capitalize">Prioritas: {item.prioritas}</span>
+              <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground capitalize">
+                Prioritas: {item.prioritas}
+              </span>
             )}
           </div>
         </div>
-        <Link to="/admin" className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:underline">
+        <Link
+          to="/admin"
+          className="hidden sm:inline-flex items-center gap-1 text-sm text-primary hover:underline"
+        >
           <ArrowLeft className="h-4 w-4" /> Daftar
         </Link>
       </div>
@@ -252,60 +300,108 @@ function DetailPermohonan() {
             <>
               <div className="rounded-xl border border-primary/30 bg-primary-soft/40 p-5 shadow-soft">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-primary">Pemohon (Atas Nama)</h2>
-                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">DIWAKILKAN</span>
+                  <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-primary">
+                    Pemohon (Atas Nama)
+                  </h2>
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                    DIWAKILKAN
+                  </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field icon={IdCard} label="Nama">{item.atas_nama_nama || "—"}</Field>
-                  <Field icon={IdCard} label="NIK">{item.atas_nama_nik || "—"}</Field>
-                  <Field icon={Phone} label="Telepon">{item.atas_nama_hp || "—"}</Field>
+                  <Field icon={IdCard} label="Nama">
+                    {item.atas_nama_nama || "—"}
+                  </Field>
+                  <Field icon={IdCard} label="NIK">
+                    {item.atas_nama_nik || "—"}
+                  </Field>
+                  <Field icon={Phone} label="Telepon">
+                    {item.atas_nama_hp || "—"}
+                  </Field>
                 </div>
               </div>
               <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-                <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pemilik Akun (Pengaju)</h2>
+                <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Pemilik Akun (Pengaju)
+                </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field icon={IdCard} label="Nama">{item.profiles?.nama_lengkap || "—"}</Field>
-                  <Field icon={IdCard} label="NIK">{item.profiles?.nik || "—"}</Field>
-                  <Field icon={Phone} label="Telepon">{item.profiles?.no_hp || "—"}</Field>
-                  <Field icon={Mail} label="Email">{pemohonEmail || "—"}</Field>
+                  <Field icon={IdCard} label="Nama">
+                    {item.profiles?.nama_lengkap || "—"}
+                  </Field>
+                  <Field icon={IdCard} label="NIK">
+                    {item.profiles?.nik || "—"}
+                  </Field>
+                  <Field icon={Phone} label="Telepon">
+                    {item.profiles?.no_hp || "—"}
+                  </Field>
+                  <Field icon={Mail} label="Email">
+                    {pemohonEmail || "—"}
+                  </Field>
                 </div>
               </div>
             </>
           ) : (
             <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-              <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Data Pemohon</h2>
+              <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Data Pemohon
+              </h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field icon={IdCard} label="Nama">{item.profiles?.nama_lengkap || "—"}</Field>
-                <Field icon={IdCard} label="NIK">{item.profiles?.nik || "—"}</Field>
-                <Field icon={Phone} label="Telepon">{item.profiles?.no_hp || "—"}</Field>
-                <Field icon={Mail} label="Email">{pemohonEmail || "—"}</Field>
+                <Field icon={IdCard} label="Nama">
+                  {item.profiles?.nama_lengkap || "—"}
+                </Field>
+                <Field icon={IdCard} label="NIK">
+                  {item.profiles?.nik || "—"}
+                </Field>
+                <Field icon={Phone} label="Telepon">
+                  {item.profiles?.no_hp || "—"}
+                </Field>
+                <Field icon={Mail} label="Email">
+                  {pemohonEmail || "—"}
+                </Field>
               </div>
             </div>
           )}
 
           {item.wakil_ambil_nama && (
             <div className="rounded-xl border border-gold/40 bg-gold/5 p-5 shadow-soft">
-              <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-gold-foreground">Wakil Pengambilan Berkas</h2>
+              <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-gold-foreground">
+                Wakil Pengambilan Berkas
+              </h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field icon={IdCard} label="Nama Wakil">{item.wakil_ambil_nama}</Field>
-                <Field icon={IdCard} label="NIK Wakil">{item.wakil_ambil_nik || "—"}</Field>
+                <Field icon={IdCard} label="Nama Wakil">
+                  {item.wakil_ambil_nama}
+                </Field>
+                <Field icon={IdCard} label="NIK Wakil">
+                  {item.wakil_ambil_nik || "—"}
+                </Field>
               </div>
             </div>
           )}
 
           {item.deskripsi && (
             <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-              <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Deskripsi</h2>
+              <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Deskripsi
+              </h2>
               <p className="text-sm text-foreground whitespace-pre-wrap">{item.deskripsi}</p>
               <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                <span>Diajukan: <strong className="text-foreground">{fmtDateTime(item.tanggal_masuk)}</strong></span>
-                {item.tenggat && <span>Tenggat: <strong className="text-foreground">{fmtDateTime(item.tenggat)}</strong></span>}
+                <span>
+                  Diajukan:{" "}
+                  <strong className="text-foreground">{fmtDateTime(item.tanggal_masuk)}</strong>
+                </span>
+                {item.tenggat && (
+                  <span>
+                    Tenggat:{" "}
+                    <strong className="text-foreground">{fmtDateTime(item.tenggat)}</strong>
+                  </span>
+                )}
               </div>
             </div>
           )}
 
           <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Berkas Pendukung</h2>
+            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Berkas Pendukung
+            </h2>
             {berkas.length === 0 ? (
               <p className="text-sm text-muted-foreground">Tidak ada berkas terlampir.</p>
             ) : (
@@ -316,10 +412,17 @@ function DetailPermohonan() {
                       <Paperclip className="h-4 w-4" />
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className="truncate text-sm font-medium">{b.name.split("_").slice(1).join("_") || b.name}</div>
-                      <div className="text-xs text-muted-foreground">{(b.size / 1024).toFixed(0)} KB</div>
+                      <div className="truncate text-sm font-medium">
+                        {b.name.split("_").slice(1).join("_") || b.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(b.size / 1024).toFixed(0)} KB
+                      </div>
                     </div>
-                    <button onClick={() => downloadBerkas(b.name)} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                    <button
+                      onClick={() => downloadBerkas(b.name)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
                       <Download className="h-3.5 w-3.5" /> Unduh
                     </button>
                   </li>
@@ -329,7 +432,9 @@ function DetailPermohonan() {
           </div>
 
           <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Riwayat & Catatan</h2>
+            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Riwayat & Catatan
+            </h2>
             <ol className="space-y-3">
               {riwayat.map((r) => (
                 <li key={r.id} className="relative pl-6">
@@ -341,16 +446,22 @@ function DetailPermohonan() {
                     {r.nama_petugas && (
                       <span className="ml-2">
                         · oleh <strong className="text-foreground">{r.nama_petugas}</strong>
-                        {r.email_petugas && <span className="text-muted-foreground"> ({r.email_petugas})</span>}
+                        {r.email_petugas && (
+                          <span className="text-muted-foreground"> ({r.email_petugas})</span>
+                        )}
                       </span>
                     )}
                   </div>
-                  {r.catatan && <div className="mt-1 text-sm text-surface-foreground">{r.catatan}</div>}
+                  {r.catatan && (
+                    <div className="mt-1 text-sm text-surface-foreground">{r.catatan}</div>
+                  )}
                 </li>
               ))}
             </ol>
             <div className="mt-4 border-t border-border pt-4">
-              <label className="text-xs font-medium text-muted-foreground">Tambah catatan internal</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Tambah catatan internal
+              </label>
               <div className="mt-2 flex gap-2">
                 <input
                   value={catatanBaru}
@@ -374,7 +485,9 @@ function DetailPermohonan() {
 
         <aside className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ubah Status</h2>
+            <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Ubah Status
+            </h2>
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map((s) => (
                 <button
@@ -382,7 +495,9 @@ function DetailPermohonan() {
                   type="button"
                   onClick={() => setStatusBaru(s)}
                   className={`rounded-md border px-3 py-2 text-xs font-semibold capitalize transition ${
-                    statusBaru === s ? STATUS_TONE[s] + " ring-2 ring-ring" : "border-border bg-background text-surface-foreground hover:bg-muted"
+                    statusBaru === s
+                      ? STATUS_TONE[s] + " ring-2 ring-ring"
+                      : "border-border bg-background text-surface-foreground hover:bg-muted"
                   }`}
                 >
                   {STATUS_LABEL[s]}
@@ -392,7 +507,11 @@ function DetailPermohonan() {
             <textarea
               value={catatanStatus}
               onChange={(e) => setCatatanStatus(e.target.value)}
-              placeholder={statusBaru === "ditolak" ? "Alasan penolakan (wajib, min. 5 karakter)…" : "Catatan perubahan status (opsional)…"}
+              placeholder={
+                statusBaru === "ditolak"
+                  ? "Alasan penolakan (wajib, min. 5 karakter)…"
+                  : "Catatan perubahan status (opsional)…"
+              }
               maxLength={500}
               rows={3}
               className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
@@ -413,7 +532,6 @@ function DetailPermohonan() {
             dokumenFinalPath={item.dokumen_final_path}
           />
         </aside>
-
       </div>
     </AdminShell>
   );
@@ -430,7 +548,9 @@ function Field({
 }) {
   return (
     <div>
-      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
       <div className="mt-1 flex items-start gap-2 text-sm text-foreground">
         <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
         <span className="break-words">{children}</span>

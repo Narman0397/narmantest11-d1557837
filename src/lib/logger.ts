@@ -11,7 +11,8 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-const SENSITIVE_KEYS = /^(authorization|cookie|set-cookie|password|token|access_token|refresh_token|api[-_]?key|secret|signed_url|x-api-key)$/i;
+const SENSITIVE_KEYS =
+  /^(authorization|cookie|set-cookie|password|token|access_token|refresh_token|api[-_]?key|secret|signed_url|x-api-key)$/i;
 
 function redact(value: unknown, depth = 0): unknown {
   if (depth > 4) return "[depth]";
@@ -53,7 +54,7 @@ export const log = {
 };
 
 export function newCorrelationId(): string {
-  return (typeof crypto !== "undefined" && "randomUUID" in crypto)
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 }

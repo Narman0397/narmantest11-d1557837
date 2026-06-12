@@ -76,9 +76,13 @@ export function isFieldVisible(field: FormField, values: Record<string, unknown>
     case "empty":
       return Array.isArray(asStr) ? asStr.length === 0 : asStr === "";
     case "eq":
-      return Array.isArray(asStr) ? asStr.includes(String(rule.value ?? "")) : asStr === String(rule.value ?? "");
+      return Array.isArray(asStr)
+        ? asStr.includes(String(rule.value ?? ""))
+        : asStr === String(rule.value ?? "");
     case "neq":
-      return Array.isArray(asStr) ? !asStr.includes(String(rule.value ?? "")) : asStr !== String(rule.value ?? "");
+      return Array.isArray(asStr)
+        ? !asStr.includes(String(rule.value ?? ""))
+        : asStr !== String(rule.value ?? "");
     case "in": {
       const list = Array.isArray(rule.value) ? rule.value : rule.value ? [rule.value] : [];
       return Array.isArray(asStr) ? asStr.some((x) => list.includes(x)) : list.includes(asStr);

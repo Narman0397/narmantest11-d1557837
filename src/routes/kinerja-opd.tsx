@@ -6,22 +6,53 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, LineChart, Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  LineChart,
+  Line,
 } from "recharts";
-import { Building2, CheckCircle2, ThumbsUp, TrendingUp, AlertCircle, Lock, Download, Trophy } from "lucide-react";
+import {
+  Building2,
+  CheckCircle2,
+  ThumbsUp,
+  TrendingUp,
+  AlertCircle,
+  Lock,
+  Download,
+  Trophy,
+} from "lucide-react";
 import { fetchAllOpdKinerja } from "@/lib/kinerja-queries";
-import { opdKinerjaTrend, opdSkorKomposit, layananKinerjaAgg, exportKinerjaXlsx, type TrendRow, type SkorRow, type LayananAggRow } from "@/lib/kinerja.functions";
+import {
+  opdKinerjaTrend,
+  opdSkorKomposit,
+  layananKinerjaAgg,
+  exportKinerjaXlsx,
+  type TrendRow,
+  type SkorRow,
+  type LayananAggRow,
+} from "@/lib/kinerja.functions";
 import { STATUS_TONE } from "@/lib/permohonan";
 import { useAuth } from "@/lib/auth-context";
 import { getAccessMode, type AccessMode } from "@/lib/access-mode";
-
 
 export const Route = createFileRoute("/kinerja-opd")({
   head: () => ({
     meta: [
       { title: "Kinerja OPD — Pemerintah Kabupaten Buton Selatan" },
-      { name: "description", content: "Dashboard publik kinerja setiap Organisasi Perangkat Daerah (OPD) dalam menangani permohonan layanan." },
+      {
+        name: "description",
+        content:
+          "Dashboard publik kinerja setiap Organisasi Perangkat Daerah (OPD) dalam menangani permohonan layanan.",
+      },
     ],
   }),
   component: KinerjaOpdPage,
@@ -35,7 +66,9 @@ function KinerjaOpdPage() {
   const [accessMode, setAccessModeState] = useState<AccessMode | null>(null);
 
   useEffect(() => {
-    getAccessMode("kinerja_opd_visible_public").then(setAccessModeState).catch(() => setAccessModeState("public"));
+    getAccessMode("kinerja_opd_visible_public")
+      .then(setAccessModeState)
+      .catch(() => setAccessModeState("public"));
   }, []);
 
   useEffect(() => {
@@ -46,7 +79,6 @@ function KinerjaOpdPage() {
       navigate({ to: "/auth", search: { redirect: "/kinerja-opd" } });
     }
   }, [accessMode, authLoading, user, navigate]);
-
 
   const blocked = accessMode === "auth" && !user;
 
@@ -59,7 +91,8 @@ function KinerjaOpdPage() {
 
   const { data: trendData } = useQuery({
     queryKey: ["kinerja-trend"],
-    queryFn: () => opdKinerjaTrend({ data: { months: 12 } }).then((r) => (r as { rows: TrendRow[] }).rows),
+    queryFn: () =>
+      opdKinerjaTrend({ data: { months: 12 } }).then((r) => (r as { rows: TrendRow[] }).rows),
     staleTime: 5 * 60_000,
     enabled: !blocked && accessMode !== null,
   });
@@ -81,11 +114,14 @@ function KinerjaOpdPage() {
       const r = await exportKinerjaXlsx();
       const { url, filename } = r as { url: string; filename: string };
       const a = document.createElement("a");
-      a.href = url; a.download = filename; a.click();
+      a.href = url;
+      a.download = filename;
+      a.click();
       toast.success("Laporan diunduh");
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   }
-
 
   if (blocked) {
     return (
@@ -96,8 +132,14 @@ function KinerjaOpdPage() {
               <Lock className="h-6 w-6" />
             </div>
             <h2 className="font-display text-lg font-bold">Perlu Login</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Halaman Kinerja OPD hanya dapat diakses setelah Anda masuk.</p>
-            <Link to="/auth" search={{ redirect: "/kinerja-opd" }} className="mt-4 inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
+              Halaman Kinerja OPD hanya dapat diakses setelah Anda masuk.
+            </p>
+            <Link
+              to="/auth"
+              search={{ redirect: "/kinerja-opd" }}
+              className="mt-4 inline-flex h-10 items-center rounded-md bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground"
+            >
               Masuk Akun
             </Link>
           </div>
@@ -105,7 +147,6 @@ function KinerjaOpdPage() {
       </PageShell>
     );
   }
-
 
   if (accessMode === null || authLoading || isLoading) {
     return (
@@ -156,7 +197,7 @@ function KinerjaOpdPage() {
       acc.ditolak += opd.status_counts.ditolak;
       return acc;
     },
-    { baru: 0, diproses: 0, selesai: 0, ditolak: 0 }
+    { baru: 0, diproses: 0, selesai: 0, ditolak: 0 },
   );
 
   const pieData = [
@@ -207,7 +248,7 @@ function KinerjaOpdPage() {
             <div className="mt-2 text-2xl font-bold">
               {Math.round(
                 data.reduce((sum, o) => sum + (o.tepat_waktu_persen ?? 0), 0) /
-                  (data.filter((o) => o.tepat_waktu_persen !== null).length || 1)
+                  (data.filter((o) => o.tepat_waktu_persen !== null).length || 1),
               )}
               %
             </div>
@@ -230,7 +271,10 @@ function KinerjaOpdPage() {
         {/* Export */}
         {user && (
           <div className="mt-4 flex justify-end">
-            <button onClick={handleExport} className="inline-flex items-center gap-2 h-9 rounded-md bg-gradient-primary px-4 text-xs font-semibold text-primary-foreground">
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center gap-2 h-9 rounded-md bg-gradient-primary px-4 text-xs font-semibold text-primary-foreground"
+            >
               <Download className="h-3.5 w-3.5" /> Unduh Laporan Excel
             </button>
           </div>
@@ -240,7 +284,9 @@ function KinerjaOpdPage() {
         {trendData && trendData.length > 0 && (
           <div className="mt-8 rounded-xl border border-border bg-card p-5 shadow-soft">
             <h2 className="text-lg font-semibold">Tren 12 Bulan Terakhir</h2>
-            <p className="text-sm text-muted-foreground">Permohonan masuk vs selesai per bulan (seluruh OPD)</p>
+            <p className="text-sm text-muted-foreground">
+              Permohonan masuk vs selesai per bulan (seluruh OPD)
+            </p>
             <div className="mt-4 h-72 w-full">
               <ResponsiveContainer>
                 <LineChart data={trendData}>
@@ -265,27 +311,38 @@ function KinerjaOpdPage() {
               <Trophy className="h-5 w-5 text-warning" />
               <h2 className="text-lg font-semibold">Peringkat OPD (Skor Komposit)</h2>
             </div>
-            <p className="text-sm text-muted-foreground">Skor = 40% SLA + 30% rating warga + 30% completion rate</p>
+            <p className="text-sm text-muted-foreground">
+              Skor = 40% SLA + 30% rating warga + 30% completion rate
+            </p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-surface text-left text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2">#</th><th className="px-3 py-2">OPD</th>
-                    <th className="px-3 py-2">SLA %</th><th className="px-3 py-2">Rating</th>
-                    <th className="px-3 py-2">Completion %</th><th className="px-3 py-2">Skor</th>
+                    <th className="px-3 py-2">#</th>
+                    <th className="px-3 py-2">OPD</th>
+                    <th className="px-3 py-2">SLA %</th>
+                    <th className="px-3 py-2">Rating</th>
+                    <th className="px-3 py-2">Completion %</th>
+                    <th className="px-3 py-2">Skor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...skorData].sort((a, b) => (b.skor ?? 0) - (a.skor ?? 0)).slice(0, 10).map((r, i) => (
-                    <tr key={r.opd_id} className="border-t border-border">
-                      <td className="px-3 py-2 font-bold">{i + 1}</td>
-                      <td className="px-3 py-2">{r.opd_nama} <span className="text-xs text-muted-foreground">({r.opd_singkatan})</span></td>
-                      <td className="px-3 py-2">{r.sla_pct?.toFixed(1) ?? "—"}</td>
-                      <td className="px-3 py-2">{r.rating_avg?.toFixed(1) ?? "—"}</td>
-                      <td className="px-3 py-2">{r.completion_pct?.toFixed(1) ?? "—"}</td>
-                      <td className="px-3 py-2 font-semibold">{r.skor?.toFixed(1) ?? "—"}</td>
-                    </tr>
-                  ))}
+                  {[...skorData]
+                    .sort((a, b) => (b.skor ?? 0) - (a.skor ?? 0))
+                    .slice(0, 10)
+                    .map((r, i) => (
+                      <tr key={r.opd_id} className="border-t border-border">
+                        <td className="px-3 py-2 font-bold">{i + 1}</td>
+                        <td className="px-3 py-2">
+                          {r.opd_nama}{" "}
+                          <span className="text-xs text-muted-foreground">({r.opd_singkatan})</span>
+                        </td>
+                        <td className="px-3 py-2">{r.sla_pct?.toFixed(1) ?? "—"}</td>
+                        <td className="px-3 py-2">{r.rating_avg?.toFixed(1) ?? "—"}</td>
+                        <td className="px-3 py-2">{r.completion_pct?.toFixed(1) ?? "—"}</td>
+                        <td className="px-3 py-2 font-semibold">{r.skor?.toFixed(1) ?? "—"}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -301,9 +358,12 @@ function KinerjaOpdPage() {
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-surface text-left text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2">Layanan</th><th className="px-3 py-2">OPD</th>
-                    <th className="px-3 py-2">Total</th><th className="px-3 py-2">Selesai</th>
-                    <th className="px-3 py-2">Tepat Waktu</th><th className="px-3 py-2">Rata Hari</th>
+                    <th className="px-3 py-2">Layanan</th>
+                    <th className="px-3 py-2">OPD</th>
+                    <th className="px-3 py-2">Total</th>
+                    <th className="px-3 py-2">Selesai</th>
+                    <th className="px-3 py-2">Tepat Waktu</th>
+                    <th className="px-3 py-2">Rata Hari</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -313,8 +373,12 @@ function KinerjaOpdPage() {
                       <td className="px-3 py-2 text-xs">{r.opd_singkatan ?? "-"}</td>
                       <td className="px-3 py-2">{r.total}</td>
                       <td className="px-3 py-2">{r.selesai}</td>
-                      <td className="px-3 py-2">{r.on_time}/{r.selesai_dengan_sla}</td>
-                      <td className="px-3 py-2 text-xs">{r.rata_hari_selesai ? Number(r.rata_hari_selesai).toFixed(1) : "—"}</td>
+                      <td className="px-3 py-2">
+                        {r.on_time}/{r.selesai_dengan_sla}
+                      </td>
+                      <td className="px-3 py-2 text-xs">
+                        {r.rata_hari_selesai ? Number(r.rata_hari_selesai).toFixed(1) : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -323,12 +387,12 @@ function KinerjaOpdPage() {
           </div>
         )}
 
-
-
         {/* Chart Batang Total Permohonan per OPD */}
         <div className="mt-10 rounded-xl border border-border bg-card p-5 shadow-soft">
           <h2 className="text-lg font-semibold">Total Permohonan per OPD</h2>
-          <p className="text-sm text-muted-foreground">Jumlah permohonan yang masuk ke masing-masing OPD</p>
+          <p className="text-sm text-muted-foreground">
+            Jumlah permohonan yang masuk ke masing-masing OPD
+          </p>
           <div className="mt-4 h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} layout="vertical" margin={{ left: 50, right: 20 }}>
@@ -350,7 +414,15 @@ function KinerjaOpdPage() {
             <div className="mt-4 h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -371,10 +443,17 @@ function KinerjaOpdPage() {
                 <p className="text-sm text-muted-foreground">Belum ada rating</p>
               ) : (
                 topRated.map((opd, idx) => (
-                  <div key={opd.opd_id} className="flex items-center justify-between border-b border-border pb-2">
+                  <div
+                    key={opd.opd_id}
+                    className="flex items-center justify-between border-b border-border pb-2"
+                  >
                     <div>
-                      <span className="font-medium">{idx + 1}. {opd.opd_nama}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">({opd.opd_singkatan})</span>
+                      <span className="font-medium">
+                        {idx + 1}. {opd.opd_nama}
+                      </span>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({opd.opd_singkatan})
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-semibold">{opd.rata_rating?.toFixed(1)}</span>
@@ -413,7 +492,11 @@ function KinerjaOpdPage() {
                     </td>
                     <td className="px-4 py-3">{opd.total_permohonan}</td>
                     <td className="px-4 py-3">
-                      <span className={STATUS_TONE.baru.split(" ")[0] + " px-2 py-0.5 rounded-full text-xs"}>
+                      <span
+                        className={
+                          STATUS_TONE.baru.split(" ")[0] + " px-2 py-0.5 rounded-full text-xs"
+                        }
+                      >
                         {opd.status_counts.baru}
                       </span>
                     </td>
@@ -421,10 +504,14 @@ function KinerjaOpdPage() {
                     <td className="px-4 py-3">{opd.status_counts.selesai}</td>
                     <td className="px-4 py-3">{opd.status_counts.ditolak}</td>
                     <td className="px-4 py-3">
-                      {opd.rata_hari_selesai !== null ? `${opd.rata_hari_selesai.toFixed(1)} hari` : "—"}
+                      {opd.rata_hari_selesai !== null
+                        ? `${opd.rata_hari_selesai.toFixed(1)} hari`
+                        : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      {opd.tepat_waktu_persen !== null ? `${opd.tepat_waktu_persen.toFixed(0)}%` : "—"}
+                      {opd.tepat_waktu_persen !== null
+                        ? `${opd.tepat_waktu_persen.toFixed(0)}%`
+                        : "—"}
                     </td>
                     <td className="px-4 py-3">
                       {opd.rata_rating !== null ? (
@@ -432,7 +519,9 @@ function KinerjaOpdPage() {
                           <span className="font-semibold">{opd.rata_rating.toFixed(1)}</span>
                           <span className="text-xs text-muted-foreground">/10</span>
                         </div>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))}

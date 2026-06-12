@@ -40,8 +40,13 @@ export const Route = createFileRoute("/api/public/hooks/form-deadline-reminder")
           }
           return Response.json({ ok: true, sent });
         } catch (e) {
-          log.error("cron.form-deadline-reminder.fail", { error: e instanceof Error ? e.message : String(e) });
-          return Response.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+          log.error("cron.form-deadline-reminder.fail", {
+            error: e instanceof Error ? e.message : String(e),
+          });
+          return Response.json(
+            { ok: false, error: e instanceof Error ? e.message : String(e) },
+            { status: 500 },
+          );
         }
       },
     },

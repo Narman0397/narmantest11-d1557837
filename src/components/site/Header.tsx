@@ -1,6 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Search, LogOut, User as UserIcon, FileText, ShieldCheck, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  LogOut,
+  User as UserIcon,
+  FileText,
+  ShieldCheck,
+  ChevronDown,
+} from "lucide-react";
 import lambang from "@/assets/lambang.png";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +21,7 @@ const navItems = [
   { to: "/layanan", label: "Layanan" },
   { to: "/data", label: "Data Terpadu" },
   { to: "/kinerja-opd", label: "Kinerja OPD" },
-  
+
   { to: "/berita", label: "Berita" },
   { to: "/tentang", label: "Tentang" },
   { to: "/kontak", label: "Kontak" },
@@ -21,18 +30,19 @@ const navItems = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, isAdmin, isSuperAdmin, isAdminDesa, isAdminOpd, isAdminPemda, isAsn, signOut } = useAuth();
+  const { user, isAdmin, isSuperAdmin, isAdminDesa, isAdminOpd, isAdminPemda, isAsn, signOut } =
+    useAuth();
   const roleBadge = isSuperAdmin
     ? "SUPER ADMIN"
     : isAdminPemda
-    ? "ADMIN PEMDA"
-    : isAdminOpd
-    ? "ADMIN OPD"
-    : isAdminDesa
-    ? "ADMIN DESA"
-    : isAsn
-    ? "ASN"
-    : null;
+      ? "ADMIN PEMDA"
+      : isAdminOpd
+        ? "ADMIN OPD"
+        : isAdminDesa
+          ? "ADMIN DESA"
+          : isAsn
+            ? "ASN"
+            : null;
 
   const menuRef = useRef<HTMLDivElement>(null);
   const [dataVisiblePublic, setDataVisiblePublic] = useState<boolean>(true);
@@ -56,8 +66,10 @@ export function Header() {
         for (const r of data ?? []) {
           const v = (r as { key: string; value: unknown }).value;
           const visible = v === false || v === "false" ? false : true;
-          if ((r as { key: string }).key === "data_terpadu_visible_public") setDataVisiblePublic(visible);
-          if ((r as { key: string }).key === "kinerja_opd_visible_public") setKinerjaVisiblePublic(visible);
+          if ((r as { key: string }).key === "data_terpadu_visible_public")
+            setDataVisiblePublic(visible);
+          if ((r as { key: string }).key === "kinerja_opd_visible_public")
+            setKinerjaVisiblePublic(visible);
         }
       });
   }, []);
@@ -85,23 +97,43 @@ export function Header() {
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
                 Masuk sebagai <strong className="font-semibold">{displayName}</strong>
-                {roleBadge && <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold">{roleBadge}</span>}
+                {roleBadge && (
+                  <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold">
+                    {roleBadge}
+                  </span>
+                )}
               </span>
             ) : (
-              <a href="#" className="hover:opacity-100">PPID</a>
+              <a href="#" className="hover:opacity-100">
+                PPID
+              </a>
             )}
-            <a href="#" className="hover:opacity-100">LAPOR!</a>
-            <a href="#" className="hover:opacity-100">Bahasa: ID</a>
+            <a href="#" className="hover:opacity-100">
+              LAPOR!
+            </a>
+            <a href="#" className="hover:opacity-100">
+              Bahasa: ID
+            </a>
           </div>
         </div>
       </div>
 
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-initial">
-          <img src={branding.logo_url || lambang} alt="Lambang" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 object-contain" />
+          <img
+            src={branding.logo_url || lambang}
+            alt="Lambang"
+            width={40}
+            height={40}
+            className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 object-contain"
+          />
           <div className="leading-tight min-w-0">
-            <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-sans whitespace-nowrap">{branding.brand_prefix}</div>
-            <div className="font-display text-sm sm:text-base font-bold text-foreground whitespace-nowrap">{branding.brand_name}</div>
+            <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-sans whitespace-nowrap">
+              {branding.brand_prefix}
+            </div>
+            <div className="font-display text-sm sm:text-base font-bold text-foreground whitespace-nowrap">
+              {branding.brand_name}
+            </div>
           </div>
         </Link>
 
@@ -119,7 +151,6 @@ export function Header() {
           ))}
           {isAsn && <AsnDropdown />}
         </nav>
-
 
         <div className="flex items-center gap-2">
           <button
@@ -154,23 +185,42 @@ export function Header() {
                     <div className="truncate text-muted-foreground">{user.email}</div>
                   </div>
                   <div className="py-1 text-sm">
-                    <Link to="/akun" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted">
+                    <Link
+                      to="/akun"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted"
+                    >
                       <UserIcon className="h-4 w-4" /> Akun Saya
                     </Link>
-                    <Link to="/permohonan" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted">
+                    <Link
+                      to="/permohonan"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted"
+                    >
                       <FileText className="h-4 w-4" /> Permohonan Saya
                     </Link>
-                    <Link to="/permohonan/baru" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted">
+                    <Link
+                      to="/permohonan/baru"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted"
+                    >
                       <FileText className="h-4 w-4" /> Ajukan Permohonan
                     </Link>
                     {isAdmin && (
-                      <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted">
+                      <Link
+                        to="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted"
+                      >
                         <ShieldCheck className="h-4 w-4" /> Dashboard Admin
                       </Link>
                     )}
                   </div>
                   <button
-                    onClick={() => { signOut(); setMenuOpen(false); }}
+                    onClick={() => {
+                      signOut();
+                      setMenuOpen(false);
+                    }}
                     className="flex w-full items-center gap-2 border-t border-border px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5"
                   >
                     <LogOut className="h-4 w-4" /> Keluar
@@ -224,7 +274,11 @@ export function Header() {
               <div className="mb-2 rounded-md bg-primary-soft px-3 py-2 text-xs">
                 <div className="font-semibold text-primary">{displayName}</div>
                 <div className="truncate text-muted-foreground">{user.email}</div>
-                {roleBadge && <span className="mt-1 inline-block rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">{roleBadge}</span>}
+                {roleBadge && (
+                  <span className="mt-1 inline-block rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    {roleBadge}
+                  </span>
+                )}
               </div>
             )}
             {visibleNavItems.map((item) => (
@@ -242,30 +296,58 @@ export function Header() {
             {user && (
               <>
                 <div className="my-2 h-px bg-border" />
-                <Link to="/akun" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                <Link
+                  to="/akun"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                >
                   <UserIcon className="h-4 w-4" /> Akun Saya
                 </Link>
-                <Link to="/permohonan" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                <Link
+                  to="/permohonan"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                >
                   <FileText className="h-4 w-4" /> Permohonan Saya
                 </Link>
-                <Link to="/permohonan/baru" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                <Link
+                  to="/permohonan/baru"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                >
                   <FileText className="h-4 w-4" /> Ajukan Permohonan
                 </Link>
                 {isAsn && (
                   <>
-                    <Link to="/asn/absensi" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                    <Link
+                      to="/asn/absensi"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    >
                       <ShieldCheck className="h-4 w-4" /> Absensi ASN
                     </Link>
-                    <Link to="/asn/aset" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                    <Link
+                      to="/asn/aset"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    >
                       <ShieldCheck className="h-4 w-4" /> Tracking Aset
                     </Link>
-                    <Link to="/asn/verifikasi" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                    <Link
+                      to="/asn/verifikasi"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    >
                       <ShieldCheck className="h-4 w-4" /> Verifikasi Aset
                     </Link>
                   </>
                 )}
                 {isAdmin && (
-                  <Link to="/admin" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted">
+                  <Link
+                    to="/admin"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-3 text-sm font-medium text-surface-foreground hover:bg-muted"
+                  >
                     <ShieldCheck className="h-4 w-4" /> Dashboard Admin
                   </Link>
                 )}
@@ -273,7 +355,10 @@ export function Header() {
             )}
             {user ? (
               <button
-                onClick={() => { signOut(); setOpen(false); }}
+                onClick={() => {
+                  signOut();
+                  setOpen(false);
+                }}
                 className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 text-sm font-semibold text-destructive"
               >
                 <LogOut className="h-4 w-4" /> Keluar
@@ -298,7 +383,9 @@ function AsnDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    function h(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
@@ -312,11 +399,34 @@ function AsnDropdown() {
       </button>
       {open && (
         <div className="absolute right-0 mt-1 w-52 overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-          <Link to="/asn/absensi" onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-foreground hover:bg-muted">Absensi (Scan QR Kantor)</Link>
-          <Link to="/asn/aset" onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-foreground hover:bg-muted">Tracking Aset</Link>
-          <Link to="/asn/verifikasi" onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-foreground hover:bg-muted">Verifikasi Aset (Kampanye)</Link>
-          <Link to="/asn/dokumen" onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-foreground hover:bg-muted">Dokumen Saya (TTD Digital)</Link>
-
+          <Link
+            to="/asn/absensi"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            Absensi (Scan QR Kantor)
+          </Link>
+          <Link
+            to="/asn/aset"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            Tracking Aset
+          </Link>
+          <Link
+            to="/asn/verifikasi"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            Verifikasi Aset (Kampanye)
+          </Link>
+          <Link
+            to="/asn/dokumen"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            Dokumen Saya (TTD Digital)
+          </Link>
         </div>
       )}
     </div>

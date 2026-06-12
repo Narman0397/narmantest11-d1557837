@@ -5,7 +5,13 @@ import { ShieldAlert, Lock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { useCan } from "./hooks";
-import { ROLE_LABEL, ASN_TYPE_LABEL, POSITION_LABEL, type Permission, type AppRole } from "./constants";
+import {
+  ROLE_LABEL,
+  ASN_TYPE_LABEL,
+  POSITION_LABEL,
+  type Permission,
+  type AppRole,
+} from "./constants";
 
 type GateProps = {
   permission?: Permission | Permission[];
@@ -21,16 +27,20 @@ type GateProps = {
  * PermissionGate — sembunyikan/ganti UI bila user tidak punya permission/role.
  * Super admin selalu lolos (via useCan).
  */
-export function PermissionGate({ permission, role, fallback = null, hideWhileLoading = true, children }: GateProps) {
+export function PermissionGate({
+  permission,
+  role,
+  fallback = null,
+  hideWhileLoading = true,
+  children,
+}: GateProps) {
   const { loading, isSuperAdmin, roles } = useAuth();
   const canPerm = useCan(permission ?? ([] as Permission[]));
   if (loading) return hideWhileLoading ? null : <>{children}</>;
   if (isSuperAdmin) return <>{children}</>;
 
   const permOk = permission ? canPerm : true;
-  const roleOk = role
-    ? (Array.isArray(role) ? role : [role]).some((r) => roles.includes(r))
-    : true;
+  const roleOk = role ? (Array.isArray(role) ? role : [role]).some((r) => roles.includes(r)) : true;
 
   if (permOk && roleOk) return <>{children}</>;
   return <>{fallback}</>;
@@ -50,7 +60,10 @@ export function AccessDenied({ message, backTo = "/" }: { message?: string; back
         <p className="mt-1 text-sm text-muted-foreground">
           {message ?? "Anda tidak memiliki izin untuk membuka halaman/fitur ini."}
         </p>
-        <Link to={backTo} className="mt-4 inline-flex h-9 items-center rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground">
+        <Link
+          to={backTo}
+          className="mt-4 inline-flex h-9 items-center rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
+        >
           Kembali
         </Link>
       </div>
@@ -72,7 +85,9 @@ export function RoleBadge({ role, className = "" }: { role: AppRole; className?:
     warga: "bg-muted text-muted-foreground border-border",
   };
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[role]} ${className}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[role]} ${className}`}
+    >
       {ROLE_LABEL[role]}
     </span>
   );
@@ -110,7 +125,10 @@ export function RequiresPermissionHint({ permission }: { permission: Permission 
   return (
     <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
       <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-      <span>Butuh izin: <span className="font-mono">{list.join(", ")}</span>. Hubungi Super Admin untuk pemberian akses.</span>
+      <span>
+        Butuh izin: <span className="font-mono">{list.join(", ")}</span>. Hubungi Super Admin untuk
+        pemberian akses.
+      </span>
     </div>
   );
 }

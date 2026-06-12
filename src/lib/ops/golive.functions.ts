@@ -7,7 +7,10 @@ type CheckStatus = "pass" | "warning" | "fail";
 type Check = { kategori: string; item: string; status: CheckStatus; detail: string };
 
 async function assertSuper(userId: string) {
-  const { data, error } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+  const { data, error } = await supabaseAdmin.rpc("has_role", {
+    _user_id: userId,
+    _role: "super_admin",
+  });
   if (error || data !== true) throw new Error("Forbidden");
 }
 
@@ -19,9 +22,18 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // BACKUP
     const { data: backup } = await supabaseAdmin
-      .from("backup_snapshot").select("created_at,size_bytes").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      .from("backup_snapshot")
+      .select("created_at,size_bytes")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     if (!backup) {
-      checks.push({ kategori: "BACKUP", item: "Snapshot tersedia", status: "fail", detail: "Belum ada backup_snapshot" });
+      checks.push({
+        kategori: "BACKUP",
+        item: "Snapshot tersedia",
+        status: "fail",
+        detail: "Belum ada backup_snapshot",
+      });
     } else {
       const ageH = (Date.now() - new Date(backup.created_at as string).getTime()) / 3_600_000;
       checks.push({
@@ -34,13 +46,16 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // CRON
     const { count: cronTotal } = await supabaseAdmin
-      .from("cron_history").select("*", { count: "exact", head: true })
+      .from("cron_history")
+      .select("*", { count: "exact", head: true })
       .gte("started_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
     const { count: cronFail } = await supabaseAdmin
-      .from("cron_history").select("*", { count: "exact", head: true })
+      .from("cron_history")
+      .select("*", { count: "exact", head: true })
       .neq("status", "ok")
       .gte("started_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
-    const successRate = (cronTotal ?? 0) === 0 ? 100 : 100 * (1 - (cronFail ?? 0) / Math.max(cronTotal ?? 1, 1));
+    const successRate =
+      (cronTotal ?? 0) === 0 ? 100 : 100 * (1 - (cronFail ?? 0) / Math.max(cronTotal ?? 1, 1));
     checks.push({
       kategori: "CRON",
       item: "Tingkat sukses 24j",
@@ -50,7 +65,10 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // PERMISSIONS
     const { count: activeOverrides } = await supabaseAdmin
-      .from("user_permissions").select("*", { count: "exact", head: true }).eq("granted", true).is("revoked_at", null);
+      .from("user_permissions")
+      .select("*", { count: "exact", head: true })
+      .eq("granted", true)
+      .is("revoked_at", null);
     checks.push({
       kategori: "PERMISSIONS",
       item: "Override aktif",
@@ -60,7 +78,8 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // AUDIT
     const { count: auditCount } = await supabaseAdmin
-      .from("audit_log").select("*", { count: "exact", head: true })
+      .from("audit_log")
+      .select("*", { count: "exact", head: true })
       .gte("created_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
     checks.push({
       kategori: "AUDIT",
@@ -71,7 +90,9 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // RETENTION
     const { count: retEnabled } = await supabaseAdmin
-      .from("retention_policies").select("*", { count: "exact", head: true }).eq("enabled", true);
+      .from("retention_policies")
+      .select("*", { count: "exact", head: true })
+      .eq("enabled", true);
     checks.push({
       kategori: "RETENTION",
       item: "Policy aktif",
@@ -81,7 +102,9 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
 
     // DLQ
     const { count: dlq } = await supabaseAdmin
-      .from("dead_letter_jobs").select("*", { count: "exact", head: true }).is("resolved_at", null);
+      .from("dead_letter_jobs")
+      .select("*", { count: "exact", head: true })
+      .is("resolved_at", null);
     checks.push({
       kategori: "RELIABILITY",
       item: "Dead-letter unresolved",
@@ -90,9 +113,20 @@ export const runGoLiveChecks = createServerFn({ method: "POST" })
     });
 
     // RLS (sample core tables)
-    const coreTables = ["permohonan", "notifications", "user_permissions", "audit_log", "form_submissions"];
+    const coreTables = [
+      "permohonan",
+      "notifications",
+      "user_permissions",
+      "audit_log",
+      "form_submissions",
+    ];
     for (const t of coreTables) {
-      checks.push({ kategori: "RLS", item: `RLS aktif: ${t}`, status: "pass", detail: "Diverifikasi via migration" });
+      checks.push({
+        kategori: "RLS",
+        item: `RLS aktif: ${t}`,
+        status: "pass",
+        detail: "Diverifikasi via migration",
+      });
     }
 
     const summary = {

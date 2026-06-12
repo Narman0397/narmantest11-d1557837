@@ -4,7 +4,15 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, AlertTriangle, CheckCircle2, Clock, RefreshCw, RotateCcw, Radio } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  RefreshCw,
+  RotateCcw,
+  Radio,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { SuperAdminOnly } from "@/components/admin/SuperAdminOnly";
@@ -37,10 +45,7 @@ import { getRealtimeStats, type RealtimeStats } from "@/lib/realtime/manager";
 
 export const Route = createFileRoute("/_authenticated/admin/system-health")({
   head: () => ({
-    meta: [
-      { title: "Status Sistem — Admin" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Status Sistem — Admin" }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <AdminGuard>
@@ -72,10 +77,10 @@ function StatusBadge({ status }: { status: string }) {
     status === "completed" || status === "success"
       ? "bg-emerald-100 text-emerald-700"
       : status === "running"
-      ? "bg-blue-100 text-blue-700"
-      : status === "completed_with_errors"
-      ? "bg-amber-100 text-amber-700"
-      : "bg-red-100 text-red-700";
+        ? "bg-blue-100 text-blue-700"
+        : status === "completed_with_errors"
+          ? "bg-amber-100 text-amber-700"
+          : "bg-red-100 text-red-700";
   return (
     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${tone}`}>
       {status}
@@ -221,7 +226,10 @@ function SystemHealthPage() {
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
               {s.cron.stale.map((j) => (
-                <div key={j.jobName} className="flex justify-between border-b border-border/50 py-1 last:border-0">
+                <div
+                  key={j.jobName}
+                  className="flex justify-between border-b border-border/50 py-1 last:border-0"
+                >
                   <span className="font-medium">{j.jobName}</span>
                   <span className="text-muted-foreground">
                     {j.minutesSince ?? "—"} menit sejak sukses terakhir
@@ -251,14 +259,22 @@ function SystemHealthPage() {
                 {(cronQ.data ?? []).map((r) => (
                   <tr key={r.id} className="border-t border-border/50">
                     <td className="px-4 py-2 font-medium">{r.job_name}</td>
-                    <td className="px-4 py-2"><StatusBadge status={r.status} /></td>
+                    <td className="px-4 py-2">
+                      <StatusBadge status={r.status} />
+                    </td>
                     <td className="px-4 py-2 text-muted-foreground">{fmtDate(r.started_at)}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{fmtDuration(r.duration_ms)}</td>
+                    <td className="px-4 py-2 text-muted-foreground">
+                      {fmtDuration(r.duration_ms)}
+                    </td>
                     <td className="px-4 py-2 text-muted-foreground">{r.affected_rows ?? "—"}</td>
                   </tr>
                 ))}
                 {(cronQ.data ?? []).length === 0 && !cronQ.isLoading && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">Belum ada cron yang tercatat.</td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                      Belum ada cron yang tercatat.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -298,12 +314,15 @@ function SystemHealthPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Replay dead-letter job?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Job <span className="font-mono">{r.job_name}</span> akan dimasukkan kembali ke retry queue. Pastikan handler-nya idempotent.
+                              Job <span className="font-mono">{r.job_name}</span> akan dimasukkan
+                              kembali ke retry queue. Pastikan handler-nya idempotent.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => replayMut.mutate(r.id)}>Replay</AlertDialogAction>
+                            <AlertDialogAction onClick={() => replayMut.mutate(r.id)}>
+                              Replay
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -311,7 +330,11 @@ function SystemHealthPage() {
                   </tr>
                 ))}
                 {(dlQ.data ?? []).length === 0 && !dlQ.isLoading && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">Tidak ada dead-letter aktif. 🎉</td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                      Tidak ada dead-letter aktif. 🎉
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -338,21 +361,37 @@ function SystemHealthPage() {
                 {(retryQ.data ?? []).map((r) => (
                   <tr key={r.id} className="border-t border-border/50">
                     <td className="px-4 py-2 font-medium">{r.job_name}</td>
-                    <td className="px-4 py-2"><StatusBadge status={r.status} /></td>
-                    <td className="px-4 py-2 text-muted-foreground">{r.attempts}/{r.max_attempts}</td>
+                    <td className="px-4 py-2">
+                      <StatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">
+                      {r.attempts}/{r.max_attempts}
+                    </td>
                     <td className="px-4 py-2 text-muted-foreground">{fmtDate(r.next_run_at)}</td>
-                    <td className="px-4 py-2 text-muted-foreground truncate max-w-[260px]" title={r.last_error ?? ""}>
+                    <td
+                      className="px-4 py-2 text-muted-foreground truncate max-w-[260px]"
+                      title={r.last_error ?? ""}
+                    >
                       {r.last_error ?? "—"}
                     </td>
                     <td className="px-4 py-2 text-right">
-                      <Button size="sm" variant="ghost" disabled={retryMut.isPending} onClick={() => retryMut.mutate(r.id)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={retryMut.isPending}
+                        onClick={() => retryMut.mutate(r.id)}
+                      >
                         <RotateCcw className="size-3.5" /> Retry
                       </Button>
                     </td>
                   </tr>
                 ))}
                 {(retryQ.data ?? []).length === 0 && !retryQ.isLoading && (
-                  <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Retry queue kosong.</td></tr>
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                      Retry queue kosong.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -374,9 +413,15 @@ function SystemHealthPage() {
               <Row label="Subscribe error" value={rt.subscribeErrors} />
               <Row label="Duplikat dilewati" value={rt.duplicatesSkipped} />
               <Row label="Reconnect attempts" value={rt.reconnectAttempts} />
-              <Row label="Backoff terakhir" value={rt.lastBackoffMs ? `${rt.lastBackoffMs}ms` : "—"} />
+              <Row
+                label="Backoff terakhir"
+                value={rt.lastBackoffMs ? `${rt.lastBackoffMs}ms` : "—"}
+              />
               <Row label="Status tab" value={rt.paused ? "paused (hidden)" : "aktif"} />
-              <Row label="Event terakhir" value={rt.lastEventAt ? new Date(rt.lastEventAt).toLocaleTimeString("id-ID") : "—"} />
+              <Row
+                label="Event terakhir"
+                value={rt.lastEventAt ? new Date(rt.lastEventAt).toLocaleTimeString("id-ID") : "—"}
+              />
             </CardContent>
           </Card>
 
@@ -397,12 +442,18 @@ function SystemHealthPage() {
                   {(rateQ.data ?? []).map((r, i) => (
                     <tr key={i} className="border-t border-border/50">
                       <td className="px-4 py-2 font-mono text-xs">{r.scope}</td>
-                      <td className="px-4 py-2 font-mono text-xs truncate max-w-[180px]">{r.subject}</td>
+                      <td className="px-4 py-2 font-mono text-xs truncate max-w-[180px]">
+                        {r.subject}
+                      </td>
                       <td className="px-4 py-2 text-muted-foreground">{r.count}</td>
                     </tr>
                   ))}
                   {(rateQ.data ?? []).length === 0 && !rateQ.isLoading && (
-                    <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">Tidak ada hit signifikan.</td></tr>
+                    <tr>
+                      <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
+                        Tidak ada hit signifikan.
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>

@@ -3,11 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  getUserContext,
-  canViewSubmission,
-  canReviewSubmission,
-} from "@/features/rbac/guards";
+import { getUserContext, canViewSubmission, canReviewSubmission } from "@/features/rbac/guards";
 import { buildSubmissionValidator } from "@/features/forms/schema/validator";
 import type { FormSchemaSnapshot } from "@/features/forms/schema/types";
 import { enqueueNotification } from "./notifications.functions";
@@ -24,7 +20,11 @@ class StaleSubmissionError extends Error {
   }
 }
 
-async function loadFormAndAssignment(opts: { assignmentId?: string; formId?: string; userId: string }) {
+async function loadFormAndAssignment(opts: {
+  assignmentId?: string;
+  formId?: string;
+  userId: string;
+}) {
   if (opts.assignmentId) {
     const { data: a } = await supabaseAdmin
       .from("form_assignments")
@@ -32,7 +32,16 @@ async function loadFormAndAssignment(opts: { assignmentId?: string; formId?: str
       .eq("id", opts.assignmentId)
       .maybeSingle();
     if (!a || a.user_id !== opts.userId) throw new Error("Assignment tidak valid");
-    return { assignment: a, form: (a as { forms: unknown }).forms as { id: string; opd_pemilik_id: string | null; status: string; schema_snapshot: unknown; judul: string } };
+    return {
+      assignment: a,
+      form: (a as { forms: unknown }).forms as {
+        id: string;
+        opd_pemilik_id: string | null;
+        status: string;
+        schema_snapshot: unknown;
+        judul: string;
+      },
+    };
   }
   if (opts.formId) {
     const { data: f } = await supabaseAdmin
@@ -73,7 +82,8 @@ export const saveDraft = createServerFn({ method: "POST" })
       if (!["draft", "revision_required"].includes(s.status)) {
         throw new Error("Submission tidak dapat diedit pada status ini");
       }
-      const nextStatus: SubmissionState = s.status === "revision_required" ? "draft" : (s.status as SubmissionState);
+      const nextStatus: SubmissionState =
+        s.status === "revision_required" ? "draft" : (s.status as SubmissionState);
       if (s.status !== nextStatus) assertTransition(s.status as SubmissionState, nextStatus);
       const { data: upd, error } = await supabaseAdmin
         .from("form_submissions")
@@ -119,85 +129,94 @@ export const submitSubmission = createServerFn({ method: "POST" })
     await enforceRateLimit(userId, RateLimits.submissionSubmit);
     const key = idemKey("submission:submit", userId, data.submissionId);
     return withIdempotency(key, 300_000, async () => {
-    const { data: s } = await supabaseAdmin
-      .from("form_submissions")
-      .select("*, forms(id,judul,opd_pemilik_id,schema_snapshot)")
-      .eq("id", data.submissionId)
-      .maybeSingle();
-    if (!s || s.user_id !== userId) throw new Error("Submission tidak valid");
-    if (!["draft", "revision_required"].includes(s.status)) {
-      throw new Error(`Tidak dapat submit dari status ${s.status}`);
-    }
-    const snapshot = (s.schema_version_snapshot ?? (s.forms as { schema_snapshot: unknown })?.schema_snapshot) as FormSchemaSnapshot;
-    if (!snapshot || !Array.isArray(snapshot.fields)) throw new Error("Schema form tidak tersedia");
-    const validator = buildSubmissionValidator(snapshot);
-    const parsed = validator.safeParse(s.data ?? {});
-    if (!parsed.success) {
-      throw new Error("Validasi gagal: " + parsed.error.issues.map((i) => i.message).join("; "));
-    }
-    assertTransition(s.status as SubmissionState, "submitted");
-    // Versioning snapshot
-    const { data: latest } = await supabaseAdmin
-      .from("form_submission_versions")
-      .select("version")
-      .eq("submission_id", s.id)
-      .order("version", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const nextVer = (latest?.version ?? 0) + 1;
-    const { data: files } = await supabaseAdmin
-      .from("form_submission_files")
-      .select("id,field_kode,storage_path,mime,size_bytes")
-      .eq("submission_id", s.id);
-    await supabaseAdmin.from("form_submission_versions").insert({
-      submission_id: s.id,
-      version: nextVer,
-      data: parsed.data as never,
-      files: (files ?? []) as never,
-      created_by: userId,
-    });
-    const { data: upd, error } = await supabaseAdmin
-      .from("form_submissions")
-      .update({ status: "submitted", submitted_at: new Date().toISOString(), data: parsed.data as never })
-      .eq("id", s.id)
-      .eq("version_number", s.version_number)
-      .select("id");
-    if (error) throw new Error(error.message);
-    if (!upd || upd.length === 0) {
-      log.warn("submission.submit.stale", { userId, submissionId: s.id });
-      throw new StaleSubmissionError();
-    }
-    // Update assignment status
-    if (s.assignment_id) {
-      await supabaseAdmin.from("form_assignments").update({ status: "submitted" }).eq("id", s.assignment_id);
-    }
-    // Notify form owner OPD admins
-    const opdPemilik = (s.forms as { opd_pemilik_id: string | null })?.opd_pemilik_id;
-    if (opdPemilik) {
-      const { data: admins } = await supabaseAdmin
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "admin_opd");
-      for (const a of admins ?? []) {
-        // filter by same OPD
-        const { data: p } = await supabaseAdmin
-          .from("profiles")
-          .select("opd_id")
-          .eq("id", a.user_id)
-          .maybeSingle();
-        if (p?.opd_id === opdPemilik) {
-          await enqueueNotification({
-            userId: a.user_id,
-            tipe: "form.submitted",
-            judul: `Submission baru: ${(s.forms as { judul: string }).judul}`,
-            link: `/admin/submission-review`,
-            meta: { submission_id: s.id },
-          });
+      const { data: s } = await supabaseAdmin
+        .from("form_submissions")
+        .select("*, forms(id,judul,opd_pemilik_id,schema_snapshot)")
+        .eq("id", data.submissionId)
+        .maybeSingle();
+      if (!s || s.user_id !== userId) throw new Error("Submission tidak valid");
+      if (!["draft", "revision_required"].includes(s.status)) {
+        throw new Error(`Tidak dapat submit dari status ${s.status}`);
+      }
+      const snapshot = (s.schema_version_snapshot ??
+        (s.forms as { schema_snapshot: unknown })?.schema_snapshot) as FormSchemaSnapshot;
+      if (!snapshot || !Array.isArray(snapshot.fields))
+        throw new Error("Schema form tidak tersedia");
+      const validator = buildSubmissionValidator(snapshot);
+      const parsed = validator.safeParse(s.data ?? {});
+      if (!parsed.success) {
+        throw new Error("Validasi gagal: " + parsed.error.issues.map((i) => i.message).join("; "));
+      }
+      assertTransition(s.status as SubmissionState, "submitted");
+      // Versioning snapshot
+      const { data: latest } = await supabaseAdmin
+        .from("form_submission_versions")
+        .select("version")
+        .eq("submission_id", s.id)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const nextVer = (latest?.version ?? 0) + 1;
+      const { data: files } = await supabaseAdmin
+        .from("form_submission_files")
+        .select("id,field_kode,storage_path,mime,size_bytes")
+        .eq("submission_id", s.id);
+      await supabaseAdmin.from("form_submission_versions").insert({
+        submission_id: s.id,
+        version: nextVer,
+        data: parsed.data as never,
+        files: (files ?? []) as never,
+        created_by: userId,
+      });
+      const { data: upd, error } = await supabaseAdmin
+        .from("form_submissions")
+        .update({
+          status: "submitted",
+          submitted_at: new Date().toISOString(),
+          data: parsed.data as never,
+        })
+        .eq("id", s.id)
+        .eq("version_number", s.version_number)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!upd || upd.length === 0) {
+        log.warn("submission.submit.stale", { userId, submissionId: s.id });
+        throw new StaleSubmissionError();
+      }
+      // Update assignment status
+      if (s.assignment_id) {
+        await supabaseAdmin
+          .from("form_assignments")
+          .update({ status: "submitted" })
+          .eq("id", s.assignment_id);
+      }
+      // Notify form owner OPD admins
+      const opdPemilik = (s.forms as { opd_pemilik_id: string | null })?.opd_pemilik_id;
+      if (opdPemilik) {
+        const { data: admins } = await supabaseAdmin
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin_opd");
+        for (const a of admins ?? []) {
+          // filter by same OPD
+          const { data: p } = await supabaseAdmin
+            .from("profiles")
+            .select("opd_id")
+            .eq("id", a.user_id)
+            .maybeSingle();
+          if (p?.opd_id === opdPemilik) {
+            await enqueueNotification({
+              userId: a.user_id,
+              tipe: "form.submitted",
+              judul: `Submission baru: ${(s.forms as { judul: string }).judul}`,
+              link: `/admin/submission-review`,
+              meta: { submission_id: s.id },
+            });
+          }
         }
       }
-    }
-    log.info("submission.submit.ok", { userId, correlationId, submissionId: s.id });
-    return { id: s.id, status: "submitted" as const };
+      log.info("submission.submit.ok", { userId, correlationId, submissionId: s.id });
+      return { id: s.id, status: "submitted" as const };
     });
   });
 
@@ -265,7 +284,10 @@ async function transitionReview(
   });
   // Jika revision_required + ada assignment, kembalikan assignment ke in_progress
   if (to === "revision_required" && s.assignment_id) {
-    await supabaseAdmin.from("form_assignments").update({ status: "in_progress" }).eq("id", s.assignment_id);
+    await supabaseAdmin
+      .from("form_assignments")
+      .update({ status: "in_progress" })
+      .eq("id", s.assignment_id);
   }
   return { id: submissionId, status: to };
 }
@@ -291,7 +313,13 @@ export const requestRevision = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => reviewInput.parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
-    return transitionReview(data.submissionId, userId, "revision_required", data.note, data.expectedVersion);
+    return transitionReview(
+      data.submissionId,
+      userId,
+      "revision_required",
+      data.note,
+      data.expectedVersion,
+    );
   });
 
 export const listForReview = createServerFn({ method: "POST" })
@@ -299,7 +327,9 @@ export const listForReview = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        status: z.enum(["submitted", "under_review", "approved", "rejected", "revision_required"]).optional(),
+        status: z
+          .enum(["submitted", "under_review", "approved", "rejected", "revision_required"])
+          .optional(),
         page: z.number().int().min(0).default(0),
         pageSize: z.number().int().min(1).max(50).default(20),
       })
@@ -310,7 +340,10 @@ export const listForReview = createServerFn({ method: "POST" })
     const ctx = await getUserContext(supabaseAdmin, userId);
     let q = supabaseAdmin
       .from("form_submissions")
-      .select("id,form_id,user_id,opd_id,status,submitted_at,reviewed_at, forms(judul,opd_pemilik_id)", { count: "exact" })
+      .select(
+        "id,form_id,user_id,opd_id,status,submitted_at,reviewed_at, forms(judul,opd_pemilik_id)",
+        { count: "exact" },
+      )
       .order("submitted_at", { ascending: false, nullsFirst: false })
       .range(data.page * data.pageSize, data.page * data.pageSize + data.pageSize - 1);
     if (data.status) q = q.eq("status", data.status);
@@ -325,7 +358,9 @@ export const listForReview = createServerFn({ method: "POST" })
     }
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
-    const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id).filter((id): id is string => !!id)));
+    const userIds = Array.from(
+      new Set((rows ?? []).map((r) => r.user_id).filter((id): id is string => !!id)),
+    );
     const profileMap = new Map<string, { nama_lengkap: string | null }>();
     if (userIds.length > 0) {
       const { data: profs } = await supabaseAdmin
@@ -334,7 +369,10 @@ export const listForReview = createServerFn({ method: "POST" })
         .in("id", userIds);
       for (const p of profs ?? []) profileMap.set(p.id, { nama_lengkap: p.nama_lengkap });
     }
-    const enriched = (rows ?? []).map((r) => ({ ...r, profiles: r.user_id ? profileMap.get(r.user_id) ?? null : null }));
+    const enriched = (rows ?? []).map((r) => ({
+      ...r,
+      profiles: r.user_id ? (profileMap.get(r.user_id) ?? null) : null,
+    }));
     return { rows: enriched, total: count ?? 0 };
   });
 

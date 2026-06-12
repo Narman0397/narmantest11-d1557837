@@ -3,12 +3,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { log } from "@/lib/logger";
 
-export type RetryStatus =
-  | "pending"
-  | "retrying"
-  | "completed"
-  | "failed"
-  | "dead_letter";
+export type RetryStatus = "pending" | "retrying" | "completed" | "failed" | "dead_letter";
 
 export type EnqueueOptions = {
   jobName: string;
@@ -82,7 +77,9 @@ export async function claimDueJobs(workerId: string, limit = 20): Promise<RetryJ
     .update({ locked_at: nowIso, locked_by: workerId, status: "retrying" })
     .in("id", ids)
     .is("locked_at", null) // race guard
-    .select("id, job_name, payload, status, attempts, max_attempts, next_run_at, last_error, request_id");
+    .select(
+      "id, job_name, payload, status, attempts, max_attempts, next_run_at, last_error, request_id",
+    );
   if (error) {
     log.warn("retry.claim.failed", { error: error.message });
     return [];

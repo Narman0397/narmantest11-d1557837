@@ -1,4 +1,10 @@
-import { Outlet, Link, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
@@ -47,17 +53,37 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "application-name", content: "Portal Kabupaten Buton Selatan" },
       { title: "Satu Pelayanan Pemerintah" },
-      { name: "description", content: "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard." },
+      {
+        name: "description",
+        content:
+          "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Satu Pelayanan Pemerintah" },
-      { property: "og:description", content: "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard." },
+      {
+        property: "og:description",
+        content:
+          "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Satu Pelayanan Pemerintah" },
-      { name: "twitter:description", content: "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fee199aa-ab79-4d95-9266-7b058bde67e9" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fee199aa-ab79-4d95-9266-7b058bde67e9" },
+      {
+        name: "twitter:description",
+        content:
+          "A government portal for centralized data and public services, featuring a citizen-facing website and an admin dashboard.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fee199aa-ab79-4d95-9266-7b058bde67e9",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fee199aa-ab79-4d95-9266-7b058bde67e9",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

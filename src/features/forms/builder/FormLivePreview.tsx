@@ -1,7 +1,11 @@
 // Pratinjau langsung form di builder: render field menggunakan FieldRenderer
 // dengan state lokal, evaluasi visible_if, dan validasi per-field on-the-fly.
 import { useMemo, useState } from "react";
-import { isFieldVisible, type FormField, type FormSchemaSnapshot } from "@/features/forms/schema/types";
+import {
+  isFieldVisible,
+  type FormField,
+  type FormSchemaSnapshot,
+} from "@/features/forms/schema/types";
 import { buildSubmissionValidator } from "@/features/forms/schema/validator";
 import { FieldRenderer } from "@/features/forms/renderer/FieldRenderer";
 import { Eye, RefreshCw } from "lucide-react";
@@ -46,7 +50,11 @@ export function FormLivePreview({ fields, judul }: { fields: FormField[]; judul:
         </div>
         <button
           type="button"
-          onClick={() => { setData({}); setTouched({}); setShowAllErrors(false); }}
+          onClick={() => {
+            setData({});
+            setTouched({});
+            setShowAllErrors(false);
+          }}
           className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs"
         >
           <RefreshCw className="h-3 w-3" /> Reset
@@ -72,7 +80,7 @@ export function FormLivePreview({ fields, judul }: { fields: FormField[]; judul:
                 submissionId={null}
                 files={[]}
                 onFilesChanged={() => undefined}
-                error={showErr ? errors[f.kode] ?? null : null}
+                error={showErr ? (errors[f.kode] ?? null) : null}
               />
             );
           })}

@@ -21,7 +21,9 @@ export const Route = createFileRoute("/api/public/hooks/retry-queue")({
             .select("id")
             .maybeSingle();
           historyId = (data as { id?: string } | null)?.id ?? null;
-        } catch { /* non-fatal */ }
+        } catch {
+          /* non-fatal */
+        }
 
         try {
           // No-op handler by default: handlers should be registered per job_name.
@@ -30,13 +32,16 @@ export const Route = createFileRoute("/api/public/hooks/retry-queue")({
             log.info("retry.handler.noop", { jobName: job.job_name, id: job.id, requestId });
           });
           if (historyId) {
-            await supabaseAdmin.from("cron_history").update({
-              finished_at: new Date().toISOString(),
-              duration_ms: Date.now() - startedAt,
-              status: result.failed > 0 ? "completed_with_errors" : "success",
-              affected_rows: result.processed,
-              meta: result as never,
-            } as never).eq("id", historyId);
+            await supabaseAdmin
+              .from("cron_history")
+              .update({
+                finished_at: new Date().toISOString(),
+                duration_ms: Date.now() - startedAt,
+                status: result.failed > 0 ? "completed_with_errors" : "success",
+                affected_rows: result.processed,
+                meta: result as never,
+              } as never)
+              .eq("id", historyId);
           }
           return new Response(JSON.stringify({ ok: true, requestId, ...result }), {
             status: 200,
@@ -45,12 +50,15 @@ export const Route = createFileRoute("/api/public/hooks/retry-queue")({
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           if (historyId) {
-            await supabaseAdmin.from("cron_history").update({
-              finished_at: new Date().toISOString(),
-              duration_ms: Date.now() - startedAt,
-              status: "error",
-              error: message,
-            } as never).eq("id", historyId);
+            await supabaseAdmin
+              .from("cron_history")
+              .update({
+                finished_at: new Date().toISOString(),
+                duration_ms: Date.now() - startedAt,
+                status: "error",
+                error: message,
+              } as never)
+              .eq("id", historyId);
           }
           return new Response(JSON.stringify({ ok: false, error: message }), {
             status: 500,

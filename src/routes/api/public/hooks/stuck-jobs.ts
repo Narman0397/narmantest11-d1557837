@@ -21,7 +21,9 @@ export const Route = createFileRoute("/api/public/hooks/stuck-jobs")({
             .select("id")
             .maybeSingle();
           historyId = (data as { id?: string } | null)?.id ?? null;
-        } catch { /* non-fatal */ }
+        } catch {
+          /* non-fatal */
+        }
 
         try {
           const report = await detectStuck();
@@ -33,12 +35,15 @@ export const Route = createFileRoute("/api/public/hooks/stuck-jobs")({
             report.staleCronJobs.length > 0;
 
           if (historyId) {
-            await supabaseAdmin.from("cron_history").update({
-              finished_at: new Date().toISOString(),
-              duration_ms: Date.now() - startedAt,
-              status: hasIssue ? "completed_with_errors" : "success",
-              meta: report as unknown as never,
-            } as never).eq("id", historyId);
+            await supabaseAdmin
+              .from("cron_history")
+              .update({
+                finished_at: new Date().toISOString(),
+                duration_ms: Date.now() - startedAt,
+                status: hasIssue ? "completed_with_errors" : "success",
+                meta: report as unknown as never,
+              } as never)
+              .eq("id", historyId);
           }
           return new Response(JSON.stringify({ ok: true, requestId, report }), {
             status: 200,
@@ -47,12 +52,15 @@ export const Route = createFileRoute("/api/public/hooks/stuck-jobs")({
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           if (historyId) {
-            await supabaseAdmin.from("cron_history").update({
-              finished_at: new Date().toISOString(),
-              duration_ms: Date.now() - startedAt,
-              status: "error",
-              error: message,
-            } as never).eq("id", historyId);
+            await supabaseAdmin
+              .from("cron_history")
+              .update({
+                finished_at: new Date().toISOString(),
+                duration_ms: Date.now() - startedAt,
+                status: "error",
+                error: message,
+              } as never)
+              .eq("id", historyId);
           }
           return new Response(JSON.stringify({ ok: false, error: message }), {
             status: 500,

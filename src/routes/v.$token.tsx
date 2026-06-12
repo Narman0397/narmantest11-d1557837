@@ -16,8 +16,15 @@ export const Route = createFileRoute("/v/$token")({
   component: Page,
 });
 
-type Row = { token: string; permohonan_id: string | null; nomor_surat: string | null; storage_path: string;
-  sha256: string | null; signature_provider: string; created_at: string };
+type Row = {
+  token: string;
+  permohonan_id: string | null;
+  nomor_surat: string | null;
+  storage_path: string;
+  sha256: string | null;
+  signature_provider: string;
+  created_at: string;
+};
 
 function Page() {
   const { token } = Route.useParams();
@@ -28,8 +35,11 @@ function Page() {
     (async () => {
       const { data } = await supabase
         .from("dokumen_verifikasi")
-        .select("token,permohonan_id,nomor_surat,storage_path,sha256,signature_provider,created_at" as never)
-        .eq("token" as never, token).maybeSingle();
+        .select(
+          "token,permohonan_id,nomor_surat,storage_path,sha256,signature_provider,created_at" as never,
+        )
+        .eq("token" as never, token)
+        .maybeSingle();
       setRow(data as Row | null);
       setLoading(false);
     })();
@@ -44,20 +54,29 @@ function Page() {
             <CardTitle>Verifikasi Dokumen Resmi</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {loading ? <p>Memuat…</p>
-              : !row ? <p className="text-destructive">Token tidak ditemukan atau dokumen tidak valid.</p>
-              : (
-                <>
-                  <p className="text-sm">Status: <span className="font-medium text-emerald-600">VALID</span></p>
-                  <dl className="grid grid-cols-[140px_1fr] gap-y-2 text-sm">
-                    <dt className="text-muted-foreground">Nomor Surat</dt><dd>{row.nomor_surat ?? "-"}</dd>
-                    <dt className="text-muted-foreground">Diterbitkan</dt><dd>{new Date(row.created_at).toLocaleString("id-ID")}</dd>
-                    <dt className="text-muted-foreground">Tanda tangan</dt><dd>{row.signature_provider}</dd>
-                    <dt className="text-muted-foreground">SHA256</dt><dd className="break-all font-mono text-xs">{row.sha256 ?? "-"}</dd>
-                    <dt className="text-muted-foreground">Token</dt><dd className="break-all font-mono text-xs">{row.token}</dd>
-                  </dl>
-                </>
-              )}
+            {loading ? (
+              <p>Memuat…</p>
+            ) : !row ? (
+              <p className="text-destructive">Token tidak ditemukan atau dokumen tidak valid.</p>
+            ) : (
+              <>
+                <p className="text-sm">
+                  Status: <span className="font-medium text-emerald-600">VALID</span>
+                </p>
+                <dl className="grid grid-cols-[140px_1fr] gap-y-2 text-sm">
+                  <dt className="text-muted-foreground">Nomor Surat</dt>
+                  <dd>{row.nomor_surat ?? "-"}</dd>
+                  <dt className="text-muted-foreground">Diterbitkan</dt>
+                  <dd>{new Date(row.created_at).toLocaleString("id-ID")}</dd>
+                  <dt className="text-muted-foreground">Tanda tangan</dt>
+                  <dd>{row.signature_provider}</dd>
+                  <dt className="text-muted-foreground">SHA256</dt>
+                  <dd className="break-all font-mono text-xs">{row.sha256 ?? "-"}</dd>
+                  <dt className="text-muted-foreground">Token</dt>
+                  <dd className="break-all font-mono text-xs">{row.token}</dd>
+                </dl>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>

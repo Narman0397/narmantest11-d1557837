@@ -9,7 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/_authenticated/admin/rating")({
-  head: () => ({ meta: [{ title: "Rating & Komentar — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Rating & Komentar — Admin" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <RatingPage />
@@ -54,7 +56,8 @@ function RatingPage() {
 
   const opdOptions = useMemo(() => {
     const map = new Map<string, string>();
-    for (const r of rows) if (r.opd_id) map.set(r.opd_id, r.opd_singkatan ?? r.opd_nama ?? r.opd_id);
+    for (const r of rows)
+      if (r.opd_id) map.set(r.opd_id, r.opd_singkatan ?? r.opd_nama ?? r.opd_id);
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [rows]);
 
@@ -102,7 +105,9 @@ function RatingPage() {
     <AdminShell breadcrumb={[{ label: "Rating & Komentar" }]}>
       <div className="mb-4">
         <h1 className="font-display text-2xl font-bold">Rating & Komentar Pemohon</h1>
-        <p className="text-sm text-muted-foreground">Lihat dan moderasi seluruh rating yang diberikan warga atas permohonan mereka.</p>
+        <p className="text-sm text-muted-foreground">
+          Lihat dan moderasi seluruh rating yang diberikan warga atas permohonan mereka.
+        </p>
       </div>
 
       {/* Stat ringkas */}
@@ -144,7 +149,9 @@ function RatingPage() {
           >
             <option value="__all__">Semua OPD</option>
             {opdOptions.map(([id, nama]) => (
-              <option key={id} value={id}>{nama}</option>
+              <option key={id} value={id}>
+                {nama}
+              </option>
             ))}
           </select>
           <select
@@ -154,7 +161,9 @@ function RatingPage() {
           >
             <option value="__all__">Semua skor</option>
             {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((s) => (
-              <option key={s} value={String(s)}>{s} bintang</option>
+              <option key={s} value={String(s)}>
+                {s} bintang
+              </option>
             ))}
           </select>
         </div>
@@ -162,13 +171,20 @@ function RatingPage() {
 
       {/* Tabel */}
       {loading ? (
-        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">Memuat...</div>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+          Memuat...
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">Belum ada rating.</div>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
+          Belum ada rating.
+        </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((r) => (
-            <div key={r.rating_id} className="rounded-xl border border-border bg-card p-4 shadow-soft">
+            <div
+              key={r.rating_id}
+              className="rounded-xl border border-border bg-card p-4 shadow-soft"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -187,7 +203,10 @@ function RatingPage() {
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+                      {new Date(r.created_at).toLocaleString("id-ID", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
                     </span>
                   </div>
                   <div className="mt-1 text-sm">

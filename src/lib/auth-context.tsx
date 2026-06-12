@@ -3,12 +3,27 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 // AppRole mencakup role baru `admin_pemda` & `pimpinan`. Role lama tetap.
-export type AppRole = "warga" | "admin_opd" | "super_admin" | "admin_desa" | "asn" | "admin_pemda" | "pimpinan";
+export type AppRole =
+  | "warga"
+  | "admin_opd"
+  | "super_admin"
+  | "admin_desa"
+  | "asn"
+  | "admin_pemda"
+  | "pimpinan";
 
 export type AsnTypeValue = "pns" | "pppk_penuh_waktu" | "pppk_paruh_waktu" | "honorer";
 export type SystemPositionValue =
-  | "kepala_opd" | "sekretaris" | "kepala_bidang" | "kepala_sekolah"
-  | "operator" | "verifikator" | "staff" | "guru" | "tenaga_teknis" | "lainnya";
+  | "kepala_opd"
+  | "sekretaris"
+  | "kepala_bidang"
+  | "kepala_sekolah"
+  | "operator"
+  | "verifikator"
+  | "staff"
+  | "guru"
+  | "tenaga_teknis"
+  | "lainnya";
 
 export type AuthProfile = {
   nama_lengkap: string | null;
@@ -66,11 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const DEBUG_AUTH = typeof import.meta !== "undefined" && import.meta.env?.DEV;
-  const debug = (...args: unknown[]) => { if (DEBUG_AUTH) console.debug("[auth]", ...args); };
+  const debug = (...args: unknown[]) => {
+    if (DEBUG_AUTH) console.debug("[auth]", ...args);
+  };
 
   async function loadRoles(uid: string) {
     const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    if (error) { debug("loadRoles error", error.message); return; }
+    if (error) {
+      debug("loadRoles error", error.message);
+      return;
+    }
     setRoles((data ?? []).map((r) => r.role as AppRole));
   }
   async function loadProfile(uid: string) {
@@ -79,16 +99,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("nama_lengkap,nik,no_hp,desa,verified_at,verified_by,asn_type,system_position")
       .eq("id", uid)
       .maybeSingle();
-    if (error) { debug("loadProfile error", error.message); return; }
-    const row = data as (AuthProfile & { asn_type?: AsnTypeValue | null; system_position?: SystemPositionValue | null }) | null;
-    setProfile(row ? {
-      nama_lengkap: row.nama_lengkap,
-      nik: row.nik,
-      no_hp: row.no_hp,
-      desa: row.desa,
-      verified_at: row.verified_at,
-      verified_by: row.verified_by,
-    } : null);
+    if (error) {
+      debug("loadProfile error", error.message);
+      return;
+    }
+    const row = data as
+      | (AuthProfile & {
+          asn_type?: AsnTypeValue | null;
+          system_position?: SystemPositionValue | null;
+        })
+      | null;
+    setProfile(
+      row
+        ? {
+            nama_lengkap: row.nama_lengkap,
+            nik: row.nik,
+            no_hp: row.no_hp,
+            desa: row.desa,
+            verified_at: row.verified_at,
+            verified_by: row.verified_by,
+          }
+        : null,
+    );
     setAsnType(row?.asn_type ?? null);
     setSystemPosition(row?.system_position ?? null);
     // Load pejabat aktif untuk derive isBupati & pimpinanType.
@@ -115,14 +147,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== "undefined") {
         try {
           const mod = await import("sonner");
-          mod.toast.error("Gagal memuat izin akses. Beberapa fitur mungkin tidak tersedia.", { id: "perm-load-fail" });
-        } catch { /* sonner mungkin belum terpasang */ }
+          mod.toast.error("Gagal memuat izin akses. Beberapa fitur mungkin tidak tersedia.", {
+            id: "perm-load-fail",
+          });
+        } catch {
+          /* sonner mungkin belum terpasang */
+        }
       }
       return;
     }
-    const codes = (data ?? [])
-      .map((r: { code: string }) => r.code)
-      .filter(Boolean);
+    const codes = (data ?? []).map((r: { code: string }) => r.code).filter(Boolean);
     setPermissions(new Set(codes));
   }
 
@@ -163,25 +197,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       lastLoadedUid = uid;
       debug("syncForSession load", source, uid);
-      inflight = loadAll(uid).finally(() => { inflight = null; });
+      inflight = loadAll(uid).finally(() => {
+        inflight = null;
+      });
       return inflight;
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
       debug("onAuthStateChange", event);
       // Jangan jalankan supabase calls langsung di dalam callback (anjuran resmi).
-      setTimeout(() => { void syncForSession(sess, `event:${event}`); }, 0);
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+      setTimeout(() => {
+        void syncForSession(sess, `event:${event}`);
+      }, 0);
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "TOKEN_REFRESHED"
+      ) {
         markSettled();
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session: sess } }) => {
-      void syncForSession(sess, "getSession").finally(markSettled);
-    }).catch((e) => {
-      debug("getSession failed", e);
-      markSettled();
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: sess } }) => {
+        void syncForSession(sess, "getSession").finally(markSettled);
+      })
+      .catch((e) => {
+        debug("getSession failed", e);
+        markSettled();
+      });
 
     const safety = setTimeout(markSettled, 4000);
     return () => {
@@ -190,7 +236,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   // Realtime: dengarkan perubahan profil pengguna saat ini agar status
   // verifikasi & data lain langsung sinkron dengan dashboard admin.
@@ -237,7 +282,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${user.id}` },
         async () => {
           const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-          const next = ((data ?? []).map((r) => r.role as AppRole)).slice().sort().join("|");
+          const next = (data ?? [])
+            .map((r) => r.role as AppRole)
+            .slice()
+            .sort()
+            .join("|");
           if (next !== lastSnapshot) {
             const prev = new Set(lastSnapshot.split("|").filter(Boolean));
             const now = new Set(next.split("|").filter(Boolean));
@@ -269,11 +318,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .channel(`perms-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "user_permissions", filter: `user_id=eq.${user.id}` },
-        () => { loadPermissions(user.id); },
+        {
+          event: "*",
+          schema: "public",
+          table: "user_permissions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          loadPermissions(user.id);
+        },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   // Refetch permissions + profile + roles saat tab kembali aktif (≥ 30 detik
@@ -299,16 +357,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
 
-
-
-
   const value: AuthCtx = {
     user,
     session,
     roles,
     profile,
     loading,
-    isAdmin: roles.includes("admin_opd") || roles.includes("super_admin") || roles.includes("admin_desa") || roles.includes("admin_pemda"),
+    isAdmin:
+      roles.includes("admin_opd") ||
+      roles.includes("super_admin") ||
+      roles.includes("admin_desa") ||
+      roles.includes("admin_pemda"),
     isSuperAdmin: roles.includes("super_admin"),
     isAdminDesa: roles.includes("admin_desa"),
     isAdminOpd: roles.includes("admin_opd"),
@@ -316,7 +375,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isPimpinan: roles.includes("pimpinan"),
     isBupati: roles.includes("pimpinan") && pimpinanType === "bupati",
     isElevated: roles.includes("super_admin") || roles.includes("admin_pemda"),
-    isElevatedView: roles.includes("super_admin") || roles.includes("admin_pemda") || roles.includes("pimpinan"),
+    isElevatedView:
+      roles.includes("super_admin") || roles.includes("admin_pemda") || roles.includes("pimpinan"),
     isAsn: roles.includes("asn"),
     isStaff:
       roles.includes("super_admin") ||

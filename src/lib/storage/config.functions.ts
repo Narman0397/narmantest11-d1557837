@@ -61,9 +61,10 @@ export const setStorageProviderConfig = createServerFn({ method: "POST" })
     const current = await loadStorageConfig();
     const merged: StorageProviderConfig = {
       provider: data.provider,
-      encryption_key: data.encryption_key !== undefined && data.encryption_key !== ""
-        ? data.encryption_key
-        : current.encryption_key,
+      encryption_key:
+        data.encryption_key !== undefined && data.encryption_key !== ""
+          ? data.encryption_key
+          : current.encryption_key,
       r2: {
         account_id: data.r2?.account_id ?? current.r2.account_id,
         access_key_id: data.r2?.access_key_id ?? current.r2.access_key_id,
@@ -83,10 +84,12 @@ export const setStorageProviderConfig = createServerFn({ method: "POST" })
       { key: "storage.r2", value: merged.r2 as never },
     ];
     for (const u of upserts) {
-      await supabaseAdmin.from("app_setting").upsert(
-        { key: u.key, value: u.value, category: "storage", public_visible: false } as never,
-        { onConflict: "key" } as never,
-      );
+      await supabaseAdmin
+        .from("app_setting")
+        .upsert(
+          { key: u.key, value: u.value, category: "storage", public_visible: false } as never,
+          { onConflict: "key" } as never,
+        );
     }
     await supabaseAdmin.from("audit_log").insert({
       user_id: userId,

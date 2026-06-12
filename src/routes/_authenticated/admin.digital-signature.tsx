@@ -26,7 +26,11 @@ function Layout() {
         {tabs.map((t) => {
           const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
-            <Link key={t.to} to={t.to} className={`px-3 py-2 text-sm border-b-2 -mb-px ${active ? "border-primary text-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            <Link
+              key={t.to}
+              to={t.to}
+              className={`px-3 py-2 text-sm border-b-2 -mb-px ${active ? "border-primary text-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
               {t.label}
             </Link>
           );

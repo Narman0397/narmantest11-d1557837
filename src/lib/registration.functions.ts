@@ -101,10 +101,7 @@ export const applyStaffRegistration = createServerFn({ method: "POST" })
     if (data.nip) patch.nip = data.nip;
     if (data.jabatan) patch.jabatan = data.jabatan;
 
-    const { error: perr } = await supabaseAdmin
-      .from("profiles")
-      .update(patch)
-      .eq("id", userId);
+    const { error: perr } = await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
     if (perr) throw new Error(perr.message);
 
     await supabaseAdmin.from("audit_log").insert({
@@ -120,10 +117,7 @@ export const applyStaffRegistration = createServerFn({ method: "POST" })
 
 // Daftar OPD publik untuk dropdown registrasi (read-only nama+singkatan)
 export const listOpdPublic = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await supabaseAdmin
-    .from("opd")
-    .select("id,nama,singkatan")
-    .order("nama");
+  const { data, error } = await supabaseAdmin.from("opd").select("id,nama,singkatan").order("nama");
   if (error) throw new Error(error.message);
   return { rows: data ?? [] };
 });

@@ -17,11 +17,17 @@ export const Route = createFileRoute("/api/public/hooks/sla-escalation")({
         if (unauth) return unauth;
         try {
           const { data: flag } = await supabaseAdmin
-            .from("feature_flags").select("enabled").eq("flag_key", "escalation.enabled").maybeSingle();
-          if (!flag?.enabled) return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
+            .from("feature_flags")
+            .select("enabled")
+            .eq("flag_key", "escalation.enabled")
+            .maybeSingle();
+          if (!flag?.enabled)
+            return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
 
           const { data: cfgs } = await supabaseAdmin
-            .from("escalation_config").select("opd_id,level,threshold_days,target_role").eq("aktif", true);
+            .from("escalation_config")
+            .select("opd_id,level,threshold_days,target_role")
+            .eq("aktif", true);
           const byOpd = new Map<string | "null", CfgRow[]>();
           for (const c of (cfgs ?? []) as CfgRow[]) {
             const k = c.opd_id ?? "null";
@@ -31,12 +37,21 @@ export const Route = createFileRoute("/api/public/hooks/sla-escalation")({
           const defaults = byOpd.get("null") ?? [];
 
           const { data: rows } = await supabaseAdmin
-            .from("v_permohonan_overdue").select("id,kode,opd_id,overdue_days,status").limit(500);
+            .from("v_permohonan_overdue")
+            .select("id,kode,opd_id,overdue_days,status")
+            .limit(500);
 
           const today = new Date().toISOString().slice(0, 10);
-          let notified = 0, eventsLogged = 0;
+          let notified = 0,
+            eventsLogged = 0;
 
-          for (const p of (rows ?? []) as Array<{ id: string; kode: string; opd_id: string; overdue_days: number; status: string }>) {
+          for (const p of (rows ?? []) as Array<{
+            id: string;
+            kode: string;
+            opd_id: string;
+            overdue_days: number;
+            status: string;
+          }>) {
             const cfgs = byOpd.get(p.opd_id) ?? defaults;
             // Pilih level tertinggi yang terlewati
             const sorted = [...cfgs].sort((a, b) => b.threshold_days - a.threshold_days);
@@ -46,13 +61,17 @@ export const Route = createFileRoute("/api/public/hooks/sla-escalation")({
             const eventType = `overdue_l${hit.level}` as "overdue_l1" | "overdue_l2" | "overdue_l3";
             // Idempotency: hanya catat event jika belum ada level itu untuk permohonan ini hari ini
             const { data: existed } = await supabaseAdmin
-              .from("submission_sla_events").select("id")
-              .eq("permohonan_id", p.id).eq("event_type", eventType)
-              .gte("started_at", today + "T00:00:00Z").maybeSingle();
+              .from("submission_sla_events")
+              .select("id")
+              .eq("permohonan_id", p.id)
+              .eq("event_type", eventType)
+              .gte("started_at", today + "T00:00:00Z")
+              .maybeSingle();
             if (existed) continue;
 
             await supabaseAdmin.from("submission_sla_events").insert({
-              permohonan_id: p.id, event_type: eventType,
+              permohonan_id: p.id,
+              event_type: eventType,
               reason: `Overdue ${p.overdue_days} hari, threshold L${hit.level}=${hit.threshold_days}`,
             });
             eventsLogged++;
@@ -79,7 +98,12 @@ export const Route = createFileRoute("/api/public/hooks/sla-escalation")({
           }
 
           return new Response(
-            JSON.stringify({ ok: true, scanned: rows?.length ?? 0, events_logged: eventsLogged, notifications_sent: notified }),
+            JSON.stringify({
+              ok: true,
+              scanned: rows?.length ?? 0,
+              events_logged: eventsLogged,
+              notifications_sent: notified,
+            }),
             { status: 200, headers: { "content-type": "application/json" } },
           );
         } catch (e) {

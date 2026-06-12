@@ -15,9 +15,18 @@ export const Route = createFileRoute("/api/public/hooks/aset-susut-bulanan")({
         const unauth = verifyCronCaller(request);
         if (unauth) return unauth;
         const periode = periodeNow();
-        const { data, error } = await supabaseAdmin.rpc("fn_susut_bulanan_run", { _periode: periode });
-        if (error) return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
-        return new Response(JSON.stringify({ ok: true, periode, result: data }), { status: 200, headers: { "Content-Type": "application/json" } });
+        const { data, error } = await supabaseAdmin.rpc("fn_susut_bulanan_run", {
+          _periode: periode,
+        });
+        if (error)
+          return new Response(JSON.stringify({ ok: false, error: error.message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        return new Response(JSON.stringify({ ok: true, periode, result: data }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       },
     },
   },

@@ -34,7 +34,11 @@ export const upsertSchedule = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: row, error } = await supabaseAdmin.from("work_schedule").insert(data).select("id").single();
+    const { data: row, error } = await supabaseAdmin
+      .from("work_schedule")
+      .insert(data)
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
@@ -43,8 +47,11 @@ export const listSchedules = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const c = await ctxOf(context.userId);
-    let q = supabaseAdmin.from("work_schedule")
-      .select("id,nama,opd_id,hari_kerja,jam_masuk,jam_pulang,toleransi_menit,aktif,updated_at, opd:opd!opd_id(nama,singkatan)")
+    let q = supabaseAdmin
+      .from("work_schedule")
+      .select(
+        "id,nama,opd_id,hari_kerja,jam_masuk,jam_pulang,toleransi_menit,aktif,updated_at, opd:opd!opd_id(nama,singkatan)",
+      )
       .order("nama");
     if (!c.isSuper && c.opdId) q = q.or(`opd_id.is.null,opd_id.eq.${c.opdId}`);
     const { data, error } = await q;
@@ -65,17 +72,22 @@ export const deleteSchedule = createServerFn({ method: "POST" })
 
 export const assignSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    user_id: z.string().uuid(),
-    schedule_id: z.string().uuid(),
-    berlaku_dari: z.string().optional(),
-    berlaku_sampai: z.string().optional().nullable(),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        user_id: z.string().uuid(),
+        schedule_id: z.string().uuid(),
+        berlaku_dari: z.string().optional(),
+        berlaku_sampai: z.string().optional().nullable(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
     if (!c.isSuper && !c.isAdminOpd) throw new Error("Forbidden");
     const { error } = await supabaseAdmin.from("work_schedule_assignment").insert({
-      user_id: data.user_id, schedule_id: data.schedule_id,
+      user_id: data.user_id,
+      schedule_id: data.schedule_id,
       berlaku_dari: data.berlaku_dari ?? new Date().toISOString().slice(0, 10),
       berlaku_sampai: data.berlaku_sampai ?? null,
     });
@@ -89,21 +101,31 @@ export const assignSchedule = createServerFn({ method: "POST" })
 // ===== COMPLIANCE =====
 export const myCompliance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    from: z.string().optional(), to: z.string().optional(),
-  }).parse(i))
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+      })
+      .parse(i),
+  )
   .handler(async ({ data, context }) => {
     const to = data.to ?? new Date().toISOString().slice(0, 10);
     const from = data.from ?? new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
-    const { data: row, error } = await supabaseAdmin
-      .rpc("attendance_compliance", { _user_id: context.userId, _from: from, _to: to });
+    const { data: row, error } = await supabaseAdmin.rpc("attendance_compliance", {
+      _user_id: context.userId,
+      _from: from,
+      _to: to,
+    });
     if (error) throw new Error(error.message);
     return { from, to, stats: row };
   });
 
 export const opdAttendanceToday = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ opd_id: z.string().uuid().optional().nullable() }).parse(i))
+  .inputValidator((i: unknown) =>
+    z.object({ opd_id: z.string().uuid().optional().nullable() }).parse(i),
+  )
   .handler(async ({ data, context }) => {
     const c = await ctxOf(context.userId);
     if (!c.isSuper && !c.isAdminOpd) throw new Error("Forbidden");
@@ -122,7 +144,9 @@ export const resolveMySchedule = createServerFn({ method: "POST" })
     const tgl = data.tanggal ?? new Date().toISOString().slice(0, 10);
     const { data: rows } = await supabaseAdmin
       .from("work_schedule_assignment")
-      .select("schedule:work_schedule!schedule_id(id,nama,hari_kerja,jam_masuk,jam_pulang,toleransi_menit,aktif), berlaku_dari, berlaku_sampai")
+      .select(
+        "schedule:work_schedule!schedule_id(id,nama,hari_kerja,jam_masuk,jam_pulang,toleransi_menit,aktif), berlaku_dari, berlaku_sampai",
+      )
       .eq("user_id", context.userId)
       .lte("berlaku_dari", tgl)
       .order("berlaku_dari", { ascending: false });

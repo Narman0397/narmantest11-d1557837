@@ -28,25 +28,33 @@ async function ensureProfilesForUsers(userIds: string[]) {
   const missingIds = userIds.filter((id) => !existingIds.has(id));
   if (missingIds.length === 0) return;
 
-  const rows = await Promise.all(missingIds.map(async (id) => {
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
-    if (authError || !authUser.user) return null;
-    const meta = (authUser.user.user_metadata ?? {}) as Record<string, unknown>;
-    const username = typeof meta.username === "string" && meta.username.trim()
-      ? meta.username.trim().toLowerCase()
-      : (authUser.user.email ?? "").split("@")[0] || null;
-    return {
-      id,
-      username,
-      nama_lengkap: typeof meta.nama_lengkap === "string" && meta.nama_lengkap.trim() ? meta.nama_lengkap.trim() : username ?? "",
-      no_hp: typeof meta.no_hp === "string" ? meta.no_hp : null,
-      nik: typeof meta.nik === "string" ? meta.nik : null,
-      desa: typeof meta.desa === "string" ? meta.desa : null,
-    };
-  }));
+  const rows = await Promise.all(
+    missingIds.map(async (id) => {
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
+      if (authError || !authUser.user) return null;
+      const meta = (authUser.user.user_metadata ?? {}) as Record<string, unknown>;
+      const username =
+        typeof meta.username === "string" && meta.username.trim()
+          ? meta.username.trim().toLowerCase()
+          : (authUser.user.email ?? "").split("@")[0] || null;
+      return {
+        id,
+        username,
+        nama_lengkap:
+          typeof meta.nama_lengkap === "string" && meta.nama_lengkap.trim()
+            ? meta.nama_lengkap.trim()
+            : (username ?? ""),
+        no_hp: typeof meta.no_hp === "string" ? meta.no_hp : null,
+        nik: typeof meta.nik === "string" ? meta.nik : null,
+        desa: typeof meta.desa === "string" ? meta.desa : null,
+      };
+    }),
+  );
   const payload = rows.filter((row): row is NonNullable<typeof row> => row !== null);
   if (payload.length > 0) {
-    const { error: upsertError } = await supabaseAdmin.from("profiles").upsert(payload, { onConflict: "id" });
+    const { error: upsertError } = await supabaseAdmin
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
     if (upsertError) throw new Error(upsertError.message);
   }
 }
@@ -119,24 +127,28 @@ export const getMyVerificationToken = createServerFn({ method: "POST" })
 
     // generate token baru (regenerasi bila habis pakai / kedaluwarsa)
     const token = crypto.randomUUID().replace(/-/g, "");
-    const { error } = await supabaseAdmin
-      .from("verification_token")
-      .upsert(
-        {
-          user_id: userId,
-          token,
-          used_at: null,
-          used_by: null,
-          expires_at: new Date(now + 30 * 86400_000).toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
+    const { error } = await supabaseAdmin.from("verification_token").upsert(
+      {
+        user_id: userId,
+        token,
+        used_at: null,
+        used_by: null,
+        expires_at: new Date(now + 30 * 86400_000).toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
     if (error) throw new Error(error.message);
     return { token, used: false, verified: false };
   });
 
 // ---- Lookup data warga dari token (admin_desa / super_admin) ----
-const tokenSchema = z.object({ token: z.string().min(8).max(64).regex(/^[a-f0-9]+$/i) });
+const tokenSchema = z.object({
+  token: z
+    .string()
+    .min(8)
+    .max(64)
+    .regex(/^[a-f0-9]+$/i),
+});
 
 export const lookupVerificationToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -156,7 +168,11 @@ export const lookupVerificationToken = createServerFn({ method: "POST" })
     if (new Date(tok.expires_at as string) < new Date()) throw new Error("Token sudah kedaluwarsa");
 
     const [{ data: prof }, { data: authUser }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id,nama_lengkap,nik,no_hp,desa,verified_at,verified_by").eq("id", tok.user_id).maybeSingle(),
+      supabaseAdmin
+        .from("profiles")
+        .select("id,nama_lengkap,nik,no_hp,desa,verified_at,verified_by")
+        .eq("id", tok.user_id)
+        .maybeSingle(),
       supabaseAdmin.auth.admin.getUserById(tok.user_id as string),
     ]);
     if (!prof) throw new Error("Profil tidak ditemukan");
@@ -195,7 +211,10 @@ export const verifyWargaByToken = createServerFn({ method: "POST" })
     if (tok.used_at) throw new Error("Token sudah pernah digunakan");
 
     const { data: prof } = await supabaseAdmin
-      .from("profiles").select("desa,verified_at").eq("id", tok.user_id).maybeSingle();
+      .from("profiles")
+      .select("desa,verified_at")
+      .eq("id", tok.user_id)
+      .maybeSingle();
     if (!prof) throw new Error("Profil tidak ditemukan");
     if (prof.verified_at) throw new Error("Akun ini sudah diverifikasi");
 
@@ -292,16 +311,29 @@ export const listPendingStaff = createServerFn({ method: "POST" })
       .in("role", ["admin_opd", "admin_desa", "asn"]);
     const ids = (roleRows ?? []).map((r) => r.user_id as string);
     if (ids.length === 0) return { rows: [] };
-    const roleMap = new Map((roleRows ?? []).map((r) => [r.user_id as string, r.role as "admin_opd" | "admin_desa" | "asn"]));
+    const roleMap = new Map(
+      (roleRows ?? []).map((r) => [
+        r.user_id as string,
+        r.role as "admin_opd" | "admin_desa" | "asn",
+      ]),
+    );
     await ensureProfilesForUsers(ids);
 
     const [{ data: profs }, { data: list }, { data: opds }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id,nama_lengkap,desa,opd_id,nip,jabatan,verified_at,created_at").in("id", ids),
+      supabaseAdmin
+        .from("profiles")
+        .select("id,nama_lengkap,desa,opd_id,nip,jabatan,verified_at,created_at")
+        .in("id", ids),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 }),
       supabaseAdmin.from("opd").select("id,nama,singkatan"),
     ]);
     const emailMap = new Map((list?.users ?? []).map((u) => [u.id, u.email ?? ""]));
-    const opdMap = new Map(((opds ?? []) as { id: string; nama: string; singkatan: string }[]).map((o) => [o.id, `${o.singkatan} — ${o.nama}`]));
+    const opdMap = new Map(
+      ((opds ?? []) as { id: string; nama: string; singkatan: string }[]).map((o) => [
+        o.id,
+        `${o.singkatan} — ${o.nama}`,
+      ]),
+    );
     const rows: StaffRow[] = (profs ?? []).map((p) => ({
       id: p.id as string,
       email: emailMap.get(p.id as string) ?? "",
@@ -309,7 +341,7 @@ export const listPendingStaff = createServerFn({ method: "POST" })
       role: roleMap.get(p.id as string) ?? "admin_opd",
       desa: (p.desa as string | null) ?? null,
       opd_id: (p.opd_id as string | null) ?? null,
-      opd_nama: p.opd_id ? opdMap.get(p.opd_id as string) ?? null : null,
+      opd_nama: p.opd_id ? (opdMap.get(p.opd_id as string) ?? null) : null,
       nip: (p.nip as string | null) ?? null,
       jabatan: (p.jabatan as string | null) ?? null,
       verified_at: (p.verified_at as string | null) ?? null,
@@ -334,12 +366,26 @@ export const getMyVerificationDetail = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
     if (!prof?.verified_at) return { verified_at: null, verifier: null };
-    let verifier: { id: string; nama_lengkap: string | null; email: string; role: string | null } | null = null;
+    let verifier: {
+      id: string;
+      nama_lengkap: string | null;
+      email: string;
+      role: string | null;
+    } | null = null;
     if (prof.verified_by) {
       const [{ data: vp }, vu, { data: vr }] = await Promise.all([
-        supabaseAdmin.from("profiles").select("nama_lengkap").eq("id", prof.verified_by).maybeSingle(),
+        supabaseAdmin
+          .from("profiles")
+          .select("nama_lengkap")
+          .eq("id", prof.verified_by)
+          .maybeSingle(),
         supabaseAdmin.auth.admin.getUserById(prof.verified_by as string),
-        supabaseAdmin.from("user_roles").select("role").eq("user_id", prof.verified_by).limit(1).maybeSingle(),
+        supabaseAdmin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", prof.verified_by)
+          .limit(1)
+          .maybeSingle(),
       ]);
       verifier = {
         id: prof.verified_by as string,
@@ -385,7 +431,9 @@ export const listVerificationLog = createServerFn({ method: "POST" })
       : { data: [] as { id: string; nama_lengkap: string | null }[] };
     const listUsers = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
     const nameMap = new Map<string, string | null>();
-    ((profsRes.data ?? []) as { id: string; nama_lengkap: string | null }[]).forEach((p) => nameMap.set(p.id, p.nama_lengkap));
+    ((profsRes.data ?? []) as { id: string; nama_lengkap: string | null }[]).forEach((p) =>
+      nameMap.set(p.id, p.nama_lengkap),
+    );
     const emailMap = new Map((listUsers?.data?.users ?? []).map((u) => [u.id, u.email ?? ""]));
 
     return {
@@ -395,13 +443,15 @@ export const listVerificationLog = createServerFn({ method: "POST" })
         aksi: r.aksi as string,
         actor: {
           id: (r.user_id as string | null) ?? null,
-          nama: r.user_id ? nameMap.get(r.user_id as string) ?? null : null,
-          email: r.user_id ? emailMap.get(r.user_id as string) ?? (r.user_email as string | null) ?? "" : ((r.user_email as string | null) ?? ""),
+          nama: r.user_id ? (nameMap.get(r.user_id as string) ?? null) : null,
+          email: r.user_id
+            ? (emailMap.get(r.user_id as string) ?? (r.user_email as string | null) ?? "")
+            : ((r.user_email as string | null) ?? ""),
         },
         target: {
           id: (r.entitas_id as string) ?? "",
-          nama: r.entitas_id ? nameMap.get(r.entitas_id as string) ?? null : null,
-          email: r.entitas_id ? emailMap.get(r.entitas_id as string) ?? "" : "",
+          nama: r.entitas_id ? (nameMap.get(r.entitas_id as string) ?? null) : null,
+          email: r.entitas_id ? (emailMap.get(r.entitas_id as string) ?? "") : "",
         },
       })),
     };
@@ -411,7 +461,12 @@ export const listVerificationLog = createServerFn({ method: "POST" })
 const updateWargaSchema = z.object({
   user_id: z.string().uuid(),
   nama_lengkap: z.string().trim().min(1).max(120),
-  nik: z.string().trim().regex(/^\d{16}$/).nullable().optional(),
+  nik: z
+    .string()
+    .trim()
+    .regex(/^\d{16}$/)
+    .nullable()
+    .optional(),
   no_hp: z.string().trim().min(6).max(20).nullable().optional(),
   desa: z.string().trim().min(2).max(120).nullable().optional(),
 });
@@ -427,7 +482,10 @@ export const adminUpdateWarga = createServerFn({ method: "POST" })
     if (!isSuper && !isDesa) throw new Error("Forbidden");
 
     const { data: target } = await supabaseAdmin
-      .from("profiles").select("desa").eq("id", data.user_id).maybeSingle();
+      .from("profiles")
+      .select("desa")
+      .eq("id", data.user_id)
+      .maybeSingle();
     if (!target) throw new Error("Profil tidak ditemukan");
 
     if (isDesa && !isSuper) {
@@ -435,7 +493,12 @@ export const adminUpdateWarga = createServerFn({ method: "POST" })
       if (!myDesa || target.desa !== myDesa) throw new Error("Warga di luar desa Anda");
     }
 
-    const patch: { nama_lengkap: string; nik: string | null; no_hp: string | null; desa?: string | null } = {
+    const patch: {
+      nama_lengkap: string;
+      nik: string | null;
+      no_hp: string | null;
+      desa?: string | null;
+    } = {
       nama_lengkap: data.nama_lengkap,
       nik: data.nik ?? null,
       no_hp: data.no_hp ?? null,
@@ -446,8 +509,11 @@ export const adminUpdateWarga = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("audit_log").insert({
-      user_id: userId, aksi: "warga.updated", entitas: "profile",
-      entitas_id: data.user_id, data_sesudah: patch as never,
+      user_id: userId,
+      aksi: "warga.updated",
+      entitas: "profile",
+      entitas_id: data.user_id,
+      data_sesudah: patch as never,
     });
     return { ok: true };
   });
@@ -471,7 +537,11 @@ export const adminDeleteWarga = createServerFn({ method: "POST" })
 
     // Pastikan target adalah warga (bukan staff) dan di desa admin (kecuali super).
     const [{ data: target }, { data: targetRoles }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("desa,nama_lengkap").eq("id", data.user_id).maybeSingle(),
+      supabaseAdmin
+        .from("profiles")
+        .select("desa,nama_lengkap")
+        .eq("id", data.user_id)
+        .maybeSingle(),
       supabaseAdmin.from("user_roles").select("role").eq("user_id", data.user_id),
     ]);
     if (!target) throw new Error("Profil tidak ditemukan");

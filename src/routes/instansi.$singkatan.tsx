@@ -2,7 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { PageShell, PageHero } from "@/components/site/PageShell";
-import { Building2, ChevronRight, ChevronLeft, LayoutGrid, Search, X, ArrowLeft, Loader2, FileCheck2 } from "lucide-react";
+import {
+  Building2,
+  ChevronRight,
+  ChevronLeft,
+  LayoutGrid,
+  Search,
+  X,
+  ArrowLeft,
+  Loader2,
+  FileCheck2,
+} from "lucide-react";
 import { opdBySingkatanQueryOptions, layananByOpdIdQueryOptions } from "@/lib/queries";
 import { parsePersyaratan } from "@/lib/parse-persyaratan";
 
@@ -16,7 +26,10 @@ export const Route = createFileRoute("/instansi/$singkatan")({
   head: ({ params }) => ({
     meta: [
       { title: `OPD ${params.singkatan} — Pemerintah Kabupaten Buton Selatan` },
-      { name: "description", content: `Profil dan daftar layanan publik yang dikelola oleh ${params.singkatan} Kabupaten Buton Selatan.` },
+      {
+        name: "description",
+        content: `Profil dan daftar layanan publik yang dikelola oleh ${params.singkatan} Kabupaten Buton Selatan.`,
+      },
       { property: "og:title", content: `OPD ${params.singkatan} — Buton Selatan` },
       { property: "og:description", content: `Layanan publik yang dikelola ${params.singkatan}.` },
     ],
@@ -44,9 +57,16 @@ export const Route = createFileRoute("/instansi/$singkatan")({
       <PageShell>
         <section className="container-page py-20 text-center">
           <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-bold">OPD "{singkatan}" tidak ditemukan</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Periksa kembali singkatan OPD pada URL.</p>
-          <Link to="/layanan" className="mt-6 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+          <h1 className="mt-4 font-display text-2xl font-bold">
+            OPD "{singkatan}" tidak ditemukan
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Periksa kembali singkatan OPD pada URL.
+          </p>
+          <Link
+            to="/layanan"
+            className="mt-6 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
             <ArrowLeft className="h-4 w-4" /> Kembali ke daftar OPD
           </Link>
         </section>
@@ -68,7 +88,9 @@ function OpdDetailPage() {
   const { data: layanan } = useSuspenseQuery(layananByOpdIdQueryOptions(opd.id));
 
   const [qInput, setQInput] = useState(search.q ?? "");
-  useEffect(() => { setQInput(search.q ?? ""); }, [search.q]);
+  useEffect(() => {
+    setQInput(search.q ?? "");
+  }, [search.q]);
 
   const filtered = useMemo(() => {
     const q = (search.q ?? "").trim().toLowerCase();
@@ -91,15 +113,14 @@ function OpdDetailPage() {
 
   return (
     <PageShell>
-      <PageHero
-        eyebrow="OPD"
-        title={opd.nama}
-        description={`Singkatan resmi: ${opd.singkatan}`}
-      />
+      <PageHero eyebrow="OPD" title={opd.nama} description={`Singkatan resmi: ${opd.singkatan}`} />
 
       <section className="container-page py-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link to="/layanan" className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            to="/layanan"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" /> Kembali ke daftar OPD
           </Link>
           <Link
@@ -114,7 +135,12 @@ function OpdDetailPage() {
         {opd.kategori.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {opd.kategori.map((k) => (
-              <span key={k} className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{k}</span>
+              <span
+                key={k}
+                className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+              >
+                {k}
+              </span>
             ))}
           </div>
         )}
@@ -131,12 +157,19 @@ function OpdDetailPage() {
                 className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
               />
               {qInput && (
-                <button type="button" onClick={() => setQInput("")} className="text-muted-foreground hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => setQInput("")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            <button type="submit" className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+            <button
+              type="submit"
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
               Cari
             </button>
           </form>
@@ -144,10 +177,13 @@ function OpdDetailPage() {
 
         <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Menampilkan <span className="font-semibold text-foreground">{pageItems.length}</span> dari {filtered.length} layanan
+            Menampilkan <span className="font-semibold text-foreground">{pageItems.length}</span>{" "}
+            dari {filtered.length} layanan
             {search.q && " (tersaring)"}
           </span>
-          <span>Halaman {currentPage} / {totalPages}</span>
+          <span>
+            Halaman {currentPage} / {totalPages}
+          </span>
         </div>
       </section>
 
@@ -156,10 +192,14 @@ function OpdDetailPage() {
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
             <LayoutGrid className="mx-auto h-10 w-10 text-muted-foreground" />
             <h2 className="mt-3 font-display text-xl font-bold">
-              {layanan.length === 0 ? "Belum ada layanan terdaftar" : "Tidak ada layanan yang cocok"}
+              {layanan.length === 0
+                ? "Belum ada layanan terdaftar"
+                : "Tidak ada layanan yang cocok"}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {layanan.length === 0 ? "OPD ini belum mempublikasikan layanan." : "Coba ubah kata kunci pencarian."}
+              {layanan.length === 0
+                ? "OPD ini belum mempublikasikan layanan."
+                : "Coba ubah kata kunci pencarian."}
             </p>
           </div>
         )}
@@ -209,7 +249,8 @@ function OpdDetailPage() {
                   </div>
 
                   <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                    Ajukan permohonan <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    Ajukan permohonan{" "}
+                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </Link>
               );
@@ -232,7 +273,9 @@ function OpdDetailPage() {
                 key={p}
                 onClick={() => goPage(p)}
                 className={`h-9 w-9 rounded-lg text-sm font-medium ${
-                  p === currentPage ? "bg-primary text-primary-foreground" : "border border-border bg-card hover:bg-muted"
+                  p === currentPage
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-card hover:bg-muted"
                 }`}
               >
                 {p}

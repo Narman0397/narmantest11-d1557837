@@ -77,25 +77,30 @@ export const DEFAULT_BRANDING: SiteBranding = {
   hero_title_line1: "Satu Pintu,",
   hero_title_line2: "Satu Data,",
   hero_title_line3: "Satu Pelayanan.",
-  hero_subtitle: "Akses seluruh layanan publik dan data pemerintah terpadu dalam satu tempat — cepat, transparan, dan terverifikasi.",
+  hero_subtitle:
+    "Akses seluruh layanan publik dan data pemerintah terpadu dalam satu tempat — cepat, transparan, dan terverifikasi.",
   hero_btn_primary: "Mulai Layanan",
   hero_btn_secondary: "Lihat Satu Data",
   direktori_eyebrow: "Direktori OPD",
   direktori_title: "Dinas & Perangkat Daerah",
   direktori_desc: "Kenali setiap OPD dan layanan yang dikelolanya.",
   pilar_1_title: "Satu Data Terpadu",
-  pilar_1_desc: "Semua dataset pemerintah dalam satu standar — terbuka, terverifikasi, dan dapat diunduh.",
+  pilar_1_desc:
+    "Semua dataset pemerintah dalam satu standar — terbuka, terverifikasi, dan dapat diunduh.",
   pilar_2_title: "Pelayanan Sentralistik",
-  pilar_2_desc: "Warga cukup satu akun untuk seluruh layanan: adminduk, perizinan, kesehatan, hingga pajak.",
+  pilar_2_desc:
+    "Warga cukup satu akun untuk seluruh layanan: adminduk, perizinan, kesehatan, hingga pajak.",
   pilar_3_title: "Transparansi Real-time",
   pilar_3_desc: "Dashboard kinerja, anggaran, dan capaian program publik dapat dipantau langsung.",
   cta_title: "Punya keluhan atau aspirasi?",
-  cta_desc: "Sampaikan langsung melalui kanal LAPOR! Setiap laporan dipantau dan ditindaklanjuti oleh OPD terkait.",
+  cta_desc:
+    "Sampaikan langsung melalui kanal LAPOR! Setiap laporan dipantau dan ditindaklanjuti oleh OPD terkait.",
   cta_btn_primary: "Lapor Sekarang",
   cta_btn_secondary: "Tentang Pemerintah",
   footer_org: "Pemerintah Kabupaten",
   footer_tagline: "Melayani dengan integritas & data",
-  footer_description: "Situs resmi pemusatan pelayanan publik dan data terintegrasi. Transparan, terpadu, dan dapat diakses kapan saja.",
+  footer_description:
+    "Situs resmi pemusatan pelayanan publik dan data terintegrasi. Transparan, terpadu, dan dapat diakses kapan saja.",
   footer_address: "—",
   footer_phone: "—",
   footer_email: "—",
@@ -109,7 +114,9 @@ function readBrandingCache(): SiteBranding | null {
     const raw = window.localStorage.getItem(BRANDING_LS_KEY);
     if (!raw) return null;
     return { ...DEFAULT_BRANDING, ...(JSON.parse(raw) as Partial<SiteBranding>) };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function writeBrandingCache(b: SiteBranding) {
@@ -148,13 +155,20 @@ export function useSiteBranding(): SiteBranding {
     let alive = true;
     const cached = readBrandingCache();
     if (cached) setB(cached);
-    getSiteBranding().then((v) => { if (alive) setB(v); }).catch(() => {});
+    getSiteBranding()
+      .then((v) => {
+        if (alive) setB(v);
+      })
+      .catch(() => {});
     const onUpdate = (e: Event) => {
       const detail = (e as CustomEvent<SiteBranding>).detail;
       if (detail) setB(detail);
     };
     window.addEventListener("site-branding-updated", onUpdate);
-    return () => { alive = false; window.removeEventListener("site-branding-updated", onUpdate); };
+    return () => {
+      alive = false;
+      window.removeEventListener("site-branding-updated", onUpdate);
+    };
   }, []);
   return b;
 }

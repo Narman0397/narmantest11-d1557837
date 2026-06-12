@@ -12,10 +12,7 @@ export function CardGridSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-border bg-card p-6 shadow-soft"
-        >
+        <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
           <div className="flex items-center gap-3">
             <Box className="h-11 w-11 rounded-lg" />
             <div className="flex-1 space-y-2">
@@ -126,10 +123,7 @@ export function HomeLayananSkeleton() {
   return (
     <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-2xl border border-border bg-card p-6 shadow-soft"
-        >
+        <div key={i} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
           <Box className="h-12 w-12 rounded-xl" />
           <div className="mt-5 space-y-2">
             <Box className="h-5 w-2/3" />

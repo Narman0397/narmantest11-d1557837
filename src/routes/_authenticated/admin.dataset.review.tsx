@@ -9,7 +9,9 @@ import { listPendingReviews, reviewSubmission } from "@/lib/dataset-review.funct
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin/dataset/review")({
-  head: () => ({ meta: [{ title: "Review Dataset — Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Review Dataset — Admin" }, { name: "robots", content: "noindex" }],
+  }),
   component: () => (
     <AdminGuard>
       <AdminShell breadcrumb={[{ label: "Admin" }, { label: "Review Dataset" }]}>
@@ -40,16 +42,22 @@ function Page() {
 
   async function load() {
     try {
-      const r = (await fnList({ data: { status, page: 0, pageSize: 50 } })) as { rows: Row[]; total: number };
+      const r = (await fnList({ data: { status, page: 0, pageSize: 50 } })) as {
+        rows: Row[];
+        total: number;
+      };
       setRows(r.rows);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gagal memuat");
     }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [status]);
 
   async function act(id: string, aksi: "approve" | "reject" | "request_revision") {
-    const catatan = aksi === "approve" ? undefined : prompt("Catatan untuk pengirim:") ?? undefined;
+    const catatan =
+      aksi === "approve" ? undefined : (prompt("Catatan untuk pengirim:") ?? undefined);
     if (aksi !== "approve" && !catatan) return;
     setBusy(true);
     try {
@@ -67,12 +75,17 @@ function Page() {
     <div className="space-y-4">
       <div>
         <h2 className="font-display text-xl font-bold">Review Submission Dataset</h2>
-        <p className="text-sm text-muted-foreground">Approve / reject / minta revisi atas submission ASN.</p>
+        <p className="text-sm text-muted-foreground">
+          Approve / reject / minta revisi atas submission ASN.
+        </p>
       </div>
       <div className="flex gap-2">
         {(["pending", "revision", "approved", "rejected"] as const).map((s) => (
-          <button key={s} onClick={() => setStatus(s)}
-            className={`rounded-md border px-3 py-1.5 text-xs uppercase ${status === s ? "bg-primary text-primary-foreground" : "border-border"}`}>
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={`rounded-md border px-3 py-1.5 text-xs uppercase ${status === s ? "bg-primary text-primary-foreground" : "border-border"}`}
+          >
             {s}
           </button>
         ))}
@@ -89,21 +102,54 @@ function Page() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {rows.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">Tidak ada submission.</td></tr>}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                  Tidak ada submission.
+                </td>
+              </tr>
+            )}
             {rows.map((r) => (
               <tr key={r.id}>
-                <td className="px-3 py-2 text-xs">{new Date(r.submitted_at).toLocaleString("id-ID")}</td>
+                <td className="px-3 py-2 text-xs">
+                  {new Date(r.submitted_at).toLocaleString("id-ID")}
+                </td>
                 <td className="px-3 py-2 text-xs font-mono">{r.template_id.slice(0, 8)}</td>
-                <td className="px-3 py-2 text-xs max-w-md truncate"><code>{JSON.stringify(r.data)}</code></td>
+                <td className="px-3 py-2 text-xs max-w-md truncate">
+                  <code>{JSON.stringify(r.data)}</code>
+                </td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">{r.review_note ?? "—"}</td>
                 <td className="px-3 py-2">
                   {status === "pending" || status === "revision" ? (
                     <div className="flex gap-1">
-                      <Button size="sm" variant="default" disabled={busy} onClick={() => act(r.id, "approve")}>Approve</Button>
-                      <Button size="sm" variant="outline" disabled={busy} onClick={() => act(r.id, "request_revision")}>Revisi</Button>
-                      <Button size="sm" variant="destructive" disabled={busy} onClick={() => act(r.id, "reject")}>Reject</Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        disabled={busy}
+                        onClick={() => act(r.id, "approve")}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => act(r.id, "request_revision")}
+                      >
+                        Revisi
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => act(r.id, "reject")}
+                      >
+                        Reject
+                      </Button>
                     </div>
-                  ) : <span className="text-xs text-muted-foreground">selesai</span>}
+                  ) : (
+                    <span className="text-xs text-muted-foreground">selesai</span>
+                  )}
                 </td>
               </tr>
             ))}

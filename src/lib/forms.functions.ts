@@ -43,7 +43,9 @@ export const listForms = createServerFn({ method: "POST" })
     const ctx = await getUserContext(supabaseAdmin, userId);
     let q = supabase
       .from("forms")
-      .select("id,judul,deskripsi,status,opd_pemilik_id,deadline,created_at,published_at", { count: "exact" })
+      .select("id,judul,deskripsi,status,opd_pemilik_id,deadline,created_at,published_at", {
+        count: "exact",
+      })
       .order("updated_at", { ascending: false })
       .range(data.page * data.pageSize, data.page * data.pageSize + data.pageSize - 1);
     if (data.status) q = q.eq("status", data.status);
@@ -63,11 +65,7 @@ export const getForm = createServerFn({ method: "POST" })
       supabaseAdmin.from("form_fields").select("*").eq("form_id", data.id).order("urutan"),
       supabaseAdmin.from("form_targets").select("*").eq("form_id", data.id),
     ]);
-    const { data: full } = await supabaseAdmin
-      .from("forms")
-      .select("*")
-      .eq("id", data.id)
-      .single();
+    const { data: full } = await supabaseAdmin.from("forms").select("*").eq("id", data.id).single();
     return { form: full, fields: fields ?? [], targets: targets ?? [] };
   });
 
@@ -88,7 +86,7 @@ export const createForm = createServerFn({ method: "POST" })
     const { userId } = context as { userId: string };
     const ctx = await getUserContext(supabaseAdmin, userId);
     if (!ctx.isElevated && !ctx.isAdminOpd) throw new Error("Akses ditolak");
-    const opdId = ctx.isElevated ? data.opd_pemilik_id ?? null : ctx.opdId;
+    const opdId = ctx.isElevated ? (data.opd_pemilik_id ?? null) : ctx.opdId;
     const { data: row, error } = await supabaseAdmin
       .from("forms")
       .insert({
@@ -122,7 +120,8 @@ export const updateFormMeta = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context as { userId: string };
     const { form } = await requireFormAccess(data.id, userId);
-    if (form.status !== "draft") throw new Error("Form yang sudah dipublish tidak bisa diubah metadatanya");
+    if (form.status !== "draft")
+      throw new Error("Form yang sudah dipublish tidak bisa diubah metadatanya");
     const payload: {
       judul?: string;
       deskripsi?: string | null;
@@ -132,7 +131,8 @@ export const updateFormMeta = createServerFn({ method: "POST" })
     if (data.judul !== undefined) payload.judul = data.judul;
     if (data.deskripsi !== undefined) payload.deskripsi = data.deskripsi;
     if (data.deadline !== undefined) payload.deadline = data.deadline;
-    if (data.allow_multiple_submit !== undefined) payload.allow_multiple_submit = data.allow_multiple_submit;
+    if (data.allow_multiple_submit !== undefined)
+      payload.allow_multiple_submit = data.allow_multiple_submit;
     const { error } = await supabaseAdmin.from("forms").update(payload).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -182,7 +182,14 @@ export const saveFormTargets = createServerFn({ method: "POST" })
         targets: z
           .array(
             z.object({
-              target_type: z.enum(["opd", "asn_type", "role", "position", "unit_kerja", "individu"]),
+              target_type: z.enum([
+                "opd",
+                "asn_type",
+                "role",
+                "position",
+                "unit_kerja",
+                "individu",
+              ]),
               target_value: z.string().min(1).max(80),
             }),
           )
@@ -232,8 +239,10 @@ export const publishForm = createServerFn({ method: "POST" })
         placeholder: f.placeholder ?? null,
         help_text: f.help_text ?? null,
         options: ((f.options as unknown as FormField["options"]) ?? []) as FormField["options"],
-        validation: ((f.validation as unknown as FormField["validation"]) ?? {}) as FormField["validation"],
-        visible_if: (((f as unknown as { visible_if?: FormField["visible_if"] }).visible_if) ?? null) as FormField["visible_if"],
+        validation: ((f.validation as unknown as FormField["validation"]) ??
+          {}) as FormField["validation"],
+        visible_if: ((f as unknown as { visible_if?: FormField["visible_if"] }).visible_if ??
+          null) as FormField["visible_if"],
         urutan: typeof f.urutan === "number" ? f.urutan : i,
       })),
       publishedAt: new Date().toISOString(),

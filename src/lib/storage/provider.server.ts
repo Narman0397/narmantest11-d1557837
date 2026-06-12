@@ -39,7 +39,10 @@ export async function loadStorageConfig(): Promise<StorageProviderConfig> {
   const map = new Map((data ?? []).map((r) => [r.key, r.value]));
   const providerRaw = map.get("storage.provider");
   const provider: StorageProvider = providerRaw === "r2" ? "r2" : "supabase";
-  const encryption_key = typeof map.get("storage.encryption_key") === "string" ? (map.get("storage.encryption_key") as string) : "";
+  const encryption_key =
+    typeof map.get("storage.encryption_key") === "string"
+      ? (map.get("storage.encryption_key") as string)
+      : "";
   const r2raw = (map.get("storage.r2") as Partial<R2Config> | undefined) ?? {};
   const r2: R2Config = { ...DEFAULT_R2, ...r2raw } as R2Config;
   return { provider, encryption_key, r2 };
@@ -84,7 +87,9 @@ export async function createSignedUpload(
   const aws = r2Client(r2);
   const url = new URL(r2ObjectUrl(r2, path));
   url.searchParams.set("X-Amz-Expires", String(ttlSeconds));
-  const signed = await aws.sign(new Request(url.toString(), { method: "PUT" }), { aws: { signQuery: true } });
+  const signed = await aws.sign(new Request(url.toString(), { method: "PUT" }), {
+    aws: { signQuery: true },
+  });
   return { provider: "r2", signedUrl: signed.url, path };
 }
 
@@ -97,7 +102,9 @@ export async function createSignedDownload(
   const cfg = await loadStorageConfig();
   const provider = providerOverride ?? cfg.provider;
   if (provider === "supabase") {
-    const { data, error } = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, ttlSeconds);
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .createSignedUrl(path, ttlSeconds);
     if (error || !data) throw new Error(error?.message ?? "Gagal membuat signed URL");
     return { url: data.signedUrl, expiresIn: ttlSeconds };
   }
@@ -105,7 +112,9 @@ export async function createSignedDownload(
   const aws = r2Client(r2);
   const url = new URL(r2ObjectUrl(r2, path));
   url.searchParams.set("X-Amz-Expires", String(ttlSeconds));
-  const signed = await aws.sign(new Request(url.toString(), { method: "GET" }), { aws: { signQuery: true } });
+  const signed = await aws.sign(new Request(url.toString(), { method: "GET" }), {
+    aws: { signQuery: true },
+  });
   return { url: signed.url, expiresIn: ttlSeconds };
 }
 
@@ -165,7 +174,9 @@ export async function listObjects(bucket: string, prefix: string): Promise<Stora
   if (!res.ok) throw new Error(`R2 list gagal: ${res.status}`);
   const xml = await res.text();
   const out: StorageObject[] = [];
-  for (const m of xml.matchAll(/<CommonPrefixes>\s*<Prefix>([^<]+)<\/Prefix>\s*<\/CommonPrefixes>/g)) {
+  for (const m of xml.matchAll(
+    /<CommonPrefixes>\s*<Prefix>([^<]+)<\/Prefix>\s*<\/CommonPrefixes>/g,
+  )) {
     const full = m[1];
     const name = full.replace(/\/$/, "").split("/").pop() ?? full;
     out.push({ name, isFolder: true, size: null, mimetype: null, updated_at: null });

@@ -43,7 +43,9 @@ async function ensureSubscription(userId: string) {
 
   const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   // Paksa update untuk memastikan SW versi terbaru (push handler) terpasang.
-  try { await reg.update(); } catch {}
+  try {
+    await reg.update();
+  } catch {}
   await navigator.serviceWorker.ready;
 
   if (Notification.permission === "default") {
@@ -94,8 +96,11 @@ export function PushAutoEnable() {
     const standalone =
       window.matchMedia?.("(display-mode: standalone)").matches ||
       (window.navigator as { standalone?: boolean }).standalone === true;
-    const alreadyGranted = typeof Notification !== "undefined" && Notification.permission === "granted";
-    const tryEnable = () => { ensureSubscription(user.id).catch(() => {}); };
+    const alreadyGranted =
+      typeof Notification !== "undefined" && Notification.permission === "granted";
+    const tryEnable = () => {
+      ensureSubscription(user.id).catch(() => {});
+    };
     if (standalone || alreadyGranted) tryEnable();
     window.addEventListener("appinstalled", tryEnable);
     return () => window.removeEventListener("appinstalled", tryEnable);
