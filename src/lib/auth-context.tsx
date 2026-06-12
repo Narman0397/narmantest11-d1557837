@@ -91,7 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } : null);
     setAsnType(row?.asn_type ?? null);
     setSystemPosition(row?.system_position ?? null);
-    setPimpinanType(null);
+    // Load pejabat aktif untuk derive isBupati & pimpinanType.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: pej } = await (supabase as any)
+      .from("pejabat")
+      .select("pimpinan_type")
+      .eq("user_id", uid)
+      .eq("aktif", true)
+      .maybeSingle();
+    setPimpinanType((pej?.pimpinan_type as string | null) ?? null);
   }
   async function loadPermissions(uid: string, attempt = 0): Promise<void> {
     const { data, error } = await supabase.rpc("get_effective_permissions", { _user_id: uid });
@@ -306,6 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdminOpd: roles.includes("admin_opd"),
     isAdminPemda: roles.includes("admin_pemda"),
     isPimpinan: roles.includes("pimpinan"),
+    isBupati: roles.includes("pimpinan") && pimpinanType === "bupati",
     isElevated: roles.includes("super_admin") || roles.includes("admin_pemda"),
     isElevatedView: roles.includes("super_admin") || roles.includes("admin_pemda") || roles.includes("pimpinan"),
     isAsn: roles.includes("asn"),
