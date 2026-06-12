@@ -50,10 +50,13 @@ const pemdaNav: NavItem[] = [
   { to: "/admin/audit", label: "Riwayat Audit", icon: FileClock, permission: "can_view_audit_logs" },
 ];
 
-// Pimpinan Daerah: read-only dashboard saja.
+// Pimpinan Daerah: read-only dashboard. Bupati mendapat tambahan link approval/disposisi.
 const pimpinanNav: NavItem[] = [
   { to: "/executive", label: "Dashboard Eksekutif", icon: LayoutDashboard },
   { to: "/kinerja-opd", label: "Kinerja OPD", icon: ListChecks },
+];
+const bupatiExtraNav: NavItem[] = [
+  { to: "/admin/digital-signature", label: "Tanda Tangan Digital", icon: ShieldCheck, permission: "executive.sign" },
 ];
 
 // F5.9 — Sidebar Super Admin diorganisir per grup operasional.
@@ -142,7 +145,7 @@ export function AdminShell({
   opdAktifId?: string;
   onChangeOpd?: (id: string) => void;
 }) {
-  const { isSuperAdmin, isAdminDesa, isAdminPemda, isAdminOpd, can, signOut, isPimpinan } = useAuth();
+  const { isSuperAdmin, isAdminDesa, isAdminPemda, isAdminOpd, can, signOut, isPimpinan, isBupati } = useAuth();
   const [opdList, setOpdList] = useState<Opd[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const branding = useSiteBranding();
@@ -165,7 +168,7 @@ export function AdminShell({
   const rawNav: NavItem[] = isSuperAdmin
     ? []
     : isPimpinan
-    ? pimpinanNav
+    ? [...pimpinanNav, ...(isBupati ? bupatiExtraNav : [])]
     : isAdminPemda
     ? pemdaNav
     : isAdminDesa && !isAdminOpd
