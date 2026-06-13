@@ -165,11 +165,11 @@ export const rbacSetPermissionOverride = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
-    // Elevated permission → super_admin / admin_pemda. Permission biasa → super_admin.
+    // B-01 fix: ELEVATED_PERMS hanya super_admin; permission biasa boleh admin_pemda.
     if (ELEVATED_PERMS.has(data.permission_code)) {
-      await assertSuperOrPemda(context.userId);
-    } else {
       await assertSuper(context.userId);
+    } else {
+      await assertSuperOrPemda(context.userId);
     }
     const { data: existing } = await supabaseAdmin
       .from("user_permissions")
@@ -266,7 +266,8 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
 export const rbacAuditList = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    void context;
+    // A-03 fix: hanya super_admin yang boleh melihat audit RBAC global.
+    await assertSuper(context.userId);
     const { data, error } = await supabaseAdmin
       .from("rbac_audit")
       .select("id,created_at,user_id,target_user_id,aksi,entitas,data_sebelum,data_sesudah")

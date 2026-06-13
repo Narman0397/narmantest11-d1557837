@@ -97,11 +97,13 @@ export const revokeSignature = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    // A-04 hardening: defense-in-depth — filter eksplisit user_id, jangan andalkan RLS saja.
     const { error } = await supabase
       .from("digital_signatures")
       .update({ is_active: false, revoked_at: new Date().toISOString() })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
