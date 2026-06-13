@@ -202,13 +202,34 @@ export const generateDokumenFinal = createServerFn({ method: "POST" })
 export const getDokumenFinalSignedUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ permohonan_id: z.string().uuid() }).parse(i))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     const { data: p } = await supabaseAdmin
       .from("permohonan")
-      .select("dokumen_final_path")
+      .select("dokumen_final_path,opd_id,pemohon_id")
       .eq("id", data.permohonan_id)
       .maybeSingle();
     if (!p?.dokumen_final_path) return { signed_url: null };
+
+    // B-04 fix: ownership/role check — pemohon, admin_opd OPD pemilik, atau super_admin.
+    let allowed = p.pemohon_id === userId;
+    if (!allowed) {
+      const { data: roleSuper } = await supabaseAdmin.rpc("has_role", {
+        _user_id: userId,
+        _role: "super_admin",
+      });
+      allowed = !!roleSuper;
+    }
+    if (!allowed) {
+      const { data: roleOpd } = await supabaseAdmin.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin_opd",
+      });
+      const { data: myOpd } = await supabaseAdmin.rpc("get_user_opd", { _user_id: userId });
+      allowed = !!roleOpd && myOpd === p.opd_id;
+    }
+    if (!allowed) throw new Error("Forbidden");
+
     const { data: s } = await supabaseAdmin.storage
       .from(BUCKET)
       .createSignedUrl(p.dokumen_final_path, 60 * 30);
