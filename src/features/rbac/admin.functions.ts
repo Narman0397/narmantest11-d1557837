@@ -266,7 +266,8 @@ export const rbacAuditForUser = createServerFn({ method: "POST" })
 export const rbacAuditList = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    void context;
+    // A-03 fix: hanya super_admin yang boleh melihat audit RBAC global.
+    await assertSuper(context.userId);
     const { data, error } = await supabaseAdmin
       .from("rbac_audit")
       .select("id,created_at,user_id,target_user_id,aksi,entitas,data_sebelum,data_sesudah")
