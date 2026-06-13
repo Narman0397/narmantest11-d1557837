@@ -165,11 +165,11 @@ export const rbacSetPermissionOverride = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
-    // Elevated permission → super_admin / admin_pemda. Permission biasa → super_admin.
+    // B-01 fix: ELEVATED_PERMS hanya super_admin; permission biasa boleh admin_pemda.
     if (ELEVATED_PERMS.has(data.permission_code)) {
-      await assertSuperOrPemda(context.userId);
-    } else {
       await assertSuper(context.userId);
+    } else {
+      await assertSuperOrPemda(context.userId);
     }
     const { data: existing } = await supabaseAdmin
       .from("user_permissions")
