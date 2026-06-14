@@ -113,8 +113,21 @@ export async function runStaleUploadCleanup(): Promise<CleanupResult> {
       .limit(BATCH_LIMIT);
     if (error) throw error;
     if (rows && rows.length > 0) {
-      // Safe delete: re-verify row is still NOT finalized & still orphan before drop
-      const paths = rows.map((r) => r.storage_path).filter(Boolean) as string[];
+      // B-08 fix: re-verify each row is STILL orphaned right before we remove
+      // the storage object. This closes a race where another process flips
+      // a row back to a valid state between the SELECT above and the remove
+      // below (e.g. finalization re-uses the row id). We only delete files
+      // whose row is still cleanup_status='orphaned' at this instant.
+      const candidateIds = rows.map((r) => r.id);
+      const { data: stillOrphan } = await supabaseAdmin
+        .from("form_submission_files")
+        .select("id,storage_path")
+        .in("id", candidateIds)
+        .eq("cleanup_status", "orphaned")
+        .is("finalized_at", null);
+      const safeRows = (stillOrphan ?? []) as { id: string; storage_path: string | null }[];
+      const safeIds = safeRows.map((r) => r.id);
+      const paths = safeRows.map((r) => r.storage_path).filter(Boolean) as string[];
       if (paths.length > 0) {
         const { error: rmErr, data: rmData } = await supabaseAdmin.storage
           .from(BUCKET)
@@ -126,20 +139,20 @@ export async function runStaleUploadCleanup(): Promise<CleanupResult> {
           result.deletedObjects = rmData?.length ?? paths.length;
         }
       }
-      const { error: delErr } = await supabaseAdmin
-        .from("form_submission_files")
-        .delete()
-        .in(
-          "id",
-          rows.map((r) => r.id),
-        )
-        .eq("cleanup_status", "orphaned"); // safety guard
-      if (delErr) {
-        log.error("cleanup.row_delete.fail", { error: delErr.message });
-      } else {
-        result.deletedRows = rows.length;
+      if (safeIds.length > 0) {
+        const { error: delErr } = await supabaseAdmin
+          .from("form_submission_files")
+          .delete()
+          .in("id", safeIds)
+          .eq("cleanup_status", "orphaned"); // final safety guard
+        if (delErr) {
+          log.error("cleanup.row_delete.fail", { error: delErr.message });
+        } else {
+          result.deletedRows = safeIds.length;
+        }
       }
     }
+
   } catch (e) {
     log.error("cleanup.delete_orphan.fail", { error: e instanceof Error ? e.message : String(e) });
   }
