@@ -3651,9 +3651,29 @@ BEGIN
 END $function$;
 
 -- =====================  VIEWS  =====================
--- WARNING: view public.aset_nilai_buku has no readable definition; skipped
+CREATE OR REPLACE VIEW public.aset_nilai_buku AS
+ SELECT id,
+    kode,
+    nama,
+    opd_id,
+    nilai_perolehan,
+    tanggal_perolehan,
+    umur_ekonomis_bulan,
+    metode_susut,
+    GREATEST((COALESCE(nilai_perolehan, (0)::numeric) - COALESCE(( SELECT h.akumulasi
+           FROM aset_penyusutan_history h
+          WHERE (h.aset_id = a.id)
+          ORDER BY h.periode DESC, h.created_at DESC
+         LIMIT 1), (0)::numeric)), COALESCE(nilai_sisa, (0)::numeric)) AS nilai_buku
+   FROM aset a;
 CREATE OR REPLACE VIEW public.v_permohonan_overdue AS
-;
+ SELECT id,
+    kode,
+    opd_id,
+    (GREATEST((0)::numeric, ceil((EXTRACT(epoch FROM (now() - tenggat)) / 86400.0))))::integer AS overdue_days,
+    (status)::text AS status
+   FROM permohonan p
+  WHERE ((tenggat IS NOT NULL) AND (tenggat < now()) AND ((status)::text <> ALL (ARRAY['selesai'::text, 'ditolak'::text])));
 
 -- =====================  TRIGGERS  =====================
 DROP TRIGGER IF EXISTS trg_app_setting_updated_at ON public.app_setting;
