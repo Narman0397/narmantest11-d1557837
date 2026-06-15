@@ -84,6 +84,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content:
           "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fee199aa-ab79-4d95-9266-7b058bde67e9",
       },
+      { name: "description", content: "A web application that clones and recreates websites from a specified GitHub repository." },
+      { property: "og:description", content: "A web application that clones and recreates websites from a specified GitHub repository." },
+      { name: "twitter:description", content: "A web application that clones and recreates websites from a specified GitHub repository." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b75141ec-0d03-4fbc-b02e-608231cc3a84/id-preview-e075d5af--db4c0f70-2679-4898-91e2-e85c4e24f68f.lovable.app-1781552331873.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b75141ec-0d03-4fbc-b02e-608231cc3a84/id-preview-e075d5af--db4c0f70-2679-4898-91e2-e85c4e24f68f.lovable.app-1781552331873.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
