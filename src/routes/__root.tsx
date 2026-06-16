@@ -127,8 +127,10 @@ function RootComponent() {
           <PushAutoEnable />
           <PermohonanNotifier />
           <InstallPWAFloating />
+          <VerificationGate />
           <Toaster />
         </AuthProvider>
+
       </AppErrorBoundary>
     </QueryClientProvider>
   );
