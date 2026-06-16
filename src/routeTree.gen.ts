@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TentangRouteImport } from './routes/tentang'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PendingVerificationRouteImport } from './routes/pending-verification'
 import { Route as KontakRouteImport } from './routes/kontak'
 import { Route as KinerjaOpdRouteImport } from './routes/kinerja-opd'
 import { Route as DataRouteImport } from './routes/data'
@@ -56,6 +57,7 @@ import { Route as AuthenticatedAdminRatingRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminPejabatRouteImport } from './routes/_authenticated/admin.pejabat'
 import { Route as AuthenticatedAdminOpdRouteImport } from './routes/_authenticated/admin.opd'
 import { Route as AuthenticatedAdminNomorSuratRouteImport } from './routes/_authenticated/admin.nomor-surat'
+import { Route as AuthenticatedAdminMasterJabatanRouteImport } from './routes/_authenticated/admin.master-jabatan'
 import { Route as AuthenticatedAdminLokasiRouteImport } from './routes/_authenticated/admin.lokasi'
 import { Route as AuthenticatedAdminLayananRouteImport } from './routes/_authenticated/admin.layanan'
 import { Route as AuthenticatedAdminLaporanRouteImport } from './routes/_authenticated/admin.laporan'
@@ -78,6 +80,7 @@ import { Route as AuthenticatedAdminAsnRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminAsetKampanyeRouteImport } from './routes/_authenticated/admin.aset-kampanye'
 import { Route as AuthenticatedAdminAsetExtraRouteImport } from './routes/_authenticated/admin.aset-extra'
 import { Route as AuthenticatedAdminAsetRouteImport } from './routes/_authenticated/admin.aset'
+import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authenticated/admin.approvals'
 import { Route as AuthenticatedAdminFormsIndexRouteImport } from './routes/_authenticated/admin.forms.index'
 import { Route as AuthenticatedAdminDigitalSignatureIndexRouteImport } from './routes/_authenticated/admin.digital-signature.index'
 import { Route as ApiPublicHooksUploadIntegrityRouteImport } from './routes/api/public/hooks/upload-integrity'
@@ -131,6 +134,11 @@ const TentangRoute = TentangRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingVerificationRoute = PendingVerificationRouteImport.update({
+  id: '/pending-verification',
+  path: '/pending-verification',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontakRoute = KontakRouteImport.update({
@@ -370,6 +378,12 @@ const AuthenticatedAdminNomorSuratRoute =
     path: '/admin/nomor-surat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMasterJabatanRoute =
+  AuthenticatedAdminMasterJabatanRouteImport.update({
+    id: '/admin/master-jabatan',
+    path: '/admin/master-jabatan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminLokasiRoute =
   AuthenticatedAdminLokasiRouteImport.update({
     id: '/admin/lokasi',
@@ -495,6 +509,12 @@ const AuthenticatedAdminAsetRoute = AuthenticatedAdminAsetRouteImport.update({
   path: '/admin/aset',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminApprovalsRoute =
+  AuthenticatedAdminApprovalsRouteImport.update({
+    id: '/admin/approvals',
+    path: '/admin/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminFormsIndexRoute =
   AuthenticatedAdminFormsIndexRouteImport.update({
     id: '/admin/forms/',
@@ -766,6 +786,7 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/kinerja-opd': typeof KinerjaOpdRoute
   '/kontak': typeof KontakRoute
+  '/pending-verification': typeof PendingVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/akun': typeof AuthenticatedAkunRoute
@@ -782,6 +803,7 @@ export interface FileRoutesByFullPath {
   '/data-terbuka/': typeof DataTerbukaIndexRoute
   '/layanan/': typeof LayananIndexRoute
   '/permohonan/': typeof PermohonanIndexRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/aset': typeof AuthenticatedAdminAsetRouteWithChildren
   '/admin/aset-extra': typeof AuthenticatedAdminAsetExtraRoute
   '/admin/aset-kampanye': typeof AuthenticatedAdminAsetKampanyeRoute
@@ -804,6 +826,7 @@ export interface FileRoutesByFullPath {
   '/admin/laporan': typeof AuthenticatedAdminLaporanRoute
   '/admin/layanan': typeof AuthenticatedAdminLayananRouteWithChildren
   '/admin/lokasi': typeof AuthenticatedAdminLokasiRoute
+  '/admin/master-jabatan': typeof AuthenticatedAdminMasterJabatanRoute
   '/admin/nomor-surat': typeof AuthenticatedAdminNomorSuratRoute
   '/admin/opd': typeof AuthenticatedAdminOpdRoute
   '/admin/pejabat': typeof AuthenticatedAdminPejabatRoute
@@ -880,6 +903,7 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/kinerja-opd': typeof KinerjaOpdRoute
   '/kontak': typeof KontakRoute
+  '/pending-verification': typeof PendingVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/akun': typeof AuthenticatedAkunRoute
@@ -896,6 +920,7 @@ export interface FileRoutesByTo {
   '/data-terbuka': typeof DataTerbukaIndexRoute
   '/layanan': typeof LayananIndexRoute
   '/permohonan': typeof PermohonanIndexRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/aset': typeof AuthenticatedAdminAsetRouteWithChildren
   '/admin/aset-extra': typeof AuthenticatedAdminAsetExtraRoute
   '/admin/aset-kampanye': typeof AuthenticatedAdminAsetKampanyeRoute
@@ -917,6 +942,7 @@ export interface FileRoutesByTo {
   '/admin/laporan': typeof AuthenticatedAdminLaporanRoute
   '/admin/layanan': typeof AuthenticatedAdminLayananRouteWithChildren
   '/admin/lokasi': typeof AuthenticatedAdminLokasiRoute
+  '/admin/master-jabatan': typeof AuthenticatedAdminMasterJabatanRoute
   '/admin/nomor-surat': typeof AuthenticatedAdminNomorSuratRoute
   '/admin/opd': typeof AuthenticatedAdminOpdRoute
   '/admin/pejabat': typeof AuthenticatedAdminPejabatRoute
@@ -995,6 +1021,7 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/kinerja-opd': typeof KinerjaOpdRoute
   '/kontak': typeof KontakRoute
+  '/pending-verification': typeof PendingVerificationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tentang': typeof TentangRoute
   '/_authenticated/akun': typeof AuthenticatedAkunRoute
@@ -1011,6 +1038,7 @@ export interface FileRoutesById {
   '/data-terbuka/': typeof DataTerbukaIndexRoute
   '/layanan/': typeof LayananIndexRoute
   '/permohonan/': typeof PermohonanIndexRoute
+  '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/aset': typeof AuthenticatedAdminAsetRouteWithChildren
   '/_authenticated/admin/aset-extra': typeof AuthenticatedAdminAsetExtraRoute
   '/_authenticated/admin/aset-kampanye': typeof AuthenticatedAdminAsetKampanyeRoute
@@ -1033,6 +1061,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/laporan': typeof AuthenticatedAdminLaporanRoute
   '/_authenticated/admin/layanan': typeof AuthenticatedAdminLayananRouteWithChildren
   '/_authenticated/admin/lokasi': typeof AuthenticatedAdminLokasiRoute
+  '/_authenticated/admin/master-jabatan': typeof AuthenticatedAdminMasterJabatanRoute
   '/_authenticated/admin/nomor-surat': typeof AuthenticatedAdminNomorSuratRoute
   '/_authenticated/admin/opd': typeof AuthenticatedAdminOpdRoute
   '/_authenticated/admin/pejabat': typeof AuthenticatedAdminPejabatRoute
@@ -1111,6 +1140,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/kinerja-opd'
     | '/kontak'
+    | '/pending-verification'
     | '/reset-password'
     | '/tentang'
     | '/akun'
@@ -1127,6 +1157,7 @@ export interface FileRouteTypes {
     | '/data-terbuka/'
     | '/layanan/'
     | '/permohonan/'
+    | '/admin/approvals'
     | '/admin/aset'
     | '/admin/aset-extra'
     | '/admin/aset-kampanye'
@@ -1149,6 +1180,7 @@ export interface FileRouteTypes {
     | '/admin/laporan'
     | '/admin/layanan'
     | '/admin/lokasi'
+    | '/admin/master-jabatan'
     | '/admin/nomor-surat'
     | '/admin/opd'
     | '/admin/pejabat'
@@ -1225,6 +1257,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/kinerja-opd'
     | '/kontak'
+    | '/pending-verification'
     | '/reset-password'
     | '/tentang'
     | '/akun'
@@ -1241,6 +1274,7 @@ export interface FileRouteTypes {
     | '/data-terbuka'
     | '/layanan'
     | '/permohonan'
+    | '/admin/approvals'
     | '/admin/aset'
     | '/admin/aset-extra'
     | '/admin/aset-kampanye'
@@ -1262,6 +1296,7 @@ export interface FileRouteTypes {
     | '/admin/laporan'
     | '/admin/layanan'
     | '/admin/lokasi'
+    | '/admin/master-jabatan'
     | '/admin/nomor-surat'
     | '/admin/opd'
     | '/admin/pejabat'
@@ -1339,6 +1374,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/kinerja-opd'
     | '/kontak'
+    | '/pending-verification'
     | '/reset-password'
     | '/tentang'
     | '/_authenticated/akun'
@@ -1355,6 +1391,7 @@ export interface FileRouteTypes {
     | '/data-terbuka/'
     | '/layanan/'
     | '/permohonan/'
+    | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/aset'
     | '/_authenticated/admin/aset-extra'
     | '/_authenticated/admin/aset-kampanye'
@@ -1377,6 +1414,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/laporan'
     | '/_authenticated/admin/layanan'
     | '/_authenticated/admin/lokasi'
+    | '/_authenticated/admin/master-jabatan'
     | '/_authenticated/admin/nomor-surat'
     | '/_authenticated/admin/opd'
     | '/_authenticated/admin/pejabat'
@@ -1455,6 +1493,7 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   KinerjaOpdRoute: typeof KinerjaOpdRoute
   KontakRoute: typeof KontakRoute
+  PendingVerificationRoute: typeof PendingVerificationRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TentangRoute: typeof TentangRoute
   DataTerbukaSlugRoute: typeof DataTerbukaSlugRoute
@@ -1499,6 +1538,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-verification': {
+      id: '/pending-verification'
+      path: '/pending-verification'
+      fullPath: '/pending-verification'
+      preLoaderRoute: typeof PendingVerificationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontak': {
@@ -1816,6 +1862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNomorSuratRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/master-jabatan': {
+      id: '/_authenticated/admin/master-jabatan'
+      path: '/admin/master-jabatan'
+      fullPath: '/admin/master-jabatan'
+      preLoaderRoute: typeof AuthenticatedAdminMasterJabatanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/lokasi': {
       id: '/_authenticated/admin/lokasi'
       path: '/admin/lokasi'
@@ -1968,6 +2021,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/aset'
       fullPath: '/admin/aset'
       preLoaderRoute: typeof AuthenticatedAdminAsetRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/approvals': {
+      id: '/_authenticated/admin/approvals'
+      path: '/admin/approvals'
+      fullPath: '/admin/approvals'
+      preLoaderRoute: typeof AuthenticatedAdminApprovalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/forms/': {
@@ -2398,6 +2458,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAkunRoute: typeof AuthenticatedAkunRoute
   AuthenticatedExecutiveRoute: typeof AuthenticatedExecutiveRoute
   AuthenticatedPemdaRoute: typeof AuthenticatedPemdaRoute
+  AuthenticatedAdminApprovalsRoute: typeof AuthenticatedAdminApprovalsRoute
   AuthenticatedAdminAsetRoute: typeof AuthenticatedAdminAsetRouteWithChildren
   AuthenticatedAdminAsetExtraRoute: typeof AuthenticatedAdminAsetExtraRoute
   AuthenticatedAdminAsetKampanyeRoute: typeof AuthenticatedAdminAsetKampanyeRoute
@@ -2420,6 +2481,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminLaporanRoute: typeof AuthenticatedAdminLaporanRoute
   AuthenticatedAdminLayananRoute: typeof AuthenticatedAdminLayananRouteWithChildren
   AuthenticatedAdminLokasiRoute: typeof AuthenticatedAdminLokasiRoute
+  AuthenticatedAdminMasterJabatanRoute: typeof AuthenticatedAdminMasterJabatanRoute
   AuthenticatedAdminNomorSuratRoute: typeof AuthenticatedAdminNomorSuratRoute
   AuthenticatedAdminOpdRoute: typeof AuthenticatedAdminOpdRoute
   AuthenticatedAdminPejabatRoute: typeof AuthenticatedAdminPejabatRoute
@@ -2462,6 +2524,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAkunRoute: AuthenticatedAkunRoute,
   AuthenticatedExecutiveRoute: AuthenticatedExecutiveRoute,
   AuthenticatedPemdaRoute: AuthenticatedPemdaRoute,
+  AuthenticatedAdminApprovalsRoute: AuthenticatedAdminApprovalsRoute,
   AuthenticatedAdminAsetRoute: AuthenticatedAdminAsetRouteWithChildren,
   AuthenticatedAdminAsetExtraRoute: AuthenticatedAdminAsetExtraRoute,
   AuthenticatedAdminAsetKampanyeRoute: AuthenticatedAdminAsetKampanyeRoute,
@@ -2485,6 +2548,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminLaporanRoute: AuthenticatedAdminLaporanRoute,
   AuthenticatedAdminLayananRoute: AuthenticatedAdminLayananRouteWithChildren,
   AuthenticatedAdminLokasiRoute: AuthenticatedAdminLokasiRoute,
+  AuthenticatedAdminMasterJabatanRoute: AuthenticatedAdminMasterJabatanRoute,
   AuthenticatedAdminNomorSuratRoute: AuthenticatedAdminNomorSuratRoute,
   AuthenticatedAdminOpdRoute: AuthenticatedAdminOpdRoute,
   AuthenticatedAdminPejabatRoute: AuthenticatedAdminPejabatRoute,
@@ -2542,6 +2606,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   KinerjaOpdRoute: KinerjaOpdRoute,
   KontakRoute: KontakRoute,
+  PendingVerificationRoute: PendingVerificationRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TentangRoute: TentangRoute,
   DataTerbukaSlugRoute: DataTerbukaSlugRoute,
