@@ -368,15 +368,38 @@ function AuthPage() {
                         placeholder="Nomor Induk Pegawai"
                       />
                     </Field>
-                    <Field label="Jabatan" required>
-                      <input
+                    <Field label="Jenis ASN" required>
+                      <select
                         required
-                        value={form.jabatan}
-                        onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
+                        value={form.asn_type}
+                        onChange={(e) =>
+                          setForm({ ...form, asn_type: e.target.value as typeof form.asn_type })
+                        }
                         className="input"
-                        placeholder="contoh: Analis Kepegawaian"
-                      />
+                      >
+                        <option value="">— Pilih Jenis ASN —</option>
+                        <option value="pns">PNS</option>
+                        <option value="pppk_penuh_waktu">PPPK (Penuh Waktu)</option>
+                        <option value="pppk_paruh_waktu">PPPK (Paruh Waktu)</option>
+                      </select>
                     </Field>
+                    <Field label="Jabatan" required>
+                      <select
+                        required
+                        value={form.jabatan_id}
+                        onChange={(e) => setForm({ ...form, jabatan_id: e.target.value })}
+                        className="input"
+                      >
+                        <option value="">— Pilih Jabatan —</option>
+                        {jabatanList.map((j) => (
+                          <option key={j.id} value={j.id}>
+                            {j.nama}
+                            {j.kategori ? ` (${j.kategori})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+
                   </>
                 )}
 
