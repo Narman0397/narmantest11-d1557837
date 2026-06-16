@@ -101,12 +101,15 @@ const superNavGroups: NavGroup[] = [
     title: "Pengguna & Organisasi",
     items: [
       { to: "/admin/users", label: "Pengguna & Hak Akses", icon: Users },
+      { to: "/admin/approvals", label: "Persetujuan Akun", icon: ShieldCheck },
+      { to: "/admin/master-jabatan", label: "Master Jabatan", icon: ListChecks },
       { to: "/admin/opd", label: "OPD", icon: Building2 },
       { to: "/admin/desa", label: "Desa", icon: MapPin },
       { to: "/admin/pejabat", label: "Pejabat", icon: UserSquare2 },
-      { to: "/admin/verifikasi", label: "Verifikasi Akun", icon: ScanLine },
+      { to: "/admin/verifikasi", label: "Verifikasi Akun (QR)", icon: ScanLine },
     ],
   },
+
   {
     title: "Layanan Publik",
     items: [
