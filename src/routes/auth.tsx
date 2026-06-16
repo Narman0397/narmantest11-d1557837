@@ -68,12 +68,16 @@ function AuthPage() {
     nik: "",
     no_hp: "",
     desa: "",
+    alamat: "",
     opd_id: "",
     nip: "",
     jabatan: "",
+    jabatan_id: "",
+    asn_type: "" as "" | "pns" | "pppk_penuh_waktu" | "pppk_paruh_waktu",
   });
   const [desaList, setDesaList] = useState<Desa[]>([]);
   const [opdList, setOpdList] = useState<Opd[]>([]);
+  const [jabatanList, setJabatanList] = useState<Array<{ id: string; nama: string; kategori: string | null }>>([]);
 
   useEffect(() => {
     fetchDesaList(true)
@@ -85,6 +89,13 @@ function AuthPage() {
       .then((r) => setOpdList(r.rows as Opd[]))
       .catch(() => {});
   }, []);
+  useEffect(() => {
+    import("@/lib/registration.functions")
+      .then((m) => m.listMasterJabatanPublic())
+      .then((r) => setJabatanList(r.rows))
+      .catch(() => {});
+  }, []);
+
 
   const goAfterAuth = () => {
     if (redirect) window.location.assign(redirect);
