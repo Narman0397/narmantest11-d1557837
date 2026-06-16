@@ -259,7 +259,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             desa: (row.desa as string | null) ?? null,
             verified_at: (row.verified_at as string | null) ?? null,
             verified_by: (row.verified_by as string | null) ?? null,
+            verification_status: (row.verification_status as string | null) ?? null,
+            requested_role: (row.requested_role as string | null) ?? null,
           });
+
         },
       )
       .subscribe();
