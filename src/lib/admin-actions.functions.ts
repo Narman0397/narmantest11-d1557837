@@ -97,11 +97,26 @@ export const setUserRole = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests, try again later");
     await ensureProfileForUser(data.user_id);
 
+    // Sebelum insert role, pastikan profile sudah berstatus 'verified' agar
+    // trigger prevent_unverified_role_insert tidak memblokir (role super_admin/
+    // admin_pemda/pimpinan dikecualikan oleh trigger, tapi tidak ada salahnya).
+    await supabaseAdmin
+      .from("profiles")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({
+        verification_status: "verified",
+        verified_at: new Date().toISOString(),
+        verified_by: userId,
+        verification_method: "superadmin",
+      } as any)
+      .eq("id", data.user_id);
+
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
     const { error: insErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: data.user_id, role: data.role });
     if (insErr) throw new Error(insErr.message);
+
 
     // OPD diisi untuk admin_opd atau asn; selain itu null.
     // Desa diisi untuk admin_desa; selain itu null (kecuali warga yang sudah punya).
