@@ -4254,6 +4254,14 @@ export type Database = {
       is_bupati: { Args: { _uid: string }; Returns: boolean }
       is_elevated_view: { Args: { _uid: string }; Returns: boolean }
       is_executive: { Args: { _uid: string }; Returns: boolean }
+      is_pemohon_in_admin_desa: {
+        Args: { _admin_uid: string; _pemohon_id: string }
+        Returns: boolean
+      }
+      is_pemohon_in_admin_opd: {
+        Args: { _admin_uid: string; _pemohon_id: string }
+        Returns: boolean
+      }
       is_pimpinan: { Args: { _uid: string }; Returns: boolean }
       layanan_kinerja_agg: {
         Args: never
