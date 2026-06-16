@@ -32,7 +32,10 @@ export type AuthProfile = {
   desa: string | null;
   verified_at: string | null;
   verified_by: string | null;
+  verification_status: string | null;
+  requested_role: string | null;
 };
+
 
 type AuthCtx = {
   user: User | null;
