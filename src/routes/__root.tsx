@@ -13,6 +13,8 @@ import { PermohonanNotifier } from "@/components/site/PermohonanNotifier";
 import { InstallPWAFloating } from "@/components/site/InstallPWAFloating";
 import { DynamicBrandingHead } from "@/components/site/DynamicBrandingHead";
 import { AppErrorBoundary } from "@/components/site/AppErrorBoundary";
+import { VerificationGate } from "@/components/site/VerificationGate";
+
 
 import appCss from "../styles.css?url";
 
@@ -127,8 +129,10 @@ function RootComponent() {
           <PushAutoEnable />
           <PermohonanNotifier />
           <InstallPWAFloating />
+          <VerificationGate />
           <Toaster />
         </AuthProvider>
+
       </AppErrorBoundary>
     </QueryClientProvider>
   );

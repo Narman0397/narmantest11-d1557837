@@ -32,7 +32,10 @@ export type AuthProfile = {
   desa: string | null;
   verified_at: string | null;
   verified_by: string | null;
+  verification_status: string | null;
+  requested_role: string | null;
 };
+
 
 type AuthCtx = {
   user: User | null;
@@ -96,19 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(uid: string) {
     const { data, error } = await supabase
       .from("profiles")
-      .select("nama_lengkap,nik,no_hp,desa,verified_at,verified_by,asn_type,system_position")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .select("nama_lengkap,nik,no_hp,desa,verified_at,verified_by,asn_type,system_position,verification_status,requested_role" as any)
       .eq("id", uid)
       .maybeSingle();
     if (error) {
       debug("loadProfile error", error.message);
       return;
     }
-    const row = data as
-      | (AuthProfile & {
-          asn_type?: AsnTypeValue | null;
-          system_position?: SystemPositionValue | null;
-        })
-      | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row = data as any;
     setProfile(
       row
         ? {
@@ -118,11 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             desa: row.desa,
             verified_at: row.verified_at,
             verified_by: row.verified_by,
+            verification_status: row.verification_status ?? null,
+            requested_role: row.requested_role ?? null,
           }
         : null,
     );
     setAsnType(row?.asn_type ?? null);
     setSystemPosition(row?.system_position ?? null);
+
     // Load pejabat aktif untuk derive isBupati & pimpinanType.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: pej } = await (supabase as any)
@@ -256,7 +259,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             desa: (row.desa as string | null) ?? null,
             verified_at: (row.verified_at as string | null) ?? null,
             verified_by: (row.verified_by as string | null) ?? null,
+            verification_status: (row.verification_status as string | null) ?? null,
+            requested_role: (row.requested_role as string | null) ?? null,
           });
+
         },
       )
       .subscribe();

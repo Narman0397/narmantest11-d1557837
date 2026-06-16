@@ -2715,6 +2715,39 @@ export type Database = {
           },
         ]
       }
+      master_jabatan: {
+        Row: {
+          aktif: boolean
+          created_at: string
+          id: string
+          kategori: string | null
+          kode: string
+          nama: string
+          updated_at: string
+          urutan: number
+        }
+        Insert: {
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kategori?: string | null
+          kode: string
+          nama: string
+          updated_at?: string
+          urutan?: number
+        }
+        Update: {
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kategori?: string | null
+          kode?: string
+          nama?: string
+          updated_at?: string
+          urutan?: number
+        }
+        Relationships: []
+      }
       nomor_surat_issued: {
         Row: {
           created_at: string
@@ -3344,6 +3377,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          alamat: string | null
           asn_type: string | null
           created_at: string
           desa: string | null
@@ -3351,20 +3385,28 @@ export type Database = {
           golongan: string | null
           id: string
           jabatan: string | null
+          jabatan_id: string | null
           nama_lengkap: string
           nik: string | null
           nip: string | null
           no_hp: string | null
           opd_id: string | null
           pangkat: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_role: Database["public"]["Enums"]["app_role"] | null
           status: string
           system_position: string | null
           updated_at: string
           username: string | null
+          verification_method: string | null
+          verification_status: string | null
           verified_at: string | null
           verified_by: string | null
         }
         Insert: {
+          alamat?: string | null
           asn_type?: string | null
           created_at?: string
           desa?: string | null
@@ -3372,20 +3414,28 @@ export type Database = {
           golongan?: string | null
           id: string
           jabatan?: string | null
+          jabatan_id?: string | null
           nama_lengkap?: string
           nik?: string | null
           nip?: string | null
           no_hp?: string | null
           opd_id?: string | null
           pangkat?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
           status?: string
           system_position?: string | null
           updated_at?: string
           username?: string | null
+          verification_method?: string | null
+          verification_status?: string | null
           verified_at?: string | null
           verified_by?: string | null
         }
         Update: {
+          alamat?: string | null
           asn_type?: string | null
           created_at?: string
           desa?: string | null
@@ -3393,20 +3443,34 @@ export type Database = {
           golongan?: string | null
           id?: string
           jabatan?: string | null
+          jabatan_id?: string | null
           nama_lengkap?: string
           nik?: string | null
           nip?: string | null
           no_hp?: string | null
           opd_id?: string | null
           pangkat?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"] | null
           status?: string
           system_position?: string | null
           updated_at?: string
           username?: string | null
+          verification_method?: string | null
+          verification_status?: string | null
           verified_at?: string | null
           verified_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_jabatan_id_fkey"
+            columns: ["jabatan_id"]
+            isOneToOne: false
+            referencedRelation: "master_jabatan"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_opd_id_fkey"
             columns: ["opd_id"]
@@ -4217,6 +4281,14 @@ export type Database = {
       check_signed_document_status: { Args: { _id: string }; Returns: string }
       count_permohonan_bulan_ini: { Args: never; Returns: number }
       executive_summary: { Args: never; Returns: Json }
+      fn_approve_user: {
+        Args: {
+          _method?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: Json
+      }
       fn_generate_nomor_surat: {
         Args: { _opd_id: string; _permohonan_id: string }
         Returns: string
@@ -4225,6 +4297,10 @@ export type Database = {
       fn_permohonan_effective_sla_seconds: {
         Args: { _id: string }
         Returns: number
+      }
+      fn_reject_user: {
+        Args: { _reason: string; _target_user_id: string }
+        Returns: Json
       }
       fn_retention_cleanup: { Args: never; Returns: Json }
       fn_susut_bulanan_run: { Args: { _periode: string }; Returns: Json }

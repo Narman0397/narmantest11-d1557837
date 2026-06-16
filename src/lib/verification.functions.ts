@@ -224,11 +224,15 @@ export const verifyWargaByToken = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
-    const { error: e1 } = await supabaseAdmin
-      .from("profiles")
-      .update({ verified_at: now, verified_by: userId })
-      .eq("id", tok.user_id);
-    if (e1) throw new Error(e1.message);
+
+    // Approve via RPC (set verified + grant role warga atomically).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: rpcErr } = await (supabaseAdmin as any).rpc("fn_approve_user", {
+      _target_user_id: tok.user_id,
+      _role: "warga",
+      _method: "qr",
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
 
     await supabaseAdmin
       .from("verification_token")
@@ -243,6 +247,7 @@ export const verifyWargaByToken = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
 
 // ---- Daftar warga di desa admin (untuk dashboard admin_desa) ----
 type WargaRow = {

@@ -97,11 +97,26 @@ export const setUserRole = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests, try again later");
     await ensureProfileForUser(data.user_id);
 
+    // Sebelum insert role, pastikan profile sudah berstatus 'verified' agar
+    // trigger prevent_unverified_role_insert tidak memblokir (role super_admin/
+    // admin_pemda/pimpinan dikecualikan oleh trigger, tapi tidak ada salahnya).
+    await supabaseAdmin
+      .from("profiles")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({
+        verification_status: "verified",
+        verified_at: new Date().toISOString(),
+        verified_by: userId,
+        verification_method: "superadmin",
+      } as any)
+      .eq("id", data.user_id);
+
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
     const { error: insErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: data.user_id, role: data.role });
     if (insErr) throw new Error(insErr.message);
+
 
     // OPD diisi untuk admin_opd atau asn; selain itu null.
     // Desa diisi untuk admin_desa; selain itu null (kecuali warga yang sudah punya).
@@ -1215,11 +1230,44 @@ export const setUserVerified = createServerFn({ method: "POST" })
     if (!rl.ok) throw new Error("Too many requests");
     await ensureProfileForUser(data.user_id);
 
-    const patch = data.verified
-      ? { verified_at: new Date().toISOString(), verified_by: userId }
-      : { verified_at: null, verified_by: null };
-    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.user_id);
-    if (error) throw new Error(error.message);
+    if (data.verified) {
+      // Resolve target's requested_role
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("requested_role")
+        .eq("id", data.user_id)
+        .maybeSingle();
+      const reqRole = ((prof?.requested_role as string | null) ?? "warga") as
+        | "warga"
+        | "asn"
+        | "admin_opd"
+        | "admin_desa";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabaseAdmin as any).rpc("fn_approve_user", {
+        _target_user_id: data.user_id,
+        _role: reqRole,
+        _method: "superadmin",
+      });
+      if (error) throw new Error(error.message);
+    } else {
+      // Unverify: cabut role non-elevated + reset status ke pending.
+      await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.user_id)
+        .in("role", ["warga", "asn", "admin_opd", "admin_desa"]);
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update({
+          verified_at: null,
+          verified_by: null,
+          verification_status: "pending_verification",
+          verification_method: null,
+        } as any)
+        .eq("id", data.user_id);
+      if (error) throw new Error(error.message);
+    }
 
     await supabaseAdmin.from("audit_log").insert({
       user_id: userId,
@@ -1229,6 +1277,7 @@ export const setUserVerified = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
 
 // ============= MASTER DESA (SUPER ADMIN) =============
 const desaSchema = z.object({

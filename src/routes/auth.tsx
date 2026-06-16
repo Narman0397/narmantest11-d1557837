@@ -68,12 +68,16 @@ function AuthPage() {
     nik: "",
     no_hp: "",
     desa: "",
+    alamat: "",
     opd_id: "",
     nip: "",
     jabatan: "",
+    jabatan_id: "",
+    asn_type: "" as "" | "pns" | "pppk_penuh_waktu" | "pppk_paruh_waktu",
   });
   const [desaList, setDesaList] = useState<Desa[]>([]);
   const [opdList, setOpdList] = useState<Opd[]>([]);
+  const [jabatanList, setJabatanList] = useState<Array<{ id: string; nama: string; kategori: string | null }>>([]);
 
   useEffect(() => {
     fetchDesaList(true)
@@ -85,6 +89,13 @@ function AuthPage() {
       .then((r) => setOpdList(r.rows as Opd[]))
       .catch(() => {});
   }, []);
+  useEffect(() => {
+    import("@/lib/registration.functions")
+      .then((m) => m.listMasterJabatanPublic())
+      .then((r) => setJabatanList(r.rows))
+      .catch(() => {});
+  }, []);
+
 
   const goAfterAuth = () => {
     if (redirect) window.location.assign(redirect);
@@ -143,7 +154,8 @@ function AuthPage() {
       if (roleTab === "asn") {
         if (!form.opd_id) throw new Error("OPD/Instansi wajib dipilih");
         if (!/^\d{8,20}$/.test(form.nip)) throw new Error("NIP harus 8-20 digit angka");
-        if (!form.jabatan.trim()) throw new Error("Jabatan wajib diisi");
+        if (!form.jabatan_id) throw new Error("Jabatan wajib dipilih");
+        if (!form.asn_type) throw new Error("Jenis ASN wajib dipilih");
       }
 
       const res = await signupWithUsername({
@@ -155,12 +167,15 @@ function AuthPage() {
           no_hp: form.no_hp || null,
           nik: roleTab === "warga" ? form.nik : null,
           desa: roleTab === "warga" || roleTab === "admin_desa" ? form.desa : null,
+          alamat: form.alamat || null,
           opd_id: roleTab === "admin_opd" || roleTab === "asn" ? form.opd_id : null,
           nip: roleTab === "asn" ? form.nip : null,
-          jabatan: roleTab === "asn" ? form.jabatan : null,
+          jabatan_id: roleTab === "asn" ? form.jabatan_id : null,
+          asn_type: roleTab === "asn" ? (form.asn_type as "pns" | "pppk_penuh_waktu" | "pppk_paruh_waktu") : null,
           requested_role: roleTab,
         },
       });
+
 
       // Auto login
       const { error: signErr } = await supabase.auth.signInWithPassword({
@@ -173,11 +188,14 @@ function AuthPage() {
       } else {
         toast.success(
           roleTab === "warga"
-            ? "Pendaftaran berhasil."
-            : "Pendaftaran berhasil. Akun menunggu verifikasi Super Admin.",
+            ? "Pendaftaran berhasil. Tunjukkan QR ke kantor desa untuk verifikasi."
+            : "Pendaftaran berhasil. Akun menunggu persetujuan.",
         );
-        goAfterAuth();
+        // Arahkan langsung ke halaman pending verification — VerificationGate juga akan menanganinya,
+        // tapi kita lakukan eksplisit agar tidak flash ke beranda.
+        window.location.assign("/pending-verification");
       }
+
     } catch (err) {
       const msg = err instanceof z.ZodError ? err.issues[0].message : (err as Error).message;
       toast.error(msg);
@@ -315,8 +333,17 @@ function AuthPage() {
                       desaList={desaList}
                       label="Desa / Kelurahan"
                     />
+                    <Field label="Alamat">
+                      <textarea
+                        value={form.alamat}
+                        onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                        className="input min-h-[60px]"
+                        placeholder="Alamat lengkap (opsional)"
+                      />
+                    </Field>
                   </>
                 )}
+
                 {roleTab === "admin_desa" && (
                   <DesaSelect
                     form={form}
@@ -353,15 +380,38 @@ function AuthPage() {
                         placeholder="Nomor Induk Pegawai"
                       />
                     </Field>
-                    <Field label="Jabatan" required>
-                      <input
+                    <Field label="Jenis ASN" required>
+                      <select
                         required
-                        value={form.jabatan}
-                        onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
+                        value={form.asn_type}
+                        onChange={(e) =>
+                          setForm({ ...form, asn_type: e.target.value as typeof form.asn_type })
+                        }
                         className="input"
-                        placeholder="contoh: Analis Kepegawaian"
-                      />
+                      >
+                        <option value="">— Pilih Jenis ASN —</option>
+                        <option value="pns">PNS</option>
+                        <option value="pppk_penuh_waktu">PPPK (Penuh Waktu)</option>
+                        <option value="pppk_paruh_waktu">PPPK (Paruh Waktu)</option>
+                      </select>
                     </Field>
+                    <Field label="Jabatan" required>
+                      <select
+                        required
+                        value={form.jabatan_id}
+                        onChange={(e) => setForm({ ...form, jabatan_id: e.target.value })}
+                        className="input"
+                      >
+                        <option value="">— Pilih Jabatan —</option>
+                        {jabatanList.map((j) => (
+                          <option key={j.id} value={j.id}>
+                            {j.nama}
+                            {j.kategori ? ` (${j.kategori})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+
                   </>
                 )}
 
