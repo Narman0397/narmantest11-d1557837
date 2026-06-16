@@ -55,6 +55,7 @@ const signupSchema = z.object({
     .optional()
     .nullable(),
   desa: z.string().trim().min(2).max(120).optional().nullable(),
+  alamat: z.string().trim().max(500).optional().nullable(),
   opd_id: z.string().uuid().optional().nullable(),
   nip: z
     .string()
@@ -62,7 +63,8 @@ const signupSchema = z.object({
     .regex(/^\d{8,20}$/)
     .optional()
     .nullable(),
-  jabatan: z.string().trim().min(2).max(160).optional().nullable(),
+  jabatan_id: z.string().uuid().optional().nullable(),
+  asn_type: z.enum(["pns", "pppk_penuh_waktu", "pppk_paruh_waktu"]).optional().nullable(),
   requested_role: z.enum(["warga", "admin_desa", "admin_opd", "asn"]),
 });
 
@@ -81,8 +83,24 @@ export const signupWithUsername = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("Username sudah dipakai");
 
+    // Anti-duplicate NIP untuk ASN.
+    if (data.requested_role === "asn" && data.nip) {
+      const { data: dupNip } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("nip", data.nip)
+        .maybeSingle();
+      if (dupNip) throw new Error("NIP sudah terdaftar pada akun lain");
+    }
+
     const email =
       data.email && data.email.trim().length > 0 ? data.email : `${u}@${USERNAME_DOMAIN}`;
+
+    // Tentukan status awal verifikasi sesuai role yang diminta.
+    const initialStatus =
+      data.requested_role === "admin_opd" || data.requested_role === "admin_desa"
+        ? "pending_superadmin_approval"
+        : "pending_verification";
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -97,28 +115,26 @@ export const signupWithUsername = createServerFn({ method: "POST" })
           data.requested_role === "warga" || data.requested_role === "admin_desa"
             ? (data.desa ?? null)
             : null,
+        alamat: data.alamat ?? null,
+        requested_role: data.requested_role,
       },
     });
     if (error) throw new Error(error.message);
     const userId = created.user!.id;
 
-    // Upsert profile: jangan bergantung pada trigger auth.users karena bisa tidak aktif
-    // di lingkungan hosted; tanpa baris profiles, verifikasi/manajemen user kosong.
-    const profileUpdate: {
-      id: string;
-      username: string;
-      nama_lengkap: string;
-      no_hp: string | null;
-      nik?: string | null;
-      desa?: string | null;
-      opd_id?: string | null;
-      nip?: string | null;
-      jabatan?: string | null;
-    } = {
+    // Upsert profile: SENGAJA TIDAK menyentuh user_roles. Role hanya diberikan
+    // setelah proses approval/verifikasi selesai (lihat fn_approve_user di DB).
+    const profileUpdate: Record<string, unknown> = {
       id: userId,
       username: u,
       nama_lengkap: data.nama_lengkap,
       no_hp: data.no_hp ?? null,
+      alamat: data.alamat ?? null,
+      requested_role: data.requested_role,
+      verification_status: initialStatus,
+      verified_at: null,
+      verified_by: null,
+      verification_method: null,
     };
     if (data.requested_role === "warga") {
       profileUpdate.nik = data.nik ?? null;
@@ -129,29 +145,30 @@ export const signupWithUsername = createServerFn({ method: "POST" })
     if (data.requested_role === "asn") {
       profileUpdate.opd_id = data.opd_id ?? null;
       profileUpdate.nip = data.nip ?? null;
-      profileUpdate.jabatan = data.jabatan ?? null;
+      profileUpdate.jabatan_id = data.jabatan_id ?? null;
+      profileUpdate.asn_type = data.asn_type ?? null;
     }
     const { error: profileErr } = await supabaseAdmin
       .from("profiles")
-      .upsert(profileUpdate, { onConflict: "id" });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .upsert(profileUpdate as any, { onConflict: "id" });
     if (profileErr) throw new Error(profileErr.message);
 
-    // Untuk staf (non-warga), set role tanpa verified_at. Trigger super_admin protection tetap aktif.
-    if (data.requested_role !== "warga") {
-      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-      const { error: roleErr } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: userId, role: data.requested_role });
-      if (roleErr) throw new Error(roleErr.message);
-    }
+    // Pastikan tidak ada sisa role dari trigger lama / data migrasi.
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
 
     await supabaseAdmin.from("audit_log").insert({
       user_id: userId,
       aksi: "user.registered",
       entitas: "user",
       entitas_id: userId,
-      data_sesudah: { username: u, requested_role: data.requested_role } as never,
+      data_sesudah: {
+        username: u,
+        requested_role: data.requested_role,
+        verification_status: initialStatus,
+      } as never,
     });
 
-    return { ok: true, email, username: u };
+    return { ok: true, email, username: u, verification_status: initialStatus };
   });
+
