@@ -1,19 +1,11 @@
-// Registrasi peran staf — HANYA "asn" yang boleh diminta lewat self-registration.
-// Role elevated (admin_opd, admin_desa, super_admin, admin_pemda) HANYA boleh
-// di-grant oleh super_admin / admin_pemda lewat menu Manajemen User.
-//
-// Hardening B4 (anti privilege escalation):
-//  - Whitelist field input via Zod, role di-paksa "asn".
-//  - Tolak elevated role / system_position / permission_code di payload.
-//  - Anti-duplicate NIP.
-//  - profiles.verified_at SENGAJA null sampai admin verifikasi.
+// Registrasi peran staf — sekarang HANYA mengubah profile + verification_status.
+// JANGAN PERNAH insert ke user_roles. Role hanya diberikan setelah approve via
+// fn_approve_user (admin_opd untuk ASN, super_admin/admin_pemda untuk admin_opd/admin_desa).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-// Hanya role NON-elevated yang boleh diminta saat registrasi.
-// (admin_opd / admin_desa di-grant terpisah oleh super_admin / admin_pemda.)
 const SELF_REGISTERABLE_ROLES = ["asn"] as const;
 
 const schema = z
@@ -27,9 +19,9 @@ const schema = z
       .regex(/^\d{8,20}$/, "NIP 8-20 digit")
       .nullable()
       .optional(),
-    jabatan: z.string().trim().min(2).max(160).nullable().optional(),
+    jabatan_id: z.string().uuid().nullable().optional(),
+    asn_type: z.enum(["pns", "pppk_penuh_waktu", "pppk_paruh_waktu"]).nullable().optional(),
   })
-  // STRICT: tolak field yang tidak dikenal (anti privilege escalation).
   .strict();
 
 export const applyStaffRegistration = createServerFn({ method: "POST" })
@@ -38,37 +30,27 @@ export const applyStaffRegistration = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
 
-    // Field wajib untuk role asn.
     if (data.requested_role === "asn") {
       if (!data.opd_id) throw new Error("OPD/Instansi wajib dipilih untuk ASN");
       if (!data.nip) throw new Error("NIP wajib diisi untuk ASN");
-      if (!data.jabatan) throw new Error("Jabatan wajib diisi untuk ASN");
+      if (!data.jabatan_id) throw new Error("Jabatan wajib dipilih untuk ASN");
+      if (!data.asn_type) throw new Error("Jenis ASN wajib dipilih");
     }
 
-    // Cegah eskalasi: bila user sudah punya role staf terverifikasi, tolak.
+    // Cegah eskalasi: bila user sudah punya role elevated, tolak.
     const { data: existing } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
     const existingRoles = (existing ?? []).map((r) => r.role as string);
-    const ELEVATED = ["super_admin", "admin_pemda", "admin_opd", "admin_desa"];
+    const ELEVATED = ["super_admin", "admin_pemda", "admin_opd", "admin_desa", "asn"];
     if (existingRoles.some((r) => ELEVATED.includes(r))) {
       throw new Error(
-        "Akun Anda sudah memiliki peran admin. Hubungi super admin bila perlu perubahan.",
+        "Akun Anda sudah memiliki peran admin/asn. Hubungi super admin bila perlu perubahan.",
       );
     }
-    if (existingRoles.includes("asn")) {
-      const { data: prof } = await supabaseAdmin
-        .from("profiles")
-        .select("verified_at")
-        .eq("id", userId)
-        .maybeSingle();
-      if (prof?.verified_at) {
-        throw new Error("Akun ASN Anda sudah terverifikasi.");
-      }
-    }
 
-    // Anti-duplicate NIP — NIP harus unik antar ASN aktif.
+    // Anti-duplicate NIP.
     if (data.nip) {
       const { data: dup } = await supabaseAdmin
         .from("profiles")
@@ -76,32 +58,28 @@ export const applyStaffRegistration = createServerFn({ method: "POST" })
         .eq("nip", data.nip)
         .neq("id", userId)
         .maybeSingle();
-      if (dup) {
-        throw new Error("NIP sudah terdaftar pada akun lain.");
-      }
+      if (dup) throw new Error("NIP sudah terdaftar pada akun lain.");
     }
 
-    // Replace role 'warga'/lainnya menjadi 'asn'.
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-    const { error: rerr } = await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: userId, role: "asn" });
-    if (rerr) throw new Error(rerr.message);
+    // Patch profile: requested_role=asn, status=pending_verification.
+    // verified_at / verified_by TETAP null sampai approval.
+    const patch: Record<string, unknown> = {
+      requested_role: "asn",
+      verification_status: "pending_verification",
+      verified_at: null,
+      verified_by: null,
+      verification_method: null,
+      opd_id: data.opd_id ?? null,
+      nip: data.nip ?? null,
+      jabatan_id: data.jabatan_id ?? null,
+      asn_type: data.asn_type ?? null,
+    };
 
-    // Patch profile — verified_at TETAP null. system_position TIDAK boleh
-    // di-set lewat self-registration (di-grant admin nanti).
-    const patch: {
-      verified_at: null;
-      verified_by: null;
-      opd_id?: string | null;
-      nip?: string | null;
-      jabatan?: string | null;
-    } = { verified_at: null, verified_by: null };
-    if (data.opd_id) patch.opd_id = data.opd_id;
-    if (data.nip) patch.nip = data.nip;
-    if (data.jabatan) patch.jabatan = data.jabatan;
-
-    const { error: perr } = await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
+    const { error: perr } = await supabaseAdmin
+      .from("profiles")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(patch as any)
+      .eq("id", userId);
     if (perr) throw new Error(perr.message);
 
     await supabaseAdmin.from("audit_log").insert({
@@ -109,7 +87,7 @@ export const applyStaffRegistration = createServerFn({ method: "POST" })
       aksi: "staff.registration_requested",
       entitas: "profile",
       entitas_id: userId,
-      data_sesudah: { requested_role: "asn" } as never,
+      data_sesudah: { requested_role: "asn", status: "pending_verification" } as never,
     });
 
     return { ok: true };
@@ -120,4 +98,16 @@ export const listOpdPublic = createServerFn({ method: "GET" }).handler(async () 
   const { data, error } = await supabaseAdmin.from("opd").select("id,nama,singkatan").order("nama");
   if (error) throw new Error(error.message);
   return { rows: data ?? [] };
+});
+
+// Daftar Jabatan publik (untuk dropdown signup ASN)
+export const listMasterJabatanPublic = createServerFn({ method: "GET" }).handler(async () => {
+  const { data, error } = await supabaseAdmin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("master_jabatan" as any)
+    .select("id,kode,nama,kategori")
+    .eq("aktif", true)
+    .order("urutan");
+  if (error) throw new Error(error.message);
+  return { rows: (data ?? []) as Array<{ id: string; kode: string; nama: string; kategori: string | null }> };
 });
