@@ -109,5 +109,5 @@ export const listMasterJabatanPublic = createServerFn({ method: "GET" }).handler
     .eq("aktif", true)
     .order("urutan");
   if (error) throw new Error(error.message);
-  return { rows: (data ?? []) as Array<{ id: string; kode: string; nama: string; kategori: string | null }> };
+  return { rows: ((data ?? []) as unknown) as Array<{ id: string; kode: string; nama: string; kategori: string | null }> };
 });
