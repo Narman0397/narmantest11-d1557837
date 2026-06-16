@@ -154,7 +154,8 @@ function AuthPage() {
       if (roleTab === "asn") {
         if (!form.opd_id) throw new Error("OPD/Instansi wajib dipilih");
         if (!/^\d{8,20}$/.test(form.nip)) throw new Error("NIP harus 8-20 digit angka");
-        if (!form.jabatan.trim()) throw new Error("Jabatan wajib diisi");
+        if (!form.jabatan_id) throw new Error("Jabatan wajib dipilih");
+        if (!form.asn_type) throw new Error("Jenis ASN wajib dipilih");
       }
 
       const res = await signupWithUsername({
@@ -166,12 +167,15 @@ function AuthPage() {
           no_hp: form.no_hp || null,
           nik: roleTab === "warga" ? form.nik : null,
           desa: roleTab === "warga" || roleTab === "admin_desa" ? form.desa : null,
+          alamat: form.alamat || null,
           opd_id: roleTab === "admin_opd" || roleTab === "asn" ? form.opd_id : null,
           nip: roleTab === "asn" ? form.nip : null,
-          jabatan: roleTab === "asn" ? form.jabatan : null,
+          jabatan_id: roleTab === "asn" ? form.jabatan_id : null,
+          asn_type: roleTab === "asn" ? (form.asn_type as "pns" | "pppk_penuh_waktu" | "pppk_paruh_waktu") : null,
           requested_role: roleTab,
         },
       });
+
 
       // Auto login
       const { error: signErr } = await supabase.auth.signInWithPassword({
