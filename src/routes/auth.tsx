@@ -188,11 +188,14 @@ function AuthPage() {
       } else {
         toast.success(
           roleTab === "warga"
-            ? "Pendaftaran berhasil."
-            : "Pendaftaran berhasil. Akun menunggu verifikasi Super Admin.",
+            ? "Pendaftaran berhasil. Tunjukkan QR ke kantor desa untuk verifikasi."
+            : "Pendaftaran berhasil. Akun menunggu persetujuan.",
         );
-        goAfterAuth();
+        // Arahkan langsung ke halaman pending verification — VerificationGate juga akan menanganinya,
+        // tapi kita lakukan eksplisit agar tidak flash ke beranda.
+        window.location.assign("/pending-verification");
       }
+
     } catch (err) {
       const msg = err instanceof z.ZodError ? err.issues[0].message : (err as Error).message;
       toast.error(msg);
@@ -330,8 +333,17 @@ function AuthPage() {
                       desaList={desaList}
                       label="Desa / Kelurahan"
                     />
+                    <Field label="Alamat">
+                      <textarea
+                        value={form.alamat}
+                        onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                        className="input min-h-[60px]"
+                        placeholder="Alamat lengkap (opsional)"
+                      />
+                    </Field>
                   </>
                 )}
+
                 {roleTab === "admin_desa" && (
                   <DesaSelect
                     form={form}
