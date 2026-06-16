@@ -4184,7 +4184,6 @@ export type Database = {
       }
     }
     Functions: {
-      _lovable_exec_sql: { Args: { sql: string }; Returns: undefined }
       _lovable_request_uid: { Args: never; Returns: string }
       aset_compliance: { Args: { _opd_id?: string }; Returns: Json }
       aset_due_warranty: {
