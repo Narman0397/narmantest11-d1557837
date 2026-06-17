@@ -59,7 +59,7 @@ function Page() {
       if (t) setToday(t as never);
       const s = await listSchedules();
       setScheds((s as { rows: Sch[] }).rows);
-      const sh = await listShifts();
+      const sh = await listShifts({ data: {} });
       setShifts((sh as { rows: Sh[] }).rows);
     } catch (e) {
       toast.error((e as Error).message);
