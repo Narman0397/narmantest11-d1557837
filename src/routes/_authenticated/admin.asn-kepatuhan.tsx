@@ -57,7 +57,7 @@ function Page() {
     try {
       const t = await opdAttendanceToday({ data: { opd_id: null } }).catch(() => null);
       if (t) setToday(t as never);
-      const s = await listSchedules({ data: {} });
+      const s = await listSchedules();
       setScheds((s as { rows: Sch[] }).rows);
       const sh = await listShifts({ data: {} });
       setShifts((sh as { rows: Sh[] }).rows);
