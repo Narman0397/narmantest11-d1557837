@@ -57,9 +57,9 @@ function Page() {
     try {
       const t = await opdAttendanceToday({ data: { opd_id: null } }).catch(() => null);
       if (t) setToday(t as never);
-      const s = await listSchedules();
+      const s = await listSchedules({ data: {} });
       setScheds((s as { rows: Sch[] }).rows);
-      const sh = await listShifts();
+      const sh = await listShifts({ data: {} });
       setShifts((sh as { rows: Sh[] }).rows);
     } catch (e) {
       toast.error((e as Error).message);
